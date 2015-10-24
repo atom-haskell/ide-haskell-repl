@@ -71,16 +71,20 @@ class IdeHaskellReplView
 
     @ghci.load(@uri) if @uri
 
-    @disposables.add @element, "keydown", ({keyCode, shiftKey}) =>
-      if shiftKey
-        switch keyCode
-          when 13
-            if @ghci.writeLines @editor.getBuffer().getLines()
-              @editor.setText ''
-          when 38
-            @editor.setText h if (h = @ghci.historyBack(@editor.getText()))?
-          when 40
-            @editor.setText h if (h = @ghci.historyForward())?
+    @disposables.add @element, "keydown",
+      ({keyCode, shiftKey}) =>
+        if shiftKey
+          switch keyCode
+            when 13
+              if @ghci.writeLines @editor.getBuffer().getLines()
+                @editor.setText ''
+              return false
+            when 38
+              @editor.setText @ghci.historyBack(@editor.getText())
+              return false
+            when 40
+              @editor.setText @ghci.historyForward()
+              return false
 
   setEditorHeight: ->
     lh = @editor.getLineHeightInPixels()

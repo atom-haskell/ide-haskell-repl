@@ -12,8 +12,8 @@ class GHCI
 
     @history =
       back: []
-      forw: []
       curr: ''
+      item: 0
 
     @emitter = new Emitter
     @process = new BufferedProcess
@@ -80,11 +80,11 @@ class GHCI
   writeLines: (lines) =>
     @started = true
     return false unless @finished and (not @timeout?)
-    @history.back.push @history.forw...
-    @history.forw = []
-    if (text = lines.join(EOL)) and @history.back.slice(-1)[0] isnt text
+    if (text = lines.join(EOL)) and \
+        @history.back[@history.back.length-1] isnt text
       @history.back.push text
     @history.curr = ''
+    @history.item = @history.back.length
     @timeout = setTimeout (=>
       tkill @ghci.pid, 'SIGINT'
       @finished = true
@@ -106,22 +106,18 @@ class GHCI
     return true
 
   historyBack: (current) ->
-    if @history.forw.length is 0
+    if @history.item is @history.back.length
       @history.curr = current
-    h = @history.back.pop()
-    if h?
-      @history.forw.push h
-      h
-    else
-      null
+    @history.item -= 1
+    if @history.item < 0
+      @history.item = 0
+    @history.back[@history.item] ? @history.curr
 
   historyForward: ->
-    h = @history.forw.pop()
-    if h?
-      @history.back.push h
-      h
-    else
-      @history.curr
+    @history.item += 1
+    if @history.item > @history.back.length
+      @history.item = @history.back.length
+    @history.back[@history.item] ? @history.curr
 
   # Tear down any state and detach
   destroy: ->
