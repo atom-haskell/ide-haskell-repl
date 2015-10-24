@@ -23,6 +23,7 @@ class IdeHaskellReplView
     @output.getDecorations(class: 'cursor-line', type: 'line')[0].destroy()
     @output.setGrammar \
       atom.grammars.grammarForScopeName 'text.tex.latex.haskell'
+    @element.appendChild @helpDiv = document.createElement 'div'
     @element.appendChild @errDiv = document.createElement 'pre'
     @element.appendChild @promptDiv = document.createElement 'div'
     @element.appendChild @editorDiv = document.createElement 'div'
@@ -33,6 +34,11 @@ class IdeHaskellReplView
     @editor.setLineNumberGutterVisible(false)
     @editor.setGrammar \
       atom.grammars.grammarForScopeName 'source.haskell'
+
+    @helpDiv.innerText = """
+    To submit command, use shift+enter
+    To navigate though command history, use shift+↑ and shift+↓
+    """
 
     setTimeout (=>@editorElement.focus()),100
 
@@ -51,6 +57,7 @@ class IdeHaskellReplView
       cwd: atom.project.getDirectories()[0].getPath()
 
     @ghci.onResponse (response) =>
+      @helpDiv.remove()
       @log response
 
     @ghci.onError (error) =>
