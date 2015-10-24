@@ -41,6 +41,7 @@ class IdeHaskellReplView
         "#{lines*lh}px"
     setPrompt = (prompt) =>
       @promptDiv.innerText = prompt+'>'
+    setTimeout (=>@editorElement.focus()),100
 
     @editorElement.onDidAttach -> setEditorHeight()
     @editor.onDidChange ->
