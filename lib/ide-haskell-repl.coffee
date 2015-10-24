@@ -18,7 +18,6 @@ module.exports = IdeHaskellRepl =
 
       new IdeHaskellReplView(pathname)
 
-    # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
 
     # Register command that toggles this view
@@ -35,7 +34,6 @@ module.exports = IdeHaskellRepl =
     ideHaskellReplViewState: @ideHaskellReplView.serialize()
 
   toggle: (editor) ->
-    console.log 'IdeHaskellRepl was toggled!'
     uri = editor.getURI()
 
     options =

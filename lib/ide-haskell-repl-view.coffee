@@ -1,7 +1,6 @@
 SubAtom = require 'sub-atom'
-{Range, BufferedProcess} = require 'atom'
-{EOL} = require 'os'
-tkill = require 'tree-kill'
+{Range} = require 'atom'
+GHCI = require './ghci'
 
 module.exports =
 class IdeHaskellReplView
@@ -34,115 +33,61 @@ class IdeHaskellReplView
     @editor.setLineNumberGutterVisible(false)
     @editor.setGrammar \
       atom.grammars.grammarForScopeName 'source.haskell'
-    setEditorHeight = =>
-      lh = @editor.getLineHeightInPixels()
-      lines = @editor.getScreenLineCount()
-      @editorDiv.style.setProperty 'height',
-        "#{lines*lh}px"
-    setPrompt = (prompt) =>
-      @promptDiv.innerText = prompt+'>'
+
     setTimeout (=>@editorElement.focus()),100
 
-    @editorElement.onDidAttach -> setEditorHeight()
-    @editor.onDidChange ->
-      setEditorHeight()
+    @editorElement.onDidAttach =>
+      @setEditorHeight()
+    @editor.onDidChange =>
+      @setEditorHeight()
 
     @editor.setText ''
-
-    writeAtEOF = (editor, text) =>
-      eofRange = Range.fromPointWithDelta(editor.getEofBufferPosition(),0,0)
-      editor.setTextInBufferRange eofRange, text
-      @lastPos = editor.getEofBufferPosition()
 
     @output.onDidChange ({start, end}) =>
       @output.scrollToCursorPosition()
 
-    @process = new BufferedProcess
-      command: 'cabal'
-      args: ['repl']
-      options:
-        cwd: atom.project.getDirectories()[0].getPath()
-      stdout: (output) =>
-        lines = output.toString().split(EOL).slice(0,-1) #last line is empty
-        lines = lines.map (line) ->
-          if line.length > 10000
-            line.slice(0,10000) + '...'
-          else
-            line
-        rx = /^#~IDEHASKELLREPL~(.*)~#$/
-        if rx.test promptline = lines.slice(-1)[0]
-          [_, prompt] = rx.exec promptline
-          setPrompt prompt if prompt?
-          lines =
-            if lines.slice(-2)[0]
-              lines.slice(0,-1)
-            else
-              lines.slice(0,-2)
-          if @timeout?
-            clearTimeout @timeout
-            @timeout = null
-          @finished = true
-          # TODO: Show that command finished
-        if @response
-          lines = lines.map((line)->"< #{line}")
-        writeAtEOF @output, lines.join(EOL)
-      stderr: (output) =>
-        @errDiv.innerText +=
-          output.toString().split(EOL).filter((l)->l).join(EOL)+EOL
-      exit: (code) -> console.log("repl exited with #{code}")
+    @ghci = new GHCI
+      atomPath: 'atom'
+      cwd: atom.project.getDirectories()[0].getPath()
 
-    ghci = @process.process
+    @ghci.onResponse (response) =>
+      @log response
 
-    ghci.stdin.write(":set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"#{EOL}")
-    ghci.stdin.write(":set prompt2 \"\"#{EOL}")
-    ghci.stdin.write(":set editor atom #{EOL}")
-    ghci.stdin.write(":load #{@uri}#{EOL}")
+    @ghci.onError (error) =>
+      @setError error
 
-    writeLines = (lines) =>
-      @response = (not lines[0].startsWith ':') or lines[0].startsWith ':type'
-      ghci.stdout.pause()
-      ghci.stdin.write ":{#{EOL}"
-      lines.forEach (line) =>
-        ghci.stdin.write line+EOL
-        writeAtEOF @output, EOL+'> '+line
-      writeAtEOF @output, EOL
-      ghci.stdin.write ":}#{EOL}"
-      @editor.setText ''
-      ghci.stdout.resume()
+    @ghci.onFinished (prompt) =>
+      @setPrompt prompt
 
-    backHistory = []
-    forwHistory = []
-    current = ''
+    @ghci.load(@uri)
+
     @disposables.add @element, "keydown", ({keyCode, shiftKey}) =>
       if shiftKey
         switch keyCode
           when 13
-            if @finished and not @timeout?
-              backHistory.push forwHistory...
-              forwHistory = []
-              backHistory.push @editor.getText()
-              @errDiv.innerText = ''
-              writeLines @editor.getBuffer().getLines()
-              @timeout = setTimeout (=>
-                tkill ghci.pid, 'SIGINT'
-                @finished = true
-                @timeout = null
-                ), 1000
-              @finished = false
+            if @ghci.writeLines @editor.getBuffer().getLines()
+              @editor.setText ''
           when 38
-            if forwHistory.length is 0
-              current = @editor.getText()
-            h = backHistory.pop()
-            if h?
-              forwHistory.push h
-              @editor.setText h
+            @editor.setText h if (h = @ghci.historyBack(@editor.getText()))?
           when 40
-            h = forwHistory.pop()
-            if h?
-              backHistory.push h
-              @editor.setText h
-            else
-              @editor.setText current
+            @editor.setText h if (h = @ghci.historyForward())?
+
+  setEditorHeight: ->
+    lh = @editor.getLineHeightInPixels()
+    lines = @editor.getScreenLineCount()
+    @editorDiv.style.setProperty 'height',
+      "#{lines*lh}px"
+
+  setPrompt: (prompt) ->
+    @promptDiv.innerText = prompt+'>'
+
+  setError: (err) ->
+    @errDiv.innerText = err
+
+  log: (text) ->
+    eofRange = Range.fromPointWithDelta(@output.getEofBufferPosition(),0,0)
+    @output.setTextInBufferRange eofRange, text
+    @lastPos = @output.getEofBufferPosition()
 
   getURI: ->
     "ide-haskell://repl/#{@uri}"
@@ -155,6 +100,5 @@ class IdeHaskellReplView
 
   # Tear down any state and detach
   destroy: ->
-    @process.process.stdin.end()
-    @process.process.kill()
+    @ghci.destroy()
     @element.remove()
