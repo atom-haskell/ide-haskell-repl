@@ -53,8 +53,8 @@ class GHCI
           @emitter.emit 'finished', rxres[1]
       stderr: (output) =>
         @errorBuffer.push output.split(EOL).slice(0,-1)...
-      exit: (code) ->
-        console.log("repl exited with #{code}")
+      exit: (code) =>
+        @emitter.emit 'exit', code
 
     @ghci = @process.process
 
@@ -70,6 +70,9 @@ class GHCI
 
   onError: (callback) ->
     @emitter.on 'error', callback
+
+  onExit: (callback) ->
+    @emitter.on 'exit', callback
 
   load: (uri) ->
     @ghci.stdin.write ":load \"#{uri}\"#{EOL}"
