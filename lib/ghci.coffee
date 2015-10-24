@@ -47,7 +47,8 @@ class GHCI
           # TODO: Show that command finished
           @emitter.emit 'error', @errorBuffer.join(EOL)+EOL
           @errorBuffer = []
-          @emitter.emit 'response', @responseBuffer.join(EOL)+EOL
+          if @started
+            @emitter.emit 'response', @responseBuffer.join(EOL)+EOL
           @responseBuffer = []
           @emitter.emit 'finished', rxres[1]
       stderr: (output) =>
@@ -57,9 +58,9 @@ class GHCI
 
     @ghci = @process.process
 
-    @ghci.stdin.write(":set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"#{EOL}")
-    @ghci.stdin.write(":set prompt2 \"\"#{EOL}")
-    @ghci.stdin.write(":set editor \"#{atomPath}\" #{EOL}")
+    @ghci.stdin.write ":set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"#{EOL}"
+    @ghci.stdin.write ":set prompt2 \"\"#{EOL}"
+    @ghci.stdin.write ":set editor \"#{atomPath}\"#{EOL}"
 
   onFinished: (callback) ->
     @emitter.on 'finished', callback
@@ -71,9 +72,10 @@ class GHCI
     @emitter.on 'error', callback
 
   load: (uri) ->
-    @ghci.stdin.write(":load #{uri}#{EOL}")
+    @ghci.stdin.write ":load \"#{uri}\"#{EOL}"
 
   writeLines: (lines) =>
+    @started = true
     return false unless @finished and (not @timeout?)
     @history.back.push @history.forw...
     @history.forw = []
