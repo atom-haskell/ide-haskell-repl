@@ -82,7 +82,8 @@ class GHCI
     return false unless @finished and (not @timeout?)
     @history.back.push @history.forw...
     @history.forw = []
-    @history.back.push lines.join(EOL)
+    if (text = lines.join(EOL)) and @history.back.slice(-1)[0] isnt text
+      @history.back.push text
     @history.curr = ''
     @timeout = setTimeout (=>
       tkill @ghci.pid, 'SIGINT'
