@@ -21,6 +21,7 @@ class IdeHaskellReplView
     @output = @outputElement.getModel()
     @output.setSoftWrapped(true)
     @output.setLineNumberGutterVisible(false)
+    @output.getDecorations(class: 'cursor-line', type: 'line')[0].destroy()
     @output.setGrammar \
       atom.grammars.grammarForScopeName 'text.tex.latex.haskell'
     @element.appendChild @errDiv = document.createElement 'pre'
