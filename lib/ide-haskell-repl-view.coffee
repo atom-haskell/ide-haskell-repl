@@ -62,7 +62,7 @@ class IdeHaskellReplView
     @ghci.onExit (code) =>
       atom.workspace.paneForItem(@).destroyItem(@)
 
-    @ghci.load(@uri)
+    @ghci.load(@uri) if @uri
 
     @disposables.add @element, "keydown", ({keyCode, shiftKey}) =>
       if shiftKey

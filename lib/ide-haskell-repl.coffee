@@ -14,14 +14,15 @@ module.exports = IdeHaskellRepl =
 
       return unless protocol is 'ide-haskell:' and host is 'repl'
 
-      new IdeHaskellReplView(pathname)
+      new IdeHaskellReplView(pathname.slice(1))
 
     @disposables.add atom.commands.add 'atom-text-editor',
       'ide-haskell-repl:toggle': ({target}) =>
         @open target.getModel()
 
   open: (editor) ->
-    uri = editor.getURI?()
+    if editor?.getGrammar?()?.scopeName?.endsWith? 'haskell'
+      uri = editor?.getURI?()
     atom.workspace.open "ide-haskell://repl/#{uri ? ''}",
       split: 'right'
       searchAllPanes: true
