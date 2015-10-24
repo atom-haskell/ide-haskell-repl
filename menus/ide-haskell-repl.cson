@@ -1,22 +1,7 @@
-# See https://atom.io/docs/latest/hacking-atom-package-word-count#menus for more details
-'context-menu':
-  'atom-text-editor': [
-    {
-      'label': 'Toggle ide-haskell-repl'
-      'command': 'ide-haskell-repl:toggle'
-    }
-  ]
 'menu': [
-  {
-    'label': 'Packages'
-    'submenu': [
-      'label': 'ide-haskell-repl'
-      'submenu': [
-        {
-          'label': 'Toggle'
-          'command': 'ide-haskell-repl:toggle'
-        }
-      ]
-    ]
-  }
+  'label': 'Haskell IDE'
+  'submenu': [
+    'label': 'Toggle REPL'
+    'command': 'ide-haskell-repl:toggle'
+  ]
 ]
