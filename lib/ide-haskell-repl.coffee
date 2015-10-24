@@ -3,12 +3,10 @@ IdeHaskellReplView = require './ide-haskell-repl-view'
 url = require 'url'
 
 module.exports = IdeHaskellRepl =
-  ideHaskellReplView: null
-  modalPanel: null
-  subscriptions: null
-
   activate: (state) ->
-    atom.workspace.addOpener (uriToOpen, options) ->
+    @disposables = new CompositeDisposable
+
+    @disposables.add atom.workspace.addOpener (uriToOpen, options) ->
       try
         { protocol, host, pathname } = url.parse uriToOpen
       catch error
@@ -18,26 +16,18 @@ module.exports = IdeHaskellRepl =
 
       new IdeHaskellReplView(pathname)
 
-    @subscriptions = new CompositeDisposable
-
-    # Register command that toggles this view
-    @subscriptions.add atom.commands.add 'atom-text-editor',
+    @disposables.add atom.commands.add 'atom-text-editor',
       'ide-haskell-repl:toggle': ({target}) =>
-        @toggle(target.getModel())
+        @open target.getModel()
 
-  deactivate: ->
-    @modalPanel.destroy()
-    @subscriptions.dispose()
-    @ideHaskellReplView.destroy()
-
-  serialize: ->
-    ideHaskellReplViewState: @ideHaskellReplView.serialize()
-
-  toggle: (editor) ->
-    uri = editor.getURI()
-
-    options =
+  open: (editor) ->
+    uri = editor.getURI?()
+    atom.workspace.open "ide-haskell://repl/#{uri ? ''}",
       split: 'right'
       searchAllPanes: true
 
-    atom.workspace.open "ide-haskell://repl/#{uri}", options
+  deactivate: ->
+    @disposables.dispose()
+
+  serialize: ->
+    ideHaskellReplViewState: @ideHaskellReplView.serialize()
