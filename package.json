@@ -1,0 +1,20 @@
+{
+  "name": "ide-haskell-repl",
+  "main": "./lib/ide-haskell-repl",
+  "version": "0.0.0",
+  "description": "A short description of your package",
+  "keywords": [
+  ],
+  "activationCommands": {
+    "atom-workspace": "ide-haskell-repl:toggle"
+  },
+  "repository": "https://github.com/atom/ide-haskell-repl",
+  "license": "MIT",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "dependencies": {
+    "sub-atom": "^1.0.0",
+    "tree-kill": "^1.0.0"
+  }
+}
