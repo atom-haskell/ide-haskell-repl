@@ -60,7 +60,7 @@ class IdeHaskellReplView
       @setPrompt prompt
 
     @ghci.onExit (code) =>
-      atom.workspace.paneForItem(@).destroyItem(@)
+      atom.workspace.paneForItem(@)?.destroyItem?(@)
 
     @ghci.load(@uri) if @uri
 
