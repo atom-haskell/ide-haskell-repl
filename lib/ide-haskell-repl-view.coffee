@@ -25,6 +25,7 @@ class IdeHaskellReplView
     @output.setGrammar \
       atom.grammars.grammarForScopeName 'text.tex.latex.haskell'
     @element.appendChild @errDiv = document.createElement 'pre'
+    @element.appendChild @promptDiv = document.createElement 'div'
     @element.appendChild @editorDiv = document.createElement 'div'
     @editorDiv.classList.add('ide-haskell-repl-editor')
     @editorDiv.appendChild @editorElement =
@@ -38,6 +39,8 @@ class IdeHaskellReplView
       lines = @editor.getScreenLineCount()
       @editorDiv.style.setProperty 'height',
         "#{lines*lh}px"
+    setPrompt = (prompt) =>
+      @promptDiv.innerText = prompt+'>'
 
     @editorElement.onDidAttach -> setEditorHeight()
     @editor.onDidChange ->
@@ -65,7 +68,10 @@ class IdeHaskellReplView
             line.slice(0,10000) + '...'
           else
             line
-        if lines.slice(-1)[0] is '#~IDEHASKELLREPL~#'
+        rx = /^#~IDEHASKELLREPL~(.*)~#$/
+        if rx.test promptline = lines.slice(-1)[0]
+          [_, prompt] = rx.exec promptline
+          setPrompt prompt if prompt?
           lines =
             if lines.slice(-2)[0]
               lines.slice(0,-1)
@@ -86,7 +92,7 @@ class IdeHaskellReplView
 
     ghci = @process.process
 
-    ghci.stdin.write(":set prompt \"\\n#~IDEHASKELLREPL~#\\n\"#{EOL}")
+    ghci.stdin.write(":set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"#{EOL}")
     ghci.stdin.write(":set prompt2 \"\"#{EOL}")
     ghci.stdin.write(":set editor atom #{EOL}")
     ghci.stdin.write(":load #{@uri}#{EOL}")
