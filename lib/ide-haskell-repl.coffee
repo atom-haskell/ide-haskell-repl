@@ -3,6 +3,28 @@ IdeHaskellReplView = require './ide-haskell-repl-view'
 url = require 'url'
 
 module.exports = IdeHaskellRepl =
+  config:
+    atomPath:
+      type: 'string'
+      default: 'atom'
+      description: '''
+      Path to invoke Atom. Used for :edit command.
+      '''
+    commandPath:
+      type: 'string'
+      default: 'cabal'
+      description: '''
+      Path to REPL command, e.g. ghci, cabal or stack.
+      '''
+    commandArgs:
+      type: 'array'
+      default: ['repl']
+      items:
+        type: 'string'
+      description: '''
+      Comma-separated REPL command arguments, repl for cabal and stack,
+      or none for ghci.
+      '''
   activate: (state) ->
     @disposables = new CompositeDisposable
 

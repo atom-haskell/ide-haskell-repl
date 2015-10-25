@@ -4,9 +4,7 @@ tkill = require 'tree-kill'
 
 module.exports =
 class GHCI
-  constructor: ({cwd, atomPath}) ->
-    atomPath ?= 'atom'
-    cwd ?= atom.project.getDirectories()[0].getPath()
+  constructor: ({cwd, atomPath, command, args}) ->
     @errorBuffer = []
     @responseBuffer = []
 
@@ -17,8 +15,8 @@ class GHCI
 
     @emitter = new Emitter
     @process = new BufferedProcess
-      command: 'cabal'
-      args: ['repl']
+      command: command
+      args: args
       options: {cwd}
       stdout: (output) =>
         lines = output.toString().split(EOL).slice(0,-1) #last line is empty
