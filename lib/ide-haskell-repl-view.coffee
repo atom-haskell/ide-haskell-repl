@@ -111,10 +111,6 @@ class IdeHaskellReplView
   getTitle: ->
     "REPL: #{@uri}"
 
-  # Returns an object that can be retrieved when package is activated
-  serialize: ->
-
-  # Tear down any state and detach
   destroy: ->
     @ghci.destroy()
     @element.remove()

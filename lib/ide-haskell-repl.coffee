@@ -59,6 +59,3 @@ module.exports = IdeHaskellRepl =
 
   deactivate: ->
     @disposables.dispose()
-
-  serialize: ->
-    ideHaskellReplViewState: @ideHaskellReplView.serialize()
