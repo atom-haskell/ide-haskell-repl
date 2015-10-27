@@ -1,7 +1,0 @@
-'menu': [
-  'label': 'Haskell IDE'
-  'submenu': [
-    'label': 'Toggle REPL'
-    'command': 'ide-haskell-repl:toggle'
-  ]
-]

@@ -22,7 +22,7 @@ module.exports = IdeHaskellRepl =
       items:
         type: 'string'
       description: '''
-      Comma-separated REPL command arguments, repl for cabal and stack,
+      Comma-separated REPL command arguments, repl for cabal, ghci for stack,
       or none for ghci.
       '''
   activate: (state) ->
@@ -41,6 +41,14 @@ module.exports = IdeHaskellRepl =
     @disposables.add atom.commands.add 'atom-text-editor',
       'ide-haskell-repl:toggle': ({target}) =>
         @open target.getModel()
+
+    @disposables.add atom.menu.add [
+      'label': 'Haskell IDE'
+      'submenu': [
+        'label': 'Open REPL'
+        'command': 'ide-haskell-repl:toggle'
+      ]
+    ]
 
   open: (editor) ->
     if editor?.getGrammar?()?.scopeName?.endsWith? 'haskell'

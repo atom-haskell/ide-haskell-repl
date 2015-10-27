@@ -9,9 +9,9 @@
     "haskell",
     "repl"
   ],
-  "activationCommands": {
-    "atom-workspace": "ide-haskell-repl:toggle"
-  },
+  "activationHooks": [
+    "language-haskell:grammar-used"
+  ],
   "repository": "https://github.com/atom-haskell/ide-haskell-repl",
   "license": "MIT",
   "engines": {
