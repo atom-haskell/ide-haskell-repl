@@ -1,3 +1,6 @@
+## 0.0.3
+* Remove redundant @[0] and better errDiv styling
+
 ## 0.0.2
 * Remove bogus serialization
 * Activate on Haskell sources only
