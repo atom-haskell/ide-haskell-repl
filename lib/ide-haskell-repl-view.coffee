@@ -11,7 +11,6 @@ class IdeHaskellReplView
     # Create message element
     @element = document.createElement 'div'
     @element.classList.add('ide-haskell-repl')
-    @[0]=@element
     @element.appendChild @outputDiv = document.createElement 'div'
     @outputDiv.classList.add('ide-haskell-repl-output')
     @outputDiv.appendChild @outputElement =
@@ -24,7 +23,8 @@ class IdeHaskellReplView
     @output.setGrammar \
       atom.grammars.grammarForScopeName 'text.tex.latex.haskell'
     @element.appendChild @helpDiv = document.createElement 'div'
-    @element.appendChild @errDiv = document.createElement 'pre'
+    @element.appendChild @errDiv = document.createElement 'div'
+    @errDiv.classList.add 'ide-haskell-repl-error'
     @element.appendChild @promptDiv = document.createElement 'div'
     @element.appendChild @editorDiv = document.createElement 'div'
     @editorDiv.classList.add('ide-haskell-repl-editor')
