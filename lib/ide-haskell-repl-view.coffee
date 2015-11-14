@@ -57,19 +57,15 @@ class IdeHaskellReplView
       command: atom.config.get 'ide-haskell-repl.commandPath'
       args: atom.config.get 'ide-haskell-repl.commandArgs'
       cwd: atom.project.getDirectories()[0].getPath()
-
-    @ghci.onResponse (response) =>
-      @helpDiv.remove()
-      @log response
-
-    @ghci.onError (error) =>
-      @setError error
-
-    @ghci.onFinished (prompt) =>
-      @setPrompt prompt
-
-    @ghci.onExit (code) =>
-      atom.workspace.paneForItem(@)?.destroyItem?(@)
+      onResponse: (response) =>
+        @helpDiv.remove()
+        @log response
+      onError: (error) =>
+        @setError error
+      onFinished: (prompt) =>
+        @setPrompt prompt
+      onExit: (code) =>
+        atom.workspace.paneForItem(@)?.destroyItem?(@)
 
     @ghci.load(@uri) if @uri
 

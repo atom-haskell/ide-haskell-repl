@@ -4,7 +4,9 @@ tkill = require 'tree-kill'
 
 module.exports =
 class GHCI
-  constructor: ({cwd, atomPath, command, args}) ->
+  constructor: (opts = {}) ->
+    {cwd, atomPath, command, args} = opts
+    {onResponse, onError, onFinished, onExit} = opts
     @errorBuffer = []
     @responseBuffer = []
 
@@ -14,51 +16,74 @@ class GHCI
       item: 0
 
     @emitter = new Emitter
-    @process = new BufferedProcess
-      command: command
-      args: args
-      options: {cwd}
-      stdout: (output) =>
-        lines = output.toString().split(EOL).slice(0,-1) #last line is empty
-        lines = lines.map (line) ->
-          if line.length > 10000
-            line.slice(0,10000) + '...'
-          else
-            line
-        @responseBuffer.push lines...
-        rx = /^#~IDEHASKELLREPL~(.*)~#$/
-        rxres = rx.exec @responseBuffer.slice(-1)[0]
-        if rxres?
-          @responseBuffer =
-            if @responseBuffer.slice(-2)[0]
-              @responseBuffer.slice(0,-1)
+
+    @onResponse onResponse if onResponse?
+    @onError onError if onError?
+    @onFinished onFinished if onFinished?
+    @onExit onExit if onExit?
+
+    handleError = (error) =>
+      @emitter.emit 'response', "GHCI crashed"+EOL+"#{error}"
+      console.error error
+      @ghci = null
+      @emitter.emit 'exit', -1
+
+    try
+      @process = new BufferedProcess
+        command: command
+        args: args
+        options: {cwd}
+        stdout: (output) =>
+          lines = output.toString().split(EOL).slice(0,-1) #last line is empty
+          lines = lines.map (line) ->
+            if line.length > 10000
+              line.slice(0,10000) + '...'
             else
-              @responseBuffer.slice(0,-2)
-          if @timeout?
-            clearTimeout @timeout
-            @timeout = null
-          @finished = true
+              line
+          @responseBuffer.push lines...
+          rx = /^#~IDEHASKELLREPL~(.*)~#$/
+          rxres = rx.exec @responseBuffer.slice(-1)[0]
+          if rxres?
+            @responseBuffer =
+              if @responseBuffer.slice(-2)[0]
+                @responseBuffer.slice(0,-1)
+              else
+                @responseBuffer.slice(0,-2)
+            if @timeout?
+              clearTimeout @timeout
+              @timeout = null
+            @finished = true
 
-          if @response
-            @responseBuffer = @responseBuffer.map((line)->"< #{line}")
+            if @response
+              @responseBuffer = @responseBuffer.map((line)->"< #{line}")
 
-          # TODO: Show that command finished
-          @emitter.emit 'error', @errorBuffer.join(EOL)+EOL
-          @errorBuffer = []
-          if @started
-            @emitter.emit 'response', @responseBuffer.join(EOL)+EOL
-          @responseBuffer = []
-          @emitter.emit 'finished', rxres[1]
-      stderr: (output) =>
-        @errorBuffer.push output.split(EOL).slice(0,-1)...
-      exit: (code) =>
-        @emitter.emit 'exit', code
+            # TODO: Show that command finished
+            @emitter.emit 'error', @errorBuffer.join(EOL)+EOL
+            @errorBuffer = []
+            if @started
+              @emitter.emit 'response', @responseBuffer.join(EOL)+EOL
+            @responseBuffer = []
+            @emitter.emit 'finished', rxres[1]
+        stderr: (output) =>
+          @errorBuffer.push output.split(EOL).slice(0,-1)...
+        exit: (code) =>
+          @ghci = null
+          @emitter.emit 'exit', code
 
-    @ghci = @process.process
+      @process.onWillThrowError ({error, handle}) ->
+        handle()
+        handleError error
 
-    @ghci.stdin.write ":set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"#{EOL}"
-    @ghci.stdin.write ":set prompt2 \"\"#{EOL}"
-    @ghci.stdin.write ":set editor \"#{atomPath}\"#{EOL}"
+      @ghci = @process.process
+
+      @ghci.stdin.write ":set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"#{EOL}"
+      @ghci.stdin.write ":set prompt2 \"\"#{EOL}"
+      @ghci.stdin.write ":set editor \"#{atomPath}\"#{EOL}"
+    catch error
+      handleError error
+
+  isActive: ->
+    return !!@ghci
 
   onFinished: (callback) ->
     @emitter.on 'finished', callback
@@ -73,9 +98,11 @@ class GHCI
     @emitter.on 'exit', callback
 
   load: (uri) ->
+    return unless @isActive()
     @ghci.stdin.write ":load \"#{uri}\"#{EOL}"
 
   writeLines: (lines) =>
+    return unless @isActive()
     @started = true
     return false unless @finished and (not @timeout?)
     if (text = lines.join(EOL)) and \
@@ -119,5 +146,6 @@ class GHCI
 
   # Tear down any state and detach
   destroy: ->
+    return unless @isActive()
     @ghci.stdin.end()
     @ghci.kill()
