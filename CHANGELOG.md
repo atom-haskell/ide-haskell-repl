@@ -1,3 +1,6 @@
+## 0.0.6
+* Get Atom path from process.execPath
+
 ## 0.0.5
 * Rebindable commands, reload command
 
