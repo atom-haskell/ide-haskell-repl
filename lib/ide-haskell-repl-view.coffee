@@ -48,7 +48,7 @@ class IdeHaskellReplView
       @output.scrollToCursorPosition()
 
     @ghci = new GHCI
-      atomPath: atom.config.get 'ide-haskell-repl.atomPath'
+      atomPath: process.execPath
       command: atom.config.get 'ide-haskell-repl.commandPath'
       args: atom.config.get 'ide-haskell-repl.commandArgs'
       cwd: atom.project.getDirectories()[0].getPath()

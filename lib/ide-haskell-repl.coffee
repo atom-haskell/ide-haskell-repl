@@ -4,12 +4,6 @@ url = require 'url'
 
 module.exports = IdeHaskellRepl =
   config:
-    atomPath:
-      type: 'string'
-      default: 'atom'
-      description: '''
-      Path to invoke Atom. Used for :edit command.
-      '''
     commandPath:
       type: 'string'
       default: 'cabal'
