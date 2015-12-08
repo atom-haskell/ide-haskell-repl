@@ -1,3 +1,6 @@
+## 0.0.9
+* Work around Atom not displaying keybindings
+
 ## 0.0.8
 * Use keymaps for default bindings, OSX bindings
 
