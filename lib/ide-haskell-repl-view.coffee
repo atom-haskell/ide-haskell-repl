@@ -2,9 +2,10 @@ SubAtom = require 'sub-atom'
 {Range} = require 'atom'
 GHCI = require './ghci'
 
+
 module.exports =
 class IdeHaskellReplView
-  constructor: (@uri) ->
+  constructor: (@uri, @upi) ->
     # Create root element
     @disposables = new SubAtom
 
@@ -22,8 +23,9 @@ class IdeHaskellReplView
     @output.getDecorations(class: 'cursor-line', type: 'line')[0].destroy()
     @output.setGrammar \
       atom.grammars.grammarForScopeName 'text.tex.latex.haskell'
-    @element.appendChild @errDiv = document.createElement 'div'
-    @errDiv.classList.add 'ide-haskell-repl-error'
+    unless @upi?
+      @element.appendChild @errDiv = document.createElement 'div'
+      @errDiv.classList.add 'ide-haskell-repl-error'
     @element.appendChild @promptDiv = document.createElement 'div'
     @element.appendChild @editorDiv = document.createElement 'div'
     @editorDiv.classList.add('ide-haskell-repl-editor')
@@ -47,11 +49,13 @@ class IdeHaskellReplView
     @output.onDidChange ({start, end}) =>
       @output.scrollToCursorPosition()
 
+    @cwd = atom.project.getDirectories()[0]
+
     @ghci = new GHCI
       atomPath: process.execPath
       command: atom.config.get 'ide-haskell-repl.commandPath'
       args: atom.config.get 'ide-haskell-repl.commandArgs'
-      cwd: atom.project.getDirectories()[0].getPath()
+      cwd: @cwd.getPath()
       onResponse: (response) =>
         @log response
       onError: (error) =>
@@ -86,7 +90,57 @@ class IdeHaskellReplView
     @promptDiv.innerText = prompt + '>'
 
   setError: (err) ->
-    @errDiv.innerText = err
+    if @errDiv?
+      @errDiv.innerText = err
+    else
+      @upi.setMessages @splitErrBuffer err
+
+  splitErrBuffer: (errBuffer) ->
+    # Start of a Cabal message
+    startOfMessage = /\n\S/
+    som = errBuffer.search startOfMessage
+    msgs = while som >= 0
+      errMsg     = errBuffer.substr(0, som + 1)
+      errBuffer = errBuffer.substr(som + 1)
+      som        = errBuffer.search startOfMessage
+      @parseMessage errMsg
+    # Try to parse whatever is left in the buffer
+    msgs.push @parseMessage errBuffer
+    msgs.filter (msg) -> msg?
+
+  unindentMessage: (message) ->
+    lines = message.split('\n')
+    minIndent = null
+    for line in lines
+      match = line.match /^[\t\s]*/
+      lineIndent = match[0].length
+      minIndent = lineIndent if lineIndent < minIndent or not minIndent?
+    if minIndent?
+      lines = for line in lines
+        line.slice(minIndent)
+    lines.join('\n')
+
+
+  parseMessage: (raw) ->
+    # Regular expression to match against a location in a cabal msg (Foo.hs:3:2)
+    # The [^] syntax basically means "anything at all" (including newlines)
+    matchLoc = /(\S+):(\d+):(\d+):( Warning:)?\n?([^]*)/
+    if raw.trim() != ""
+      matched = raw.match(matchLoc)
+      if matched?
+        [file, line, col, rawTyp, msg] = matched.slice(1, 6)
+        typ = if rawTyp? then "warning" else "error"
+        if file is '<interactive>'
+          file = undefined
+          typ = 'repl'
+
+        uri: if file? then @cwd.getFile(@cwd.relativize(file)).getPath()
+        position: [parseInt(line) - 1, parseInt(col) - 1]
+        message: @unindentMessage(msg.trimRight())
+        severity: typ
+      else
+        message: raw
+        severity: 'repl'
 
   log: (text) ->
     eofRange = Range.fromPointWithDelta(@output.getEofBufferPosition(), 0, 0)
