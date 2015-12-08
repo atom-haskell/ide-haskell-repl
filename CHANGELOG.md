@@ -1,3 +1,6 @@
+## 0.0.8
+* Use keymaps for default bindings, OSX bindings
+
 ## 0.0.7
 * Use ide-haskell's UPI for error/warning output
 
