@@ -1,3 +1,6 @@
+## 0.0.7
+* Use ide-haskell's UPI for error/warning output
+
 ## 0.0.6
 * Get Atom path from process.execPath
 
