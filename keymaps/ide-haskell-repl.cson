@@ -1,4 +1,10 @@
-'.platform-linux atom-text-editor.ide-haskell-repl, .platform-win32 atom-text-editor.ide-haskell-repl':
+'.platform-linux atom-text-editor.ide-haskell-repl':
+  'shift-enter': 'ide-haskell-repl:exec-command'
+  'shift-up': 'ide-haskell-repl:history-back'
+  'shift-down': 'ide-haskell-repl:history-forward'
+  'ctrl-shift-r': 'ide-haskell-repl:ghci-reload'
+
+'.platform-win32 atom-text-editor.ide-haskell-repl':
   'shift-enter': 'ide-haskell-repl:exec-command'
   'shift-up': 'ide-haskell-repl:history-back'
   'shift-down': 'ide-haskell-repl:history-forward'
