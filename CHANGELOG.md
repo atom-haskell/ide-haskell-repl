@@ -1,3 +1,6 @@
+## 0.0.5
+* Rebindable commands, reload command
+
 ## 0.0.4
 * Handle some errors
 
