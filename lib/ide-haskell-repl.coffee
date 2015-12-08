@@ -50,23 +50,6 @@ module.exports = IdeHaskellRepl =
       'ide-haskell-repl:history-forward': commandFunction 'historyForward'
       'ide-haskell-repl:ghci-reload': commandFunction 'ghciReload'
 
-    setDefaultCommand = (command, key) ->
-      command = "ide-haskell-repl:#{command}"
-      unless atom.keymaps.findKeyBindings({command}).length
-        o = {}
-        o[key] = command
-        atom.keymaps.add 'ide-haskell-repl',
-          'atom-text-editor.ide-haskell-repl': o
-
-    defaultCommands =
-      'shift-enter': 'exec-command'
-      'shift-up': 'history-back'
-      'shift-down': 'history-forward'
-      'ctrl-shift-r': 'ghci-reload'
-
-    for key, command of defaultCommands
-      setDefaultCommand command, key
-
     @disposables.add atom.menu.add [
       'label': 'Haskell IDE'
       'submenu': [

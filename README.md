@@ -17,13 +17,6 @@ To send command, or move through history, you can use the following commands whe
 
 Note that this commands are bound specifically to repl editor, which has CSS selector of `atom-text-editor.ide-haskell-repl`.
 
-By default, if there are no other bindings, the following are used:
-
-* `'shift-enter': 'exec-command'`
-* `'shift-up': 'history-back'`
-* `'shift-down': 'history-forward'`
-* `'ctrl-shift-r': 'ghci-reload'`
-
 You can rebind those in your keymap, e.g.
 
 ```
@@ -32,3 +25,5 @@ You can rebind those in your keymap, e.g.
   'ctrl-up': 'ide-haskell-repl:history-back'
   'ctrl-down': 'ide-haskell-repl:history-forward'
 ```
+
+Just don't forget to disable default bindings in ide-haskell-repl settings, if you don't want them.
