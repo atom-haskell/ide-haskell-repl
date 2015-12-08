@@ -23,7 +23,7 @@ class GHCI
     @onExit onExit if onExit?
 
     handleError = (error) =>
-      @emitter.emit 'response', "GHCI crashed"+EOL+"#{error}"
+      @emitter.emit 'response', "GHCI crashed" + EOL + "#{error}"
       console.error error
       @ghci = null
       @emitter.emit 'exit', -1
@@ -34,10 +34,10 @@ class GHCI
         args: args
         options: {cwd}
         stdout: (output) =>
-          lines = output.toString().split(EOL).slice(0,-1) #last line is empty
+          lines = output.toString().split(EOL).slice(0, -1) #last line is empty
           lines = lines.map (line) ->
             if line.length > 10000
-              line.slice(0,10000) + '...'
+              line.slice(0, 10000) + '...'
             else
               line
           @responseBuffer.push lines...
@@ -46,26 +46,26 @@ class GHCI
           if rxres?
             @responseBuffer =
               if @responseBuffer.slice(-2)[0]
-                @responseBuffer.slice(0,-1)
+                @responseBuffer.slice(0, -1)
               else
-                @responseBuffer.slice(0,-2)
+                @responseBuffer.slice(0, -2)
             if @timeout?
               clearTimeout @timeout
               @timeout = null
             @finished = true
 
             if @response
-              @responseBuffer = @responseBuffer.map((line)->"< #{line}")
+              @responseBuffer = @responseBuffer.map((line) -> "< #{line}")
 
             # TODO: Show that command finished
-            @emitter.emit 'error', @errorBuffer.join(EOL)+EOL
+            @emitter.emit 'error', @errorBuffer.join(EOL) + EOL
             @errorBuffer = []
             if @started
-              @emitter.emit 'response', @responseBuffer.join(EOL)+EOL
+              @emitter.emit 'response', @responseBuffer.join(EOL) + EOL
             @responseBuffer = []
             @emitter.emit 'finished', rxres[1]
         stderr: (output) =>
-          @errorBuffer.push output.split(EOL).slice(0,-1)...
+          @errorBuffer.push output.split(EOL).slice(0, -1)...
         exit: (code) =>
           @ghci = null
           @emitter.emit 'exit', code
@@ -106,7 +106,7 @@ class GHCI
     @started = true
     return false unless @finished and (not @timeout?)
     if (text = lines.join(EOL)) and \
-        @history.back[@history.back.length-1] isnt text
+        @history.back[@history.back.length - 1] isnt text
       @history.back.push text
     @history.curr = ''
     @history.item = @history.back.length
@@ -123,8 +123,8 @@ class GHCI
     @responseBuffer = []
     @ghci.stdin.write ":{#{EOL}"
     lines.forEach (line) =>
-      @ghci.stdin.write line+EOL
-      @emitter.emit 'response', '> '+line+EOL
+      @ghci.stdin.write line + EOL
+      @emitter.emit 'response', '> ' + line + EOL
     @ghci.stdin.write ":}#{EOL}"
     @ghci.stdout.resume()
     @ghci.stderr.resume()

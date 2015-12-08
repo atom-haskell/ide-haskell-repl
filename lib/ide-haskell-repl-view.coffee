@@ -22,7 +22,6 @@ class IdeHaskellReplView
     @output.getDecorations(class: 'cursor-line', type: 'line')[0].destroy()
     @output.setGrammar \
       atom.grammars.grammarForScopeName 'text.tex.latex.haskell'
-    @element.appendChild @helpDiv = document.createElement 'div'
     @element.appendChild @errDiv = document.createElement 'div'
     @errDiv.classList.add 'ide-haskell-repl-error'
     @element.appendChild @promptDiv = document.createElement 'div'
@@ -30,17 +29,13 @@ class IdeHaskellReplView
     @editorDiv.classList.add('ide-haskell-repl-editor')
     @editorDiv.appendChild @editorElement =
       document.createElement('atom-text-editor')
+    @editorElement.classList.add 'ide-haskell-repl'
     @editor = @editorElement.getModel()
     @editor.setLineNumberGutterVisible(false)
     @editor.setGrammar \
       atom.grammars.grammarForScopeName 'source.haskell'
 
-    @helpDiv.innerText = """
-    To submit command, use shift+enter
-    To navigate though command history, use shift+↑ and shift+↓
-    """
-
-    setTimeout (=>@editorElement.focus()),100
+    setTimeout (=> @editorElement.focus()), 100
 
     @editorElement.onDidAttach =>
       @setEditorHeight()
@@ -58,7 +53,6 @@ class IdeHaskellReplView
       args: atom.config.get 'ide-haskell-repl.commandArgs'
       cwd: atom.project.getDirectories()[0].getPath()
       onResponse: (response) =>
-        @helpDiv.remove()
         @log response
       onError: (error) =>
         @setError error
@@ -69,35 +63,33 @@ class IdeHaskellReplView
 
     @ghci.load(@uri) if @uri
 
-    @disposables.add @element, "keydown",
-      ({keyCode, shiftKey}) =>
-        if shiftKey
-          switch keyCode
-            when 13
-              if @ghci.writeLines @editor.getBuffer().getLines()
-                @editor.setText ''
-              return false
-            when 38
-              @editor.setText @ghci.historyBack(@editor.getText())
-              return false
-            when 40
-              @editor.setText @ghci.historyForward()
-              return false
+  execCommand: ->
+    if @ghci.writeLines @editor.getBuffer().getLines()
+      @editor.setText ''
+
+  historyBack: ->
+    @editor.setText @ghci.historyBack(@editor.getText())
+
+  historyForward: ->
+    @editor.setText @ghci.historyForward()
+
+  ghciReload: ->
+    @ghci.writeLines [':reload']
 
   setEditorHeight: ->
     lh = @editor.getLineHeightInPixels()
     lines = @editor.getScreenLineCount()
     @editorDiv.style.setProperty 'height',
-      "#{lines*lh}px"
+      "#{lines * lh}px"
 
   setPrompt: (prompt) ->
-    @promptDiv.innerText = prompt+'>'
+    @promptDiv.innerText = prompt + '>'
 
   setError: (err) ->
     @errDiv.innerText = err
 
   log: (text) ->
-    eofRange = Range.fromPointWithDelta(@output.getEofBufferPosition(),0,0)
+    eofRange = Range.fromPointWithDelta(@output.getEofBufferPosition(), 0, 0)
     @output.setTextInBufferRange eofRange, text
     @lastPos = @output.getEofBufferPosition()
 
