@@ -1,3 +1,7 @@
+## 0.0.10
+* Merge pull request #13 from jjay/master
+* Focus repl input on repl focus
+
 ## 0.0.9
 * Work around Atom not displaying keybindings
 
