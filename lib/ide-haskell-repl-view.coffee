@@ -37,7 +37,11 @@ class IdeHaskellReplView
     @editor.setGrammar \
       atom.grammars.grammarForScopeName 'source.haskell'
 
-    setTimeout (=> @editorElement.focus()), 100
+    @disposables.add atom.workspace.onDidChangeActivePaneItem (item) =>
+      if item == @
+        setTimeout =>
+          @editorElement.focus()
+        , 1
 
     @editorElement.onDidAttach =>
       @setEditorHeight()
@@ -156,3 +160,4 @@ class IdeHaskellReplView
   destroy: ->
     @ghci.destroy()
     @element.remove()
+    @disposables.dispose()
