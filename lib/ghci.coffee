@@ -65,9 +65,13 @@ class GHCI
             @responseBuffer = []
             @emitter.emit 'finished', rxres[1]
         stderr: (output) =>
+          output.split(EOL).forEach (line) ->
+            console.warn "ide-haskell-repl: #{line}"
           @errorBuffer.push output.split(EOL).slice(0, -1)...
         exit: (code) =>
           @ghci = null
+          if code isnt 0
+            @emitter.emit 'error', @errorBuffer.join(EOL) + EOL
           @emitter.emit 'exit', code
 
       @process.onWillThrowError ({error, handle}) ->
