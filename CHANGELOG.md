@@ -1,3 +1,6 @@
+## 0.0.11
+* Log errors on exit, log stderr in console
+
 ## 0.0.10
 * Merge pull request #13 from jjay/master
 * Focus repl input on repl focus
