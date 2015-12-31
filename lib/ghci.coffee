@@ -115,7 +115,8 @@ class GHCI
     @history.curr = ''
     @history.item = @history.back.length
     @timeout = setTimeout (=>
-      tkill @ghci.pid, 'SIGINT'
+      if @ghci?
+        tkill @ghci.pid, 'SIGINT'
       @finished = true
       @timeout = null
       ), 1000
