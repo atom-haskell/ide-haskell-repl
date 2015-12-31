@@ -1,3 +1,6 @@
+## 0.0.12
+* Fix #14
+
 ## 0.0.11
 * Log errors on exit, log stderr in console
 
