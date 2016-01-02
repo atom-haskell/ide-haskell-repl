@@ -2,6 +2,7 @@ SubAtom = require 'sub-atom'
 {Range} = require 'atom'
 GHCI = require './ghci'
 Util = require 'atom-haskell-utils'
+fs = require 'fs'
 
 
 module.exports =
@@ -56,21 +57,30 @@ class IdeHaskellReplView
 
     @cwd = Util.getRootDir @uri
 
-    @ghci = new GHCI
-      atomPath: process.execPath
-      command: atom.config.get 'ide-haskell-repl.commandPath'
-      args: atom.config.get 'ide-haskell-repl.commandArgs'
-      cwd: @cwd.getPath()
-      onResponse: (response) =>
-        @log response
-      onError: (error) =>
-        @setError error
-      onFinished: (prompt) =>
-        @setPrompt prompt
-      onExit: (code) =>
-        atom.workspace.paneForItem(@)?.destroyItem?(@)
+    [cabalFile] =
+      @cwd.getEntriesSync().filter (file) ->
+        file.isFile() and file.getBaseName().endsWith '.cabal'
 
-    @ghci.load(@uri) if @uri
+    Util.getComponentFromFile cabalFile?.readSync?(),
+      @cwd.relativize(@uri),
+      (components) =>
+        [comp] = components
+        @ghci = new GHCI
+          atomPath: process.execPath
+          command: atom.config.get 'ide-haskell-repl.commandPath'
+          args: atom.config.get 'ide-haskell-repl.commandArgs'
+          component: comp
+          cwd: @cwd.getPath()
+          onResponse: (response) =>
+            @log response
+          onError: (error) =>
+            @setError error
+          onFinished: (prompt) =>
+            @setPrompt prompt
+          onExit: (code) =>
+            atom.workspace.paneForItem(@)?.destroyItem?(@)
+
+        @ghci.load(@uri) if @uri
 
   execCommand: ->
     if @ghci.writeLines @editor.getBuffer().getLines()
