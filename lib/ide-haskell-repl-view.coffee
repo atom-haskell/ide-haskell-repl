@@ -1,6 +1,7 @@
 SubAtom = require 'sub-atom'
 {Range} = require 'atom'
 GHCI = require './ghci'
+Util = require 'atom-haskell-utils'
 
 
 module.exports =
@@ -53,7 +54,7 @@ class IdeHaskellReplView
     @output.onDidChange ({start, end}) =>
       @output.scrollToCursorPosition()
 
-    @cwd = atom.project.getDirectories()[0]
+    @cwd = Util.getRootDir @uri
 
     @ghci = new GHCI
       atomPath: process.execPath

@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "sub-atom": "^1.0.0",
-    "tree-kill": "^1.0.0"
+    "tree-kill": "^1.0.0",
+    "atom-haskell-utils": "^0.2.0"
   },
   "consumedServices": {
     "ide-haskell-upi": {
