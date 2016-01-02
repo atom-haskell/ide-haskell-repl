@@ -1,3 +1,6 @@
+## 0.0.14
+* Fix #2 (cabal component selection)
+
 ## 0.0.13
 * Fix #1
 
