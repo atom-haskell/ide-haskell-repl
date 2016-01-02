@@ -2,7 +2,6 @@ SubAtom = require 'sub-atom'
 {Range} = require 'atom'
 GHCI = require './ghci'
 Util = require 'atom-haskell-utils'
-fs = require 'fs'
 
 
 module.exports =
