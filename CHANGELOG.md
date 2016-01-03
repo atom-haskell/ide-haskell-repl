@@ -1,3 +1,7 @@
+## 0.0.15
+* Use synchronous call to getComponentFromFile(Sync)
+* Remove unneeded import
+
 ## 0.0.14
 * Fix #2 (cabal component selection)
 
