@@ -60,26 +60,24 @@ class IdeHaskellReplView
       @cwd.getEntriesSync().filter (file) ->
         file.isFile() and file.getBaseName().endsWith '.cabal'
 
-    Util.getComponentFromFile cabalFile?.readSync?(),
-      @cwd.relativize(@uri),
-      (components) =>
-        [comp] = components
-        @ghci = new GHCI
-          atomPath: process.execPath
-          command: atom.config.get 'ide-haskell-repl.commandPath'
-          args: atom.config.get 'ide-haskell-repl.commandArgs'
-          component: comp
-          cwd: @cwd.getPath()
-          onResponse: (response) =>
-            @log response
-          onError: (error) =>
-            @setError error
-          onFinished: (prompt) =>
-            @setPrompt prompt
-          onExit: (code) =>
-            atom.workspace.paneForItem(@)?.destroyItem?(@)
+    [comp] = Util.getComponentFromFileSync cabalFile?.readSync?(), @cwd.relativize(@uri)
 
-        @ghci.load(@uri) if @uri
+    @ghci = new GHCI
+      atomPath: process.execPath
+      command: atom.config.get 'ide-haskell-repl.commandPath'
+      args: atom.config.get 'ide-haskell-repl.commandArgs'
+      component: comp
+      cwd: @cwd.getPath()
+      onResponse: (response) =>
+        @log response
+      onError: (error) =>
+        @setError error
+      onFinished: (prompt) =>
+        @setPrompt prompt
+      onExit: (code) =>
+        atom.workspace.paneForItem(@)?.destroyItem?(@)
+
+    @ghci.load(@uri) if @uri
 
   execCommand: ->
     if @ghci.writeLines @editor.getBuffer().getLines()
