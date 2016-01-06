@@ -1,3 +1,6 @@
+## 0.0.16
+* Fix isDirectory bug
+
 ## 0.0.15
 * Use synchronous call to getComponentFromFile(Sync)
 * Remove unneeded import
