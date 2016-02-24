@@ -60,12 +60,25 @@ class IdeHaskellReplView
       @cwd.getEntriesSync().filter (file) ->
         file.isFile() and file.getBaseName().endsWith '.cabal'
 
-    [comp] = Util.getComponentFromFileSync cabalFile?.readSync?(), @cwd.relativize(@uri)
+    cabalContents = cabalFile?.readSync?()
+
+    cabal = Util.parseDotCabalSync cabalContents
+
+    [comp] = Util.getComponentFromFileSync cabalContents, @cwd.relativize(@uri)
+
+    commandPath = atom.config.get 'ide-haskell-repl.commandPath'
+    commandArgs = atom.config.get 'ide-haskell-repl.commandArgs'
+
+    if commandPath.endsWith 'stack'
+      if comp.startsWith 'lib:'
+        comp = 'lib'
+      comp = "#{cabal.name}:#{comp}"
+      commandArgs.push '--main-is'
 
     @ghci = new GHCI
       atomPath: process.execPath
-      command: atom.config.get 'ide-haskell-repl.commandPath'
-      args: atom.config.get 'ide-haskell-repl.commandArgs'
+      command: commandPath
+      args: commandArgs
       component: comp
       cwd: @cwd.getPath()
       onResponse: (response) =>
