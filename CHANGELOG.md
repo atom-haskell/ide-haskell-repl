@@ -1,3 +1,7 @@
+## 0.0.18
+* Special handling of components for stack
+* atom-haskell-utils version bump
+
 ## 0.0.17
 * BUGFIX: atom-haskell-utils bump
 
