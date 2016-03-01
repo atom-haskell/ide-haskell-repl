@@ -69,7 +69,7 @@ class IdeHaskellReplView
     commandPath = atom.config.get 'ide-haskell-repl.commandPath'
     commandArgs = atom.config.get 'ide-haskell-repl.commandArgs'
 
-    if commandPath.endsWith 'stack'
+    if comp? and commandPath.endsWith 'stack'
       if comp.startsWith 'lib:'
         comp = 'lib'
       comp = "#{cabal.name}:#{comp}"
