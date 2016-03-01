@@ -1,3 +1,6 @@
+## 0.0.19
+* Quick fix for #18
+
 ## 0.0.18
 * Special handling of components for stack
 * atom-haskell-utils version bump
