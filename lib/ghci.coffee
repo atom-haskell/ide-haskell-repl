@@ -135,7 +135,9 @@ class GHCI
       @ghci.stderr.resume()
       return true
     else
-      return false
+      @ghci.stdin.write lines.join(EOL)
+      @emitter.emit 'response', "> \"#{lines.join('␊')}\"#{EOL}"
+      return true
 
   historyBack: (current) ->
     if @history.item is @history.back.length
