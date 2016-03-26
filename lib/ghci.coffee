@@ -52,9 +52,6 @@ class GHCI
                 @responseBuffer.slice(0, -1)
               else
                 @responseBuffer.slice(0, -2)
-            if @timeout?
-              clearTimeout @timeout
-              @timeout = null
             @finished = true
 
             if @response
@@ -108,35 +105,37 @@ class GHCI
     return unless @isActive()
     @ghci.stdin.write ":load \"#{uri}\"#{EOL}"
 
+  interrupt: ->
+    if @ghci?
+      tkill @ghci.pid, 'SIGINT'
+    @finished = true
+    @emitter.emit 'response', 'Interrupted' + EOL
+
   writeLines: (lines) =>
     return unless @isActive()
     @started = true
-    return false unless @finished and (not @timeout?)
-    if (text = lines.join(EOL)) and \
-        @history.back[@history.back.length - 1] isnt text
-      @history.back.push text
-    @history.curr = ''
-    @history.item = @history.back.length
-    @timeout = setTimeout (=>
-      if @ghci?
-        tkill @ghci.pid, 'SIGINT'
-      @finished = true
-      @timeout = null
-      ), 1000
-    @finished = false
-    @response = (not lines[0].startsWith ':') or lines[0].startsWith ':type'
-    @ghci.stdout.pause()
-    @ghci.stderr.pause()
-    @errorBuffer = []
-    @responseBuffer = []
-    @ghci.stdin.write ":{#{EOL}"
-    lines.forEach (line) =>
-      @ghci.stdin.write line + EOL
-      @emitter.emit 'response', '> ' + line + EOL
-    @ghci.stdin.write ":}#{EOL}"
-    @ghci.stdout.resume()
-    @ghci.stderr.resume()
-    return true
+    if @finished
+      if (text = lines.join(EOL)) and \
+          @history.back[@history.back.length - 1] isnt text
+        @history.back.push text
+      @history.curr = ''
+      @history.item = @history.back.length
+      @finished = false
+      @response = (not lines[0].startsWith ':') or lines[0].startsWith ':type'
+      @ghci.stdout.pause()
+      @ghci.stderr.pause()
+      @errorBuffer = []
+      @responseBuffer = []
+      @ghci.stdin.write ":{#{EOL}"
+      lines.forEach (line) =>
+        @ghci.stdin.write line + EOL
+        @emitter.emit 'response', '> ' + line + EOL
+      @ghci.stdin.write ":}#{EOL}"
+      @ghci.stdout.resume()
+      @ghci.stderr.resume()
+      return true
+    else
+      return false
 
   historyBack: (current) ->
     if @history.item is @history.back.length

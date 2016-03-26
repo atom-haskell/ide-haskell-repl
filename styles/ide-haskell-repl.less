@@ -3,6 +3,7 @@
 // See https://github.com/atom/atom-dark-ui/blob/master/styles/ui-variables.less
 // for a full listing of what's available.
 @import "ui-variables";
+@import "octicon-utf-codes";
 
 div.ide-haskell-repl {
   display: flex;
@@ -22,6 +23,13 @@ div.ide-haskell-repl {
     flex-grow: 0;
     flex-shrink: 0;
     position: relative;
+    display: flex;
+    flex-direction: row;
+    .editor-container {
+      flex-grow: 1;
+      flex-shrink: 1;
+      position: relative;
+    }
   }
   .ide-haskell-repl-error {
     max-height: 50%;
@@ -29,5 +37,34 @@ div.ide-haskell-repl {
     overflow: auto;
     background-color: @pane-item-background-color;
     border-top: double 3px @pane-item-border-color;
+  }
+  button.interrupt {
+    width: 2em;
+    flex-grow: 0;
+    flex-shrink: 0;
+    border-radius: @component-border-radius;
+    display: inline-block;
+    line-height: 1.8em;
+    color: @text-color-subtle;
+    border: 1px solid @button-border-color;
+    background: fade(@button-background-color,33%);
+    cursor: pointer;
+    vertical-align: middle;
+    &:active {
+      background: transparent;
+    }
+    &:before {
+      font-family: 'Octicons Regular';
+      font-weight: normal;
+      font-style: normal;
+      display: inline-block;
+      line-height: 1;
+      -webkit-font-smoothing: antialiased;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+      font-size: 1.7em;
+      content: @x;
+    }
   }
 }

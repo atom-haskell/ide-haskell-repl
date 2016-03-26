@@ -30,9 +30,14 @@ class IdeHaskellReplView
     @element.appendChild @promptDiv = document.createElement 'div'
     @element.appendChild @editorDiv = document.createElement 'div'
     @editorDiv.classList.add('ide-haskell-repl-editor')
-    @editorDiv.appendChild @editorElement =
+    @editorDiv.appendChild @editorContainer = document.createElement 'div'
+    @editorContainer.classList.add 'editor-container'
+    @editorContainer.appendChild @editorElement =
       document.createElement('atom-text-editor')
     @editorElement.classList.add 'ide-haskell-repl'
+    @editorDiv.appendChild @interruptButton =
+      document.createElement('button')
+    @interruptButton.classList.add 'interrupt'
     @editor = @editorElement.getModel()
     @editor.setLineNumberGutterVisible(false)
     @editor.setGrammar \
@@ -43,6 +48,9 @@ class IdeHaskellReplView
         setTimeout =>
           @editorElement.focus()
         , 1
+
+    @disposables.add @interruptButton, 'click', =>
+      @ghci?.interrupt()
 
     @editorElement.onDidAttach =>
       @setEditorHeight()
