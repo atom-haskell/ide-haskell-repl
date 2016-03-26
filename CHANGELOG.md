@@ -1,3 +1,7 @@
+## 0.0.20
+* Ability to supply stdin
+* Interrupt button
+
 ## 0.0.19
 * Quick fix for #18
 
