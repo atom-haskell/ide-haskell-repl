@@ -136,7 +136,7 @@ class GHCI
       return true
     else
       @ghci.stdin.write lines.join(EOL)
-      @emitter.emit 'response', "> \"#{lines.join('␊')}\"#{EOL}"
+      @emitter.emit 'response', "> \"#{lines.join('\\n')}\"#{EOL}"
       return true
 
   historyBack: (current) ->
