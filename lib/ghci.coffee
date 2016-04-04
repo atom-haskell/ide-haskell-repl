@@ -55,7 +55,7 @@ class GHCI
             @finished = true
 
             if @response
-              @responseBuffer = @responseBuffer.map((line) -> "< #{line}")
+              @responseBuffer = @responseBuffer.map((line) -> "#{line}")
 
             # TODO: Show that command finished
             @emitter.emit 'error', @errorBuffer.join(EOL) + EOL
