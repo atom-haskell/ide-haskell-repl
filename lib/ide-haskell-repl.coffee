@@ -10,6 +10,7 @@ module.exports = IdeHaskellRepl =
       description: '''
       Path to REPL command, e.g. ghci, cabal or stack.
       '''
+      order: 10
     commandArgs:
       type: 'array'
       default: ['repl']
@@ -19,6 +20,7 @@ module.exports = IdeHaskellRepl =
       Comma-separated REPL command arguments, repl for cabal, ghci for stack,
       or none for ghci.
       '''
+      order: 20
   activate: (state) ->
     @disposables = new CompositeDisposable
     @editorMap = new WeakMap
