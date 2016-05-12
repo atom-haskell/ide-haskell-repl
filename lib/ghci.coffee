@@ -35,9 +35,11 @@ class GHCI
       @process = new BufferedProcess
         command: command
         args: args
-        options: {cwd}
+        options:
+          cwd: cwd
+          encoding: 'utf8'
         stdout: (output) =>
-          lines = output.toString().split(EOL).slice(0, -1) #last line is empty
+          lines = output.split(EOL).slice(0, -1) #last line is empty
           lines = lines.map (line) ->
             if line.length > 10000
               line.slice(0, 10000) + '...'
