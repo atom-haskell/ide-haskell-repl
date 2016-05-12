@@ -1,3 +1,7 @@
+## 0.0.21
+* Set ghc process encoding
+* Use n instead of ␊
+
 ## 0.0.20
 * Ability to supply stdin
 * Interrupt button
