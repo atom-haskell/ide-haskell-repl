@@ -1,3 +1,8 @@
+## 0.0.22
+* AHS bump
+* Atom-haskell-utils bump
+* Set settings order
+
 ## 0.0.21
 * Set ghc process encoding
 * Use n instead of ␊
