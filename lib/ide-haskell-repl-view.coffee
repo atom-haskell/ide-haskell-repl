@@ -59,9 +59,6 @@ class IdeHaskellReplView
 
     @editor.setText ''
 
-    @output.onDidChange ({start, end}) =>
-      @output.scrollToCursorPosition()
-
     @cwd = Util.getRootDir @uri
 
     [cabalFile] =
@@ -179,6 +176,7 @@ class IdeHaskellReplView
     eofRange = Range.fromPointWithDelta(@output.getEofBufferPosition(), 0, 0)
     @output.setTextInBufferRange eofRange, text
     @lastPos = @output.getEofBufferPosition()
+    @output.scrollToBufferPosition(@lastPos)
 
   getURI: ->
     "ide-haskell://repl/#{@uri}"
