@@ -1,3 +1,6 @@
+## 0.0.23
+* Fix #23
+
 ## 0.0.22
 * AHS bump
 * Atom-haskell-utils bump
