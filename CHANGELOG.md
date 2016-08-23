@@ -1,3 +1,6 @@
+## 0.1.2
+* Close repl if no builder selected
+
 ## 0.1.1
 * Fix #28
 * Hack to suppress ac-p, ahu bump
