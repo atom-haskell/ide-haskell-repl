@@ -1,6 +1,6 @@
 # IDE-Haskell REPL
 
-***This is a very early prototype.***
+***This package is in beta.***
 
 This package provides a way to interact with ghci (or, more precisely, `cabal repl`) from Atom.
 
