@@ -61,6 +61,21 @@ class IdeHaskellReplView
 
     @cwd = Util.getRootDir @uri
 
+    builder = try @upi.getConfigParam('ide-haskell-cabal', 'builder')
+    builder ?= atom.config.get 'ide-haskell-repl.defaultRepl'
+
+    setImmediate =>
+      if typeof builder.then is 'function'
+        builder.then => @runREPL(builder.name)
+      else
+        @runREPL(builder.name)
+
+  runREPL: (builder) ->
+    subst =
+      'nix-build': 'cabal'
+      'none': 'ghci'
+    builder = subst[builder] ? builder
+
     [cabalFile] =
       @cwd.getEntriesSync().filter (file) ->
         file.isFile() and file.getBaseName().endsWith '.cabal'
@@ -71,20 +86,34 @@ class IdeHaskellReplView
 
     [comp] = Util.getComponentFromFileSync cabalContents, @cwd.relativize(@uri)
 
-    commandPath = atom.config.get 'ide-haskell-repl.commandPath'
-    commandArgs = atom.config.get 'ide-haskell-repl.commandArgs'
+    commandPath = atom.config.get "ide-haskell-repl.#{builder}Path"
 
-    if comp? and commandPath.endsWith 'stack'
-      if comp.startsWith 'lib:'
-        comp = 'lib'
-      comp = "#{cabal.name}:#{comp}"
-      commandArgs.push '--main-is'
+    args =
+      stack: ['ghci']
+      cabal: ['repl']
+      ghci: []
+    extraArgs =
+      stack: (x) -> "--ghci-options=\"#{x}\""
+      cabal: (x) -> "--ghc-option=#{x}"
+      ghci: (x) -> x
+
+    commandArgs = args[builder] ? throw new Error("Unknown builder #{builder}")
+
+    commandArgs.push (atom.config.get('ide-haskell-repl.extraArgs').map extraArgs[builder])...
+
+    if comp?
+      if builder is 'stack'
+        if comp.startsWith 'lib:'
+          comp = 'lib'
+        comp = "#{cabal.name}:#{comp}"
+        commandArgs.push '--main-is', comp
+      else
+        commandArgs.push comp
 
     @ghci = new GHCI
       atomPath: process.execPath
       command: commandPath
       args: commandArgs
-      component: comp
       cwd: @cwd.getPath()
       onResponse: (response) =>
         @log response
@@ -185,6 +214,6 @@ class IdeHaskellReplView
     "REPL: #{@uri}"
 
   destroy: ->
-    @ghci.destroy()
+    @ghci?.destroy?()
     @element.remove()
     @disposables.dispose()

@@ -5,13 +5,10 @@ tkill = require 'tree-kill'
 module.exports =
 class GHCI
   constructor: (opts = {}) ->
-    {cwd, atomPath, command, args, component} = opts
+    {cwd, atomPath, command, args} = opts
     {onResponse, onError, onFinished, onExit} = opts
     @errorBuffer = []
     @responseBuffer = []
-
-    if component?
-      args.push component
 
     @history =
       back: []

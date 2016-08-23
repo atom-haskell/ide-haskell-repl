@@ -4,23 +4,38 @@ url = require 'url'
 
 module.exports = IdeHaskellRepl =
   config:
-    commandPath:
+    defaultRepl:
+      type: 'string'
+      enum: [ 'stack', 'cabal', 'ghci' ]
+      default: 'ghci'
+      order: 0
+    stackPath:
+      type: 'string'
+      default: 'stack'
+      description: '''
+      Path to stack executable
+      '''
+      order: 10
+    cabalPath:
       type: 'string'
       default: 'cabal'
       description: '''
-      Path to REPL command, e.g. ghci, cabal or stack.
-      '''
-      order: 10
-    commandArgs:
-      type: 'array'
-      default: ['repl']
-      items:
-        type: 'string'
-      description: '''
-      Comma-separated REPL command arguments, repl for cabal, ghci for stack,
-      or none for ghci.
+      Path to cabal executable
       '''
       order: 20
+    ghciPath:
+      type: 'string'
+      default: 'ghci'
+      description: '''
+      Path to ghci executable
+      '''
+      order: 30
+    extraArgs:
+      type: 'array'
+      default: []
+      description: 'Extra arguments passed to ghci. Comma-separated'
+      items:
+        type: 'string'
   activate: (state) ->
     @disposables = new CompositeDisposable
     @editorMap = new WeakMap
