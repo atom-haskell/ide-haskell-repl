@@ -64,15 +64,15 @@ class IdeHaskellReplView
     @cwd = Util.getRootDir @uri
 
     builder = try @upi.getConfigParam('ide-haskell-cabal', 'builder')
-    builder ?= atom.config.get 'ide-haskell-repl.defaultRepl'
 
     setImmediate =>
-      if typeof builder.then is 'function'
-        builder.then => @runREPL(builder.name)
+      if typeof builder?.then is 'function'
+        builder.then => @runREPL(builder?.name)
       else
-        @runREPL(builder.name)
+        @runREPL(builder?.name)
 
   runREPL: (builder) ->
+    builder ?= atom.config.get 'ide-haskell-repl.defaultRepl'
     subst =
       'nix-build': 'cabal'
       'none': 'ghci'
