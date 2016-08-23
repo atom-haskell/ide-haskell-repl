@@ -15,12 +15,12 @@
   "repository": "https://github.com/atom-haskell/ide-haskell-repl",
   "license": "MIT",
   "engines": {
-    "atom": ">=1.0.0 <2.0.0"
+    "atom": ">=1.9.0 <2.0.0"
   },
   "dependencies": {
     "sub-atom": "^1.0.0",
     "tree-kill": "^1.0.0",
-    "atom-haskell-utils": "^0.7.8"
+    "atom-haskell-utils": "^0.8.0"
   },
   "consumedServices": {
     "ide-haskell-upi": {

@@ -39,6 +39,8 @@ class IdeHaskellReplView
       document.createElement('button')
     @interruptButton.classList.add 'interrupt'
     @editor = @editorElement.getModel()
+    atom.views.views.set @editor, @editorElement
+    atom.textEditors.add @editor
     @editor.setLineNumberGutterVisible(false)
     @editor.setGrammar \
       atom.grammars.grammarForScopeName 'source.haskell'
@@ -215,5 +217,6 @@ class IdeHaskellReplView
 
   destroy: ->
     @ghci?.destroy?()
+    atom.textEditors.remove @editor
     @element.remove()
     @disposables.dispose()
