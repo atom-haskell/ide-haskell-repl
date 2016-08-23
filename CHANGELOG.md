@@ -1,3 +1,9 @@
+## 0.1.1
+* Fix #28
+* Hack to suppress ac-p, ahu bump
+* Readme update
+* Update package status in README
+
 ## 0.1.0
 * Auto-switch based on ide-haskell-cabal builder
 
