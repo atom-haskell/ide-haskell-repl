@@ -1,3 +1,6 @@
+## 0.1.0
+* Auto-switch based on ide-haskell-cabal builder
+
 ## 0.0.23
 * Fix #23
 
