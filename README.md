@@ -2,9 +2,15 @@
 
 ***This package is in beta.***
 
-This package provides a way to interact with ghci (or, more precisely, `cabal repl`) from Atom.
+This package provides a way to interact with ghci (or, more precisely, `cabal repl` or `stack ghci`) from Atom.
 
 ![image](https://cloud.githubusercontent.com/assets/7275622/10709920/4fb7ff4a-7a48-11e5-831c-78e3fd0812b5.png)
+
+## Repl backend selection
+
+ide-haskell-repl will try to automatically select the correct repl backend (`stack`/`cabal`/`ghci`) based on current builder chosen in `ide-haskell-cabal`. You can choose `none` builder to use `ghci` in plain projects (a.k.a. projects with no `*.cabal` file).
+
+If `ide-haskell-cabal` is unavailable (e.g. disabled), ide-haskell-repl will fall back to `defaultRepl` specified in settings.
 
 ## Repl-specific commands
 
