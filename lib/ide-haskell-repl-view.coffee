@@ -67,7 +67,7 @@ class IdeHaskellReplView
 
     setImmediate =>
       if typeof builder?.then is 'function'
-        builder.then => @runREPL(builder?.name)
+        @destroy()
       else
         @runREPL(builder?.name)
 
