@@ -1,3 +1,6 @@
+## 0.1.3
+* Fix some issues, use UPI 0.2.0
+
 ## 0.1.2
 * Close repl if no builder selected
 
