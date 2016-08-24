@@ -45,12 +45,6 @@ class IdeHaskellReplView
     @editor.setGrammar \
       atom.grammars.grammarForScopeName 'source.haskell'
 
-    @disposables.add atom.workspace.onDidChangeActivePaneItem (item) =>
-      if item == @
-        setTimeout =>
-          @editorElement.focus()
-        , 1
-
     @disposables.add @interruptButton, 'click', =>
       @ghci?.interrupt()
 
@@ -63,15 +57,30 @@ class IdeHaskellReplView
 
     @cwd = Util.getRootDir @uri
 
-    builder = try @upi.getConfigParam('ide-haskell-cabal', 'builder')
-
     setImmediate =>
-      if typeof builder?.then is 'function'
-        @destroy()
-      else
+      @upi.getConfigParam('ide-haskell-cabal', 'builder')
+      .then (builder) =>
         @runREPL(builder?.name)
+      .catch (error) =>
+        if error?
+          switch error.name
+            when 'PackageInactiveError'
+              @runREPL()
+            else
+              atom.notifications.addFatalError error.toString(),
+                detail: error
+                dismissable: true
+              atom.workspace.paneForItem(@)?.destroyItem?(@)
+        else
+          atom.notifications.addWarning "Can't run REPL without knowing what builder to use"
+          atom.workspace.paneForItem(@)?.destroyItem?(@)
 
   runREPL: (builder) ->
+    @editorElement.focus()
+    @disposables.add atom.workspace.onDidChangeActivePaneItem (item) =>
+      if item == @
+        setImmediate => @editorElement.focus()
+
     builder ?= atom.config.get 'ide-haskell-repl.defaultRepl'
     subst =
       'nix-build': 'cabal'
