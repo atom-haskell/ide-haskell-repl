@@ -1,3 +1,6 @@
+## 0.1.4
+* Make repl input soft-wrapped
+
 ## 0.1.3
 * Fix some issues, use UPI 0.2.0
 
