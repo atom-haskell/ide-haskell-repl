@@ -42,6 +42,7 @@ class IdeHaskellReplView
     atom.views.views.set @editor, @editorElement
     atom.textEditors.add @editor
     @editor.setLineNumberGutterVisible(false)
+    @editor.setSoftWrapped(true)
     @editor.setGrammar \
       atom.grammars.grammarForScopeName 'source.haskell'
 
