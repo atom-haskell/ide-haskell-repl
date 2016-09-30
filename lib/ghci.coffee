@@ -102,7 +102,7 @@ class GHCI
 
   load: (uri) ->
     return unless @isActive()
-    @ghci.stdin.write ":load \"#{uri}\"#{EOL}"
+    @ghci.stdin.write ":load \"#{decodeURI(uri)}\"#{EOL}"
 
   interrupt: ->
     if @ghci?
