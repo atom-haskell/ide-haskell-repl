@@ -59,6 +59,8 @@ class IdeHaskellReplView
     @cwd = Util.getRootDir @uri
 
     setImmediate =>
+      return @runREPL() unless @upi?
+
       @upi.getConfigParam('ide-haskell-cabal', 'builder')
       .then (builder) =>
         @runREPL(builder?.name)
