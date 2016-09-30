@@ -1,3 +1,6 @@
+## 0.1.6
+* Tentative fix for #33
+
 ## 0.1.5
 * Fix #32
 
