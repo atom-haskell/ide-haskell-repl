@@ -1,6 +1,7 @@
 {BufferedProcess, Emitter} = require 'atom'
 {EOL} = require 'os'
 tkill = require 'tree-kill'
+{hsEscapeString} = require 'atom-haskell-utils'
 
 module.exports =
 class GHCI
@@ -102,7 +103,7 @@ class GHCI
 
   load: (uri) ->
     return unless @isActive()
-    @ghci.stdin.write ":load \"#{uri}\"#{EOL}"
+    @ghci.stdin.write ":load #{hsEscapeString uri}#{EOL}"
 
   interrupt: ->
     if @ghci?
