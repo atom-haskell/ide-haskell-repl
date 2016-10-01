@@ -1,3 +1,7 @@
+## 0.1.7
+* Fix #33
+* Revert "Tentative fix for #33"
+
 ## 0.1.6
 * Tentative fix for #33
 
