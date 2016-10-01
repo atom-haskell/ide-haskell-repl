@@ -1,6 +1,5 @@
 IdeHaskellReplView = require './ide-haskell-repl-view'
 {CompositeDisposable} = require 'atom'
-url = require 'url'
 
 module.exports = IdeHaskellRepl =
   config:
@@ -41,14 +40,12 @@ module.exports = IdeHaskellRepl =
     @editorMap = new WeakMap
 
     @disposables.add atom.workspace.addOpener (uriToOpen, options) =>
-      try
-        { protocol, host, pathname } = url.parse uriToOpen
-      catch error
+      m = uriToOpen.match(/^ide-haskell:\/\/repl\/(.*)$/)
+      unless m? and m[1]?
         return
+      pathname = m[1]
 
-      return unless protocol is 'ide-haskell:' and host is 'repl'
-
-      view = new IdeHaskellReplView(pathname.slice(1), @upi)
+      view = new IdeHaskellReplView(pathname, @upi)
       @editorMap.set(view.editor, view)
       return view
 
