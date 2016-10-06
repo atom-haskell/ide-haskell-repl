@@ -1,4 +1,5 @@
-{BufferedProcess, Emitter} = require 'atom'
+{Emitter} = require 'atom'
+CP = require 'child_process'
 {EOL} = require 'os'
 tkill = require 'tree-kill'
 {hsEscapeString} = require 'atom-haskell-utils'
@@ -30,55 +31,59 @@ class GHCI
       @emitter.emit 'exit', -1
 
     try
-      @process = new BufferedProcess
-        command: command
-        args: args
-        options:
-          cwd: cwd
-          encoding: 'utf8'
-        stdout: (output) =>
-          lines = output.split(EOL).slice(0, -1) #last line is empty
-          lines = lines.map (line) ->
-            if line.length > 10000
-              line.slice(0, 10000) + '...'
+      @process = CP.spawn command, args,
+        cwd: cwd
+        stdio: ['pipe', 'pipe', 'pipe']
+
+      buffered = (handleOutput) ->
+        buffer = ''
+        (data) ->
+          output = data.toString('utf8')
+          [first, mid..., last] = output.split(EOL)
+          buffer += first
+          if last? # it means there's at least one newline
+            lines = [buffer, mid...]
+            buffer = last
+            handleOutput lines
+
+      @process.stdout.on 'data', buffered (lines) =>
+        lines = lines.map (line) ->
+          if line.length > 10000
+            line.slice(0, 10000) + '...'
+          else
+            line
+        @responseBuffer.push lines...
+        rx = /^#~IDEHASKELLREPL~(.*)~#$/
+        rxres = rx.exec @responseBuffer.slice(-1)[0]
+        if rxres?
+          @responseBuffer =
+            if @responseBuffer.slice(-2)[0]
+              @responseBuffer.slice(0, -1)
             else
-              line
-          @responseBuffer.push lines...
-          rx = /^#~IDEHASKELLREPL~(.*)~#$/
-          rxres = rx.exec @responseBuffer.slice(-1)[0]
-          if rxres?
-            @responseBuffer =
-              if @responseBuffer.slice(-2)[0]
-                @responseBuffer.slice(0, -1)
-              else
-                @responseBuffer.slice(0, -2)
-            @finished = true
+              @responseBuffer.slice(0, -2)
+          @finished = true
 
-            if @response
-              @responseBuffer = @responseBuffer.map((line) -> "< #{line}")
+          if @response
+            @responseBuffer = @responseBuffer.map((line) -> "< #{line}")
 
-            # TODO: Show that command finished
-            @emitter.emit 'error', @errorBuffer.join(EOL) + EOL
-            @errorBuffer = []
-            if @started
-              @emitter.emit 'response', @responseBuffer.join(EOL) + EOL
-            @responseBuffer = []
-            @emitter.emit 'finished', rxres[1]
-        stderr: (output) =>
-          output.split(EOL).forEach (line) ->
-            console.warn "ide-haskell-repl: #{line}"
-          @errorBuffer.push output.split(EOL).slice(0, -1)...
-        exit: (code) =>
-          @ghci = null
-          if code isnt 0
-            @emitter.emit 'error', @errorBuffer.join(EOL) + EOL
-          @emitter.emit 'exit', code
+          # TODO: Show that command finished
+          @emitter.emit 'error', @errorBuffer.join(EOL) + EOL
+          @errorBuffer = []
+          if @started
+            @emitter.emit 'response', @responseBuffer.join(EOL) + EOL
+          @responseBuffer = []
+          @emitter.emit 'finished', rxres[1]
+      @process.stderr.on 'data', buffered (lines) =>
+        lines.forEach (line) ->
+          console.warn "ide-haskell-repl: #{line}"
+        @errorBuffer.push lines...
+      @process.on 'exit', (code) =>
+        @ghci = null
+        if code isnt 0
+          @emitter.emit 'error', @errorBuffer.join(EOL) + EOL
+        @emitter.emit 'exit', code
 
-      @process.onWillThrowError ({error, handle}) ->
-        handle()
-        handleError error
-
-      @ghci = @process.process
+      @ghci = @process
 
       @ghci.stdin.write ":set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"#{EOL}"
       @ghci.stdin.write ":set prompt2 \"\"#{EOL}"
