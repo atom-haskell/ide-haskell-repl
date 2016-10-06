@@ -1,3 +1,6 @@
+## 0.1.9
+* Switch to child_process
+
 ## 0.1.8
 * Really fix #33
 
