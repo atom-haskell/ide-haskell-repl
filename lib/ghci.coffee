@@ -39,7 +39,7 @@ class GHCI
         buffer = ''
         (data) ->
           output = data.toString('utf8')
-          [first, mid..., last] = output.split(EOL)
+          [first, mid..., last] = output.split(/\r?\n/)
           buffer += first
           if last? # it means there's at least one newline
             lines = [buffer, mid...]
