@@ -1,3 +1,6 @@
+## 0.1.11
+* Add interrupt command
+
 ## 0.1.10
 * Allow n as newline separator on Win32 in addition to rn
 
