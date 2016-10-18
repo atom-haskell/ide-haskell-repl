@@ -47,7 +47,7 @@ class IdeHaskellReplView
       atom.grammars.grammarForScopeName 'source.haskell'
 
     @disposables.add @interruptButton, 'click', =>
-      @ghci?.interrupt()
+      @interrupt()
 
     @editorElement.onDidAttach =>
       @setEditorHeight()
@@ -152,6 +152,9 @@ class IdeHaskellReplView
 
   ghciReload: ->
     @ghci.writeLines [':reload']
+
+  interrupt: ->
+    @ghci?.interrupt()
 
   setEditorHeight: ->
     lh = @editor.getLineHeightInPixels()
