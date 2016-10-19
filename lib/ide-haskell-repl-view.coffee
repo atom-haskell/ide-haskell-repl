@@ -149,7 +149,6 @@ class IdeHaskellReplView
 
   runCommand: (command) ->
     unless @ghci?.finished and @ghci?.writeLines?(command.split('\n'))
-      console.error "loop"
       setTimeout (=> @runCommand(command)), 100
 
   historyBack: ->
