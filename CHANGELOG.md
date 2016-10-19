@@ -1,3 +1,6 @@
+## 0.3.1
+* Filter out ANSI escape sequences from REPL output
+
 ## 0.3.0
 * Auto reload-repeat
 * Add reload-repeat command, some focus/scope fixes on commands
