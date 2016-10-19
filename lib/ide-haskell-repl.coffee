@@ -35,9 +35,18 @@ module.exports = IdeHaskellRepl =
       description: 'Extra arguments passed to ghci. Comma-separated'
       items:
         type: 'string'
+      order: 40
+    autoReloadRepeat:
+      type: 'boolean'
+      default: false
+      description: 'Automatically reload and repeat last command on file save.
+                    This is only the default. You can toggle this per-editor
+                    using ide-haskell-repl:toggle-auto-reload-repeat command'
+      order: 50
   activate: (state) ->
     @disposables = new CompositeDisposable
     @editorMap = new WeakMap
+    @autoRepeatMap = new WeakMap
 
     @disposables.add atom.workspace.addOpener (uriToOpen, options) =>
       m = uriToOpen.match(/^ide-haskell:\/\/repl\/(.*)$/)
@@ -82,6 +91,11 @@ module.exports = IdeHaskellRepl =
         @open(target.getModel(), false)
         .then (model) ->
           model.ghciReloadRepeat()
+      'ide-haskell-repl:toggle-auto-reload-repeat':  ({target}) =>
+        ed = target.getModel()
+        if @autoRepeatMap.has(ed)
+          old = @autoRepeatMap.get(ed) ? atom.config.get('ide-haskell-repl.autoReloadRepeat')
+          @autoRepeatMap.set(ed, not old)
 
 
     @disposables.add atom.menu.add [
@@ -99,6 +113,16 @@ module.exports = IdeHaskellRepl =
       split: 'right'
       searchAllPanes: true
       activatePane: activate
+    .then (model) =>
+      disp = new CompositeDisposable
+      @autoRepeatMap.set(editor, atom.config.get('ide-haskell-repl.autoReloadRepeat'))
+      disp.add editor.onDidSave =>
+        if @autoRepeatMap.get(editor)
+          model.ghciReloadRepeat()
+      disp.add editor.onDidDestroy ->
+        disp.dispose()
+      disp.add model.onDidDestroy ->
+        disp.dispose()
 
   deactivate: ->
     @disposables.dispose()

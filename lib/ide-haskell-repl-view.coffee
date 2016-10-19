@@ -1,5 +1,5 @@
 SubAtom = require 'sub-atom'
-{Range} = require 'atom'
+{Range, Emitter} = require 'atom'
 GHCI = require './ghci'
 Util = require 'atom-haskell-utils'
 
@@ -9,6 +9,7 @@ class IdeHaskellReplView
   constructor: (@uri, @upi) ->
     # Create root element
     @disposables = new SubAtom
+    @disposables.add @emitter = new Emitter
 
     # Create message element
     @element = document.createElement 'div'
@@ -241,8 +242,12 @@ class IdeHaskellReplView
   getTitle: ->
     "REPL: #{@uri}"
 
+  onDidDestroy: (callback) ->
+    @emitter.on 'did-destroy', callback
+
   destroy: ->
     @ghci?.destroy?()
     atom.textEditors.remove @editor
     @element.remove()
+    @emitter.emit 'did-destroy'
     @disposables.dispose()
