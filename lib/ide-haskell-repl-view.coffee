@@ -160,6 +160,10 @@ class IdeHaskellReplView
   ghciReload: ->
     @ghci.reload()
 
+  ghciReloadRepeat: ->
+    return unless @ghci?
+    @ghci.reloadRepeat()
+
   interrupt: ->
     @ghci?.interrupt()
 

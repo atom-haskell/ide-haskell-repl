@@ -65,7 +65,7 @@ module.exports = IdeHaskellRepl =
       'ide-haskell-repl:ghci-reload': commandFunction 'ghciReload'
       'ide-haskell-repl:ghci-interrupt': commandFunction 'interrupt'
 
-    @disposables.add atom.commands.add 'atom-text-editor',
+    @disposables.add atom.commands.add 'atom-text-editor:not(.ide-haskell-repl)',
       'ide-haskell-repl:copy-selection-to-repl-input':  ({target}) =>
         ed = target.getModel()
         cmd = ed.getLastSelection().getText()
@@ -75,9 +75,13 @@ module.exports = IdeHaskellRepl =
       'ide-haskell-repl:run-selection-in-repl':  ({target}) =>
         ed = target.getModel()
         cmd = ed.getLastSelection().getText()
-        @open(ed)
+        @open(ed, false)
         .then (model) ->
           model.runCommand(cmd)
+      'ide-haskell-repl:reload-repeat':  ({target}) =>
+        @open(target.getModel(), false)
+        .then (model) ->
+          model.ghciReloadRepeat()
 
 
     @disposables.add atom.menu.add [
@@ -88,12 +92,13 @@ module.exports = IdeHaskellRepl =
       ]
     ]
 
-  open: (editor) ->
+  open: (editor, activate = true) ->
     if editor?.getGrammar?()?.scopeName?.endsWith? 'haskell'
       uri = editor?.getURI?()
     atom.workspace.open "ide-haskell://repl/#{uri ? ''}",
       split: 'right'
       searchAllPanes: true
+      activatePane: activate
 
   deactivate: ->
     @disposables.dispose()

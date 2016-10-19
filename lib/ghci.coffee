@@ -115,6 +115,12 @@ class GHCI
     return unless @isActive()
     @ghci.stdin.write ":reload#{EOL}"
 
+  reloadRepeat: ->
+    return unless @isActive()
+    return unless @history.back[@history.back.length - 1]?
+    @reload()
+    @writeLines([@history.back[@history.back.length - 1]])
+
   interrupt: ->
     if @ghci?
       tkill @ghci.pid, 'SIGINT'
