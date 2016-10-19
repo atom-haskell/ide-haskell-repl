@@ -3,6 +3,7 @@ SubAtom = require 'sub-atom'
 GHCI = require './ghci'
 Util = require 'atom-haskell-utils'
 
+termEscapeRx = /\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/g
 
 module.exports =
 class IdeHaskellReplView
@@ -132,11 +133,11 @@ class IdeHaskellReplView
       cwd: @cwd.getPath()
       load: @uri
       onResponse: (response) =>
-        @log response
+        @log response.replace(termEscapeRx, '')
       onError: (error) =>
-        @setError error
+        @setError error.replace(termEscapeRx, '')
       onFinished: (prompt) =>
-        @setPrompt prompt
+        @setPrompt prompt.replace(termEscapeRx, '')
       onExit: (code) =>
         atom.workspace.paneForItem(@)?.destroyItem?(@)
 
