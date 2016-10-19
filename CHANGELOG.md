@@ -1,3 +1,8 @@
+## 0.3.0
+* Auto reload-repeat
+* Add reload-repeat command, some focus/scope fixes on commands
+* Don't save `:reload` in command history
+
 ## 0.2.1
 * Remove debug string
 
