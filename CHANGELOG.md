@@ -1,3 +1,6 @@
+## 0.2.1
+* Remove debug string
+
 ## 0.2.0
 * Add commands to copy/run selected text from current editor
 
