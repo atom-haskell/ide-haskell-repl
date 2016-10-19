@@ -7,7 +7,7 @@ tkill = require 'tree-kill'
 module.exports =
 class GHCI
   constructor: (opts = {}) ->
-    {cwd, atomPath, command, args} = opts
+    {cwd, atomPath, command, args, load} = opts
     {onResponse, onError, onFinished, onExit} = opts
     @errorBuffer = []
     @responseBuffer = []
@@ -85,6 +85,7 @@ class GHCI
 
       @ghci = @process
 
+      @load(load) if load
       @ghci.stdin.write ":set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"#{EOL}"
       @ghci.stdin.write ":set prompt2 \"\"#{EOL}"
       @ghci.stdin.write ":set editor \"#{atomPath}\"#{EOL}"

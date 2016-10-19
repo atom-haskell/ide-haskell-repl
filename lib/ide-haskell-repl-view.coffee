@@ -129,6 +129,7 @@ class IdeHaskellReplView
       command: commandPath
       args: commandArgs
       cwd: @cwd.getPath()
+      load: @uri
       onResponse: (response) =>
         @log response
       onError: (error) =>
@@ -138,11 +139,18 @@ class IdeHaskellReplView
       onExit: (code) =>
         atom.workspace.paneForItem(@)?.destroyItem?(@)
 
-    @ghci.load(@uri) if @uri
-
   execCommand: ->
     if @ghci.writeLines @editor.getBuffer().getLines()
       @editor.setText ''
+
+  copyText: (command) ->
+    @editor.setText command
+    @editorElement.focus()
+
+  runCommand: (command) ->
+    unless @ghci?.finished and @ghci?.writeLines?(command.split('\n'))
+      console.error "loop"
+      setTimeout (=> @runCommand(command)), 100
 
   historyBack: ->
     @editor.setText @ghci.historyBack(@editor.getText())
