@@ -158,7 +158,7 @@ class IdeHaskellReplView
     @editor.setText @ghci.historyForward()
 
   ghciReload: ->
-    @ghci.writeLines [':reload']
+    @ghci.reload()
 
   interrupt: ->
     @ghci?.interrupt()

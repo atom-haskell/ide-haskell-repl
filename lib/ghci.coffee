@@ -111,6 +111,10 @@ class GHCI
     return unless @isActive()
     @ghci.stdin.write ":load #{hsEscapeString uri}#{EOL}"
 
+  reload: ->
+    return unless @isActive()
+    @ghci.stdin.write ":reload#{EOL}"
+
   interrupt: ->
     if @ghci?
       tkill @ghci.pid, 'SIGINT'
