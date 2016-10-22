@@ -198,7 +198,7 @@ class IdeHaskellReplView
 
   setError: (err) ->
     if @errDiv?
-      @errDiv.innerText = err
+      @errDiv.innerText = err.trim()
     else
       @upi.setMessages @splitErrBuffer err
 
