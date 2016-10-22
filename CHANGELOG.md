@@ -1,3 +1,10 @@
+## 0.4.0
+* Resolve UPI promise on timeout
+* Trim errDiv output
+* Initial support for (de)serialization
+* Removed old code
+* Better output handling, minor bugfixes
+
 ## 0.3.1
 * Filter out ANSI escape sequences from REPL output
 
