@@ -291,4 +291,4 @@ class IdeHaskellReplView
     uri: @uri
     upi: @upi?
     content: @outputDiv.innerHTML
-    history: @ghci.history
+    history: @ghci.history.back

@@ -8,14 +8,15 @@ module.exports =
 class GHCI
   constructor: (opts = {}) ->
     @disposables = new CompositeDisposable
-    {cwd, atomPath, command, args, load, @history} = opts
+    {cwd, atomPath, command, args, load, history} = opts
     @errorBuffer = []
     @responseBuffer = []
 
-    @history ?=
-      back: []
+    history ?= []
+    @history =
+      back: history
       curr: ''
-      item: 0
+      item: history.length
 
     @disposables.add @emitter = new Emitter
 
