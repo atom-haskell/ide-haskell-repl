@@ -5,6 +5,30 @@
 @import "ui-variables";
 @import "octicon-utf-codes";
 
+.output-icon(@name) {
+  position: relative;
+  padding-left: 1.2em;
+  white-space: pre-wrap;
+  &:before {
+    font-family: 'Octicons Regular';
+    font-weight: normal;
+    font-style: normal;
+    -webkit-font-smoothing: antialiased;
+    text-decoration: none;
+    display: block;
+    content: @@name;
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    line-height: 1em;
+    width: 1em;
+    padding-top: 0.5em;
+    background: @overlay-background-color;
+    border-right: 0.3em solid @overlay-border-color;
+  }
+}
+
 div.ide-haskell-repl {
   display: flex;
   flex-direction: column;
@@ -18,6 +42,24 @@ div.ide-haskell-repl {
   .ide-haskell-repl-output {
     flex-grow: 1;
     position: relative;
+    overflow-y: scroll;
+    pre {
+      font-size: inherit;
+      font-family: inherit;
+      margin-bottom: 0.2em;
+    }
+    .ide-haskell-repl-output-text {
+      .output-icon(chevron-left);
+      background: @input-background-color;
+    }
+    .ide-haskell-repl-input-text {
+      .output-icon(chevron-right);
+      background: @overlay-background-color;
+    }
+    .ide-haskell-repl-message-text {
+      .output-icon(chevron-left);
+      background: @overlay-background-color;
+    }
   }
   .ide-haskell-repl-editor {
     flex-grow: 0;

@@ -2,6 +2,7 @@ SubAtom = require 'sub-atom'
 {Range, Emitter} = require 'atom'
 GHCI = require './ghci'
 Util = require 'atom-haskell-utils'
+highlightSync = require './highlight'
 
 termEscapeRx = /\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/g
 
@@ -16,16 +17,9 @@ class IdeHaskellReplView
     @element = document.createElement 'div'
     @element.classList.add('ide-haskell-repl')
     @element.appendChild @outputDiv = document.createElement 'div'
-    @outputDiv.classList.add('ide-haskell-repl-output')
-    @outputDiv.appendChild @outputElement =
-      document.createElement('atom-text-editor')
-    @outputElement.removeAttribute('tabindex')
-    @output = @outputElement.getModel()
-    @output.setSoftWrapped(true)
-    @output.setLineNumberGutterVisible(false)
-    @output.getDecorations(class: 'cursor-line', type: 'line')[0].destroy()
-    @output.setGrammar \
-      atom.grammars.grammarForScopeName 'text.tex.latex.haskell'
+    @outputDiv.classList.add('ide-haskell-repl-output', 'native-key-bindings')
+    @outputDiv.tabIndex = -1
+    @outputDiv.appendChild @outputElement = document.createElement('div')
     unless @upi?
       @element.appendChild @errDiv = document.createElement 'div'
       @errDiv.classList.add 'ide-haskell-repl-error'
@@ -44,9 +38,16 @@ class IdeHaskellReplView
     atom.views.views.set @editor, @editorElement
     atom.textEditors.add @editor
     @editor.setLineNumberGutterVisible(false)
-    @editor.setSoftWrapped(true)
+    setImmediate => @editor.setSoftWrapped(true)
     @editor.setGrammar \
       atom.grammars.grammarForScopeName 'source.haskell'
+
+    @disposables.add atom.config.observe 'editor.fontSize', (fontSize) =>
+      if fontSize?
+        @outputDiv.style.fontSize = "#{fontSize}px"
+    @disposables.add atom.config.observe 'editor.fontFamily', (fontFamily) =>
+      if fontFamily
+        @outputDiv.style.fontFamily = fontFamily
 
     @disposables.add @interruptButton, 'click', =>
       @interrupt()
@@ -134,6 +135,10 @@ class IdeHaskellReplView
       load: @uri
       onResponse: (response) =>
         @log response.replace(termEscapeRx, '')
+      onInput: (input) =>
+        @logInput input.replace(termEscapeRx, '')
+      onMessage: (message) =>
+        @logMessage message.replace(termEscapeRx, '')
       onError: (error) =>
         @setError error.replace(termEscapeRx, '')
       onFinished: (prompt) =>
@@ -232,10 +237,25 @@ class IdeHaskellReplView
         severity: 'repl'
 
   log: (text) ->
-    eofRange = Range.fromPointWithDelta(@output.getEofBufferPosition(), 0, 0)
-    @output.setTextInBufferRange eofRange, text
-    @lastPos = @output.getEofBufferPosition()
-    @output.scrollToBufferPosition(@lastPos)
+    pre = document.createElement('pre')
+    pre.classList.add 'ide-haskell-repl-output-text'
+    pre.innerHTML = highlightSync(fileContents: text, scopeName: 'source.haskell')
+    @outputDiv.appendChild pre
+    pre.scrollIntoView()
+
+  logInput: (text) ->
+    pre = document.createElement('pre')
+    pre.classList.add 'ide-haskell-repl-input-text'
+    pre.innerHTML = highlightSync(fileContents: text, scopeName: 'source.haskell')
+    @outputDiv.appendChild pre
+    pre.scrollIntoView()
+
+  logMessage: (text) ->
+    pre = document.createElement('pre')
+    pre.classList.add 'ide-haskell-repl-message-text'
+    pre.innerText = text
+    @outputDiv.appendChild pre
+    pre.scrollIntoView()
 
   getURI: ->
     "ide-haskell://repl/#{@uri}"

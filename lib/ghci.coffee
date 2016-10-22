@@ -1,4 +1,4 @@
-{Emitter} = require 'atom'
+{Emitter, CompositeDisposable} = require 'atom'
 CP = require 'child_process'
 {EOL} = require 'os'
 tkill = require 'tree-kill'
@@ -7,8 +7,8 @@ tkill = require 'tree-kill'
 module.exports =
 class GHCI
   constructor: (opts = {}) ->
+    @disposables = new CompositeDisposable
     {cwd, atomPath, command, args, load} = opts
-    {onResponse, onError, onFinished, onExit} = opts
     @errorBuffer = []
     @responseBuffer = []
 
@@ -17,12 +17,11 @@ class GHCI
       curr: ''
       item: 0
 
-    @emitter = new Emitter
+    @disposables.add @emitter = new Emitter
 
-    @onResponse onResponse if onResponse?
-    @onError onError if onError?
-    @onFinished onFinished if onFinished?
-    @onExit onExit if onExit?
+    events = ['onResponse', 'onError', 'onFinished', 'onExit', 'onInput', 'onMessage']
+    for i in events when opts[i]?
+      @[i](opts[i])
 
     handleError = (error) =>
       @emitter.emit 'response', "GHCI crashed" + EOL + "#{error}"
@@ -56,23 +55,28 @@ class GHCI
         rx = /^#~IDEHASKELLREPL~(.*)~#$/
         rxres = rx.exec @responseBuffer.slice(-1)[0]
         if rxres?
+          @finished = true
+          @emitter.emit 'finished', rxres[1]
+          unless @started
+            @started = true
+            @responseBuffer = []
+            return
+
           @responseBuffer =
             if @responseBuffer.slice(-2)[0]
               @responseBuffer.slice(0, -1)
             else
               @responseBuffer.slice(0, -2)
-          @finished = true
-
-          if @response
-            @responseBuffer = @responseBuffer.map((line) -> "< #{line}")
 
           # TODO: Show that command finished
           @emitter.emit 'error', @errorBuffer.join(EOL) + EOL
           @errorBuffer = []
-          if @started
+          if @response
             @emitter.emit 'response', @responseBuffer.join(EOL) + EOL
+            @response = false
+          else
+            @emitter.emit 'message', @responseBuffer.join(EOL) + EOL
           @responseBuffer = []
-          @emitter.emit 'finished', rxres[1]
       @process.stderr.on 'data', buffered (lines) =>
         lines.forEach (line) ->
           console.warn "ide-haskell-repl: #{line}"
@@ -82,13 +86,14 @@ class GHCI
         if code isnt 0
           @emitter.emit 'error', @errorBuffer.join(EOL) + EOL
         @emitter.emit 'exit', code
+        @disposables.dispose()
 
       @ghci = @process
 
       @load(load) if load
-      @ghci.stdin.write ":set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"#{EOL}"
-      @ghci.stdin.write ":set prompt2 \"\"#{EOL}"
       @ghci.stdin.write ":set editor \"#{atomPath}\"#{EOL}"
+      @ghci.stdin.write ":set prompt2 \"\"#{EOL}"
+      @ghci.stdin.write ":set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"#{EOL}"
     catch error
       handleError error
 
@@ -100,6 +105,12 @@ class GHCI
 
   onResponse: (callback) ->
     @emitter.on 'response', callback
+
+  onMessage: (callback) ->
+    @emitter.on 'message', callback
+
+  onInput: (callback) ->
+    @emitter.on 'input', callback
 
   onError: (callback) ->
     @emitter.on 'error', callback
@@ -128,8 +139,8 @@ class GHCI
     @emitter.emit 'response', 'Interrupted' + EOL
 
   writeLines: (lines) =>
-    return unless @isActive()
-    @started = true
+    return false unless @isActive()
+    return false unless @started
     if @finished
       if (text = lines.join(EOL)) and \
           @history.back[@history.back.length - 1] isnt text
@@ -137,7 +148,7 @@ class GHCI
       @history.curr = ''
       @history.item = @history.back.length
       @finished = false
-      @response = (not lines[0].startsWith ':') or lines[0].startsWith ':type'
+      @response = (not lines[0].startsWith ':') or lines[0].startsWith ':type' or lines[0].startsWith ':t'
       @ghci.stdout.pause()
       @ghci.stderr.pause()
       @errorBuffer = []
@@ -145,7 +156,7 @@ class GHCI
       @ghci.stdin.write ":{#{EOL}"
       lines.forEach (line) =>
         @ghci.stdin.write line + EOL
-        @emitter.emit 'response', '> ' + line + EOL
+      @emitter.emit 'input', lines.join('\n') + '\n'
       @ghci.stdin.write ":}#{EOL}"
       @ghci.stdout.resume()
       @ghci.stderr.resume()
