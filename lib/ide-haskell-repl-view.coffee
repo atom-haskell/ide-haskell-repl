@@ -8,7 +8,7 @@ termEscapeRx = /\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/g
 
 module.exports =
 class IdeHaskellReplView
-  constructor: (@uri, @upi) ->
+  constructor: ({@uri, content, @history, upiPromise}) ->
     # Create root element
     @disposables = new SubAtom
     @disposables.add @emitter = new Emitter
@@ -16,6 +16,14 @@ class IdeHaskellReplView
     # Create message element
     @element = document.createElement 'div'
     @element.classList.add('ide-haskell-repl')
+
+    @editorPromise = new Promise (resolveEditorPromise) =>
+      upiPromise.then (@upi) =>
+        atom.packages.getLoadedPackage('ide-haskell-repl').activationPromise
+        .then =>
+          @initialize(resolveEditorPromise, content)
+
+  initialize: (resolveEditorPromise, content) ->
     @element.appendChild @outputDiv = document.createElement 'div'
     @outputDiv.classList.add('ide-haskell-repl-output', 'native-key-bindings')
     @outputDiv.tabIndex = -1
@@ -58,6 +66,10 @@ class IdeHaskellReplView
       @setEditorHeight()
 
     @editor.setText ''
+
+    resolveEditorPromise @editor
+
+    @outputDiv.innerHTML = content if content?
 
     @cwd = Util.getRootDir @uri
 
@@ -133,6 +145,7 @@ class IdeHaskellReplView
       args: commandArgs
       cwd: @cwd.getPath()
       load: @uri
+      history: @history
       onResponse: (response) =>
         @log response.replace(termEscapeRx, '')
       onInput: (input) =>
@@ -272,3 +285,10 @@ class IdeHaskellReplView
     @element.remove()
     @emitter.emit 'did-destroy'
     @disposables.dispose()
+
+  serialize: ->
+    deserializer: 'IdeHaskellReplView'
+    uri: @uri
+    upi: @upi?
+    content: @outputDiv.innerHTML
+    history: @ghci.history

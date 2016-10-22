@@ -52,11 +52,7 @@ module.exports = IdeHaskellRepl =
       m = uriToOpen.match(/^ide-haskell:\/\/repl\/(.*)$/)
       unless m? and m[1]?
         return
-      pathname = m[1]
-
-      view = new IdeHaskellReplView(pathname, @upi)
-      @editorMap.set(view.editor, view)
-      return view
+      return @createReplView(uri: m[1])
 
     @disposables.add atom.commands.add 'atom-text-editor',
       'ide-haskell-repl:toggle': ({target}) =>
@@ -106,6 +102,16 @@ module.exports = IdeHaskellRepl =
       ]
     ]
 
+  createReplView: ({uri, upi, content, history}) ->
+    upiPromise =
+      if upi and not @upi?
+        new Promise (@resolveUPIPromise) =>
+      else
+        Promise.resolve(@upi)
+    view = new IdeHaskellReplView({uri, content, history, upiPromise})
+    view.editorPromise.then (editor) => @editorMap.set(editor, view)
+    return view
+
   open: (editor, activate = true) ->
     if editor?.getGrammar?()?.scopeName?.endsWith? 'haskell'
       uri = editor?.getURI?()
@@ -129,6 +135,7 @@ module.exports = IdeHaskellRepl =
 
   consumeUPI: (service) ->
     @upi = service.registerPlugin upiDisposables = new CompositeDisposable
+    @resolveUPIPromise @upi if @resolveUPIPromise
     @disposables.add upiDisposables
 
     @upi.setMessageTypes
