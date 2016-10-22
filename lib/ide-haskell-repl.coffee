@@ -102,6 +102,11 @@ module.exports = IdeHaskellRepl =
       ]
     ]
 
+    setTimeout (=>
+      if @resolveUPIPromise? and not @upi?
+        @resolveUPIPromise(null)
+      ), 5000
+
   createReplView: ({uri, upi, content, history}) ->
     upiPromise =
       if upi and not @upi?
