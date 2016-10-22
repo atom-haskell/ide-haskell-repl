@@ -1,3 +1,6 @@
+## 0.4.1
+* Only store history back buffer
+
 ## 0.4.0
 * Resolve UPI promise on timeout
 * Trim errDiv output
