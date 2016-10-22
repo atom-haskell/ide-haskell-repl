@@ -136,11 +136,4 @@ module.exports = IdeHaskellRepl =
         uriFilter: false
         autoScroll: true
 
-    # upi.setMenu 'Cabal', [
-    #     {label: 'Build Project', command: 'ide-haskell-cabal:build'}
-    #     {label: 'Clean Project', command: 'ide-haskell-cabal:clean'}
-    #     {label: 'Set Build Target', command: 'ide-haskell-cabal:set-build-target'}
-    #     {label: 'Test', command: 'ide-haskell-cabal:test'}
-    #   ]
-
     upiDisposables
