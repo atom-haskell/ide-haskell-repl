@@ -1,3 +1,8 @@
+## 0.4.2
+* First attempt at fixing win32 interrupt
+* Fix LICENSE date
+* Fix license
+
 ## 0.4.1
 * Only store history back buffer
 
