@@ -135,7 +135,13 @@ class GHCI
 
   interrupt: ->
     if @ghci?
-      tkill @ghci.pid, 'SIGINT'
+      if process.platform is 'win32'
+        FFI = require('node-ffi')
+        kernel32 = new FFI.Library 'kernel32',
+          'GenerateConsoleCtrlEvent': [ 'bool', [ 'int32', 'int32' ] ]
+        kernel32.GenerateConsoleCtrlEvent(0, 0)
+      else
+        tkill @ghci.pid, 'SIGINT'
     @finished = true
     @emitter.emit 'response', 'Interrupted' + EOL
 
