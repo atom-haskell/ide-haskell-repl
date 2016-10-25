@@ -1,3 +1,6 @@
+## 0.4.3
+* Revert "First attempt at fixing win32 interrupt"
+
 ## 0.4.2
 * First attempt at fixing win32 interrupt
 * Fix LICENSE date
