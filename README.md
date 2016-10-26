@@ -20,6 +20,8 @@ You need to get `ghci-wrapper.exe` executable from https://github.com/atom-haske
 
 Then you need to specify full path to this executable in `ghciWrapperPath` setting of this package.
 
+For example, if you placed `ghci-wrapper.exe` in `C:\Downloads` directory, you need to put `C:\Downloads\ghci-wrapper.exe` in `ghciWrapperPath` setting.
+
 Finally, restart any open REPL sessions.
 
 ## Repl-specific commands
