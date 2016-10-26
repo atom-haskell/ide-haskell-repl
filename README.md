@@ -12,6 +12,16 @@ ide-haskell-repl will try to automatically select the correct repl backend (`sta
 
 If `ide-haskell-cabal` is unavailable (e.g. disabled), ide-haskell-repl will fall back to `defaultRepl` specified in settings.
 
+## Using on Windows
+
+On Windows, interrupting ghci will kill it. There is no good solution to this problem at the moment, but there is a "bad" solution.
+
+You need to get `ghci-wrapper.exe` executable from https://github.com/atom-haskell/win-ghci-wrapper/releases (or if you don't trust random binaries you've downloaded from the Internet, you can build it from source -- you only really need ghc for that)
+
+Then you need to specify full path to this executable in `ghciWrapperPath` setting of this package.
+
+Finally, restart any open REPL sessions.
+
 ## Repl-specific commands
 
 To send command, or move through history, you can use the following commands when focused on repl command editor:

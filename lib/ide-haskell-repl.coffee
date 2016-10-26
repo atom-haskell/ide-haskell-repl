@@ -43,6 +43,13 @@ module.exports = IdeHaskellRepl =
                     This is only the default. You can toggle this per-editor
                     using ide-haskell-repl:toggle-auto-reload-repeat command'
       order: 50
+    ghciWrapperPath:
+      type: 'string'
+      default: ''
+      description: 'This is intended to fix the "interrupt closes ghci" problem
+                    in Atom -- see README for details. This option has no
+                    effect on other platforms'
+      order: 999
   activate: (state) ->
     @disposables = new CompositeDisposable
     @editorMap = new WeakMap

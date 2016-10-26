@@ -31,9 +31,20 @@ class GHCI
       @emitter.emit 'exit', -1
 
     try
-      @process = CP.spawn command, args,
-        cwd: cwd
-        stdio: ['pipe', 'pipe', 'pipe']
+      @process =
+        if process.platform is 'win32'
+          spawnArgs = [command, args...]
+          if cmdexe = atom.config.get('ide-haskell-repl.ghciWrapperPath')
+            spawnArgs.unshift(cmdexe)
+          CP.spawn "chcp 65001 && ", spawnArgs,
+            cwd: cwd
+            stdio: ['pipe', 'pipe', 'pipe']
+            shell: true
+        else
+          CP.spawn command, args,
+            cwd: cwd
+            stdio: ['pipe', 'pipe', 'pipe']
+
 
       buffered = (handleOutput) ->
         buffer = ''
@@ -135,7 +146,10 @@ class GHCI
 
   interrupt: ->
     if @ghci?
-      tkill @ghci.pid, 'SIGINT'
+      if atom.config.get('ide-haskell-repl.ghciWrapperPath') and process.platform is 'win32'
+        @ghci.stdin.write '\x03'
+      else
+        tkill @ghci.pid, 'SIGINT'
     @finished = true
     @emitter.emit 'response', 'Interrupted' + EOL
 
@@ -185,4 +199,4 @@ class GHCI
   destroy: ->
     return unless @isActive()
     @ghci.stdin.end()
-    @ghci.kill()
+    tkill @ghci.pid, 'SIGTERM'
