@@ -1,3 +1,7 @@
+## 0.4.5
+* Fix some formatting issues on Windows
+* [README] reword "using on windows" a bit
+
 ## 0.4.4
 * Band-aid some Windows-specific issues
 
