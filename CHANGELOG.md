@@ -1,3 +1,6 @@
+## 0.4.4
+* Band-aid some Windows-specific issues
+
 ## 0.4.3
 * Revert "First attempt at fixing win32 interrupt"
 
