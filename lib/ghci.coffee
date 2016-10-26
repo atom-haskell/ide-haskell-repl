@@ -25,7 +25,7 @@ class GHCI
       @[i](opts[i])
 
     handleError = (error) =>
-      @emitter.emit 'response', "GHCI crashed" + EOL + "#{error}"
+      @emitter.emit 'response', "GHCI crashed\n#{error}"
       console.error error
       @ghci = null
       @emitter.emit 'exit', -1
@@ -81,13 +81,13 @@ class GHCI
               @responseBuffer.slice(0, -2)
 
           # TODO: Show that command finished
-          @emitter.emit 'error', @errorBuffer.join(EOL) + EOL
+          @emitter.emit 'error', @errorBuffer.join('\n') + '\n'
           @errorBuffer = []
           if @response
-            @emitter.emit 'response', @responseBuffer.join(EOL) + EOL
+            @emitter.emit 'response', @responseBuffer.join('\n') + '\n'
             @response = false
           else
-            @emitter.emit 'message', @responseBuffer.join(EOL) + EOL
+            @emitter.emit 'message', @responseBuffer.join('\n') + '\n'
           @responseBuffer = []
       @process.stderr.on 'data', buffered (lines) =>
         lines.forEach (line) ->
@@ -96,7 +96,7 @@ class GHCI
       @process.on 'exit', (code) =>
         @ghci = null
         if code isnt 0
-          @emitter.emit 'error', @errorBuffer.join(EOL) + EOL
+          @emitter.emit 'error', @errorBuffer.join('\n') + '\n'
         @emitter.emit 'exit', code
         @disposables.dispose()
 
@@ -151,7 +151,7 @@ class GHCI
       else
         tkill @ghci.pid, 'SIGINT'
     @finished = true
-    @emitter.emit 'response', 'Interrupted' + EOL
+    @emitter.emit 'response', 'Interrupted\n'
 
   writeLines: (lines) =>
     return false unless @isActive()
@@ -168,17 +168,14 @@ class GHCI
       @ghci.stderr.pause()
       @errorBuffer = []
       @responseBuffer = []
-      @ghci.stdin.write ":{#{EOL}"
-      lines.forEach (line) =>
-        @ghci.stdin.write line + EOL
+      @ghci.stdin.write ":{#{EOL}#{lines.join(EOL)}#{EOL}:}#{EOL}"
       @emitter.emit 'input', lines.join('\n') + '\n'
-      @ghci.stdin.write ":}#{EOL}"
       @ghci.stdout.resume()
       @ghci.stderr.resume()
       return true
     else
-      @ghci.stdin.write lines.join(EOL)
-      @emitter.emit 'response', "> \"#{lines.join('\\n')}\"#{EOL}"
+      @ghci.stdin.write lines.join('\n')
+      @emitter.emit 'input', "\"#{lines.join('\\n')}\"\n"
       return true
 
   historyBack: (current) ->
