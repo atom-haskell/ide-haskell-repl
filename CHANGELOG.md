@@ -1,3 +1,6 @@
+## 0.4.6
+* Fix #40 (error panel shrinking)
+
 ## 0.4.5
 * Fix some formatting issues on Windows
 * [README] reword "using on windows" a bit
