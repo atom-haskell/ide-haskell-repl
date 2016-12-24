@@ -35,7 +35,7 @@ class GHCI
         if process.platform is 'win32'
           spawnArgs = [command, args...]
           if cmdexe = atom.config.get('ide-haskell-repl.ghciWrapperPath')
-            spawnArgs.unshift(cmdexe)
+            spawnArgs.unshift("\"" + cmdexe + "\"")
           CP.spawn "chcp 65001 && ", spawnArgs,
             cwd: cwd
             stdio: ['pipe', 'pipe', 'pipe']
