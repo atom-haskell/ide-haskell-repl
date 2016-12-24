@@ -1,3 +1,7 @@
+## 0.4.7
+* Merge pull request #43 from soiamsoNG/patch-1
+* Quote the path (soiamsoNG)
+
 ## 0.4.6
 * Fix #40 (error panel shrinking)
 
