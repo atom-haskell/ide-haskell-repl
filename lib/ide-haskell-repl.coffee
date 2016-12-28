@@ -62,11 +62,11 @@ module.exports = IdeHaskellRepl =
       return @createReplView(uri: m[1])
 
     @disposables.add atom.commands.add 'atom-text-editor',
-      'ide-haskell-repl:toggle': ({target}) =>
-        @open target.getModel()
+      'ide-haskell-repl:toggle': ({currentTarget}) =>
+        @open currentTarget.getModel()
 
-    commandFunction = (func) => ({target}) =>
-      view = @editorMap.get(target.getModel())
+    commandFunction = (func) => ({currentTarget}) =>
+      view = @editorMap.get(currentTarget.getModel())
       if view?
         view[func]()
 
@@ -78,24 +78,24 @@ module.exports = IdeHaskellRepl =
       'ide-haskell-repl:ghci-interrupt': commandFunction 'interrupt'
 
     @disposables.add atom.commands.add 'atom-text-editor:not(.ide-haskell-repl)',
-      'ide-haskell-repl:copy-selection-to-repl-input':  ({target}) =>
-        ed = target.getModel()
+      'ide-haskell-repl:copy-selection-to-repl-input':  ({currentTarget}) =>
+        ed = currentTarget.getModel()
         cmd = ed.getLastSelection().getText()
         @open(ed)
         .then (model) ->
           model.copyText(cmd)
-      'ide-haskell-repl:run-selection-in-repl':  ({target}) =>
-        ed = target.getModel()
+      'ide-haskell-repl:run-selection-in-repl':  ({currentTarget}) =>
+        ed = currentTarget.getModel()
         cmd = ed.getLastSelection().getText()
         @open(ed, false)
         .then (model) ->
           model.runCommand(cmd)
-      'ide-haskell-repl:reload-repeat':  ({target}) =>
-        @open(target.getModel(), false)
+      'ide-haskell-repl:reload-repeat':  ({currentTarget}) =>
+        @open(currentTarget.getModel(), false)
         .then (model) ->
           model.ghciReloadRepeat()
-      'ide-haskell-repl:toggle-auto-reload-repeat':  ({target}) =>
-        ed = target.getModel()
+      'ide-haskell-repl:toggle-auto-reload-repeat':  ({currentTarget}) =>
+        ed = currentTarget.getModel()
         if @autoRepeatMap.has(ed)
           old = @autoRepeatMap.get(ed) ? atom.config.get('ide-haskell-repl.autoReloadRepeat')
           @autoRepeatMap.set(ed, not old)
@@ -141,6 +141,7 @@ module.exports = IdeHaskellRepl =
         disp.dispose()
       disp.add model.onDidDestroy ->
         disp.dispose()
+      return model
 
   deactivate: ->
     @disposables.dispose()
