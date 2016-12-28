@@ -141,6 +141,7 @@ module.exports = IdeHaskellRepl =
         disp.dispose()
       disp.add model.onDidDestroy ->
         disp.dispose()
+      return model
 
   deactivate: ->
     @disposables.dispose()
