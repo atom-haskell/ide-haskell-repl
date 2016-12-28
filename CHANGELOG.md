@@ -1,3 +1,6 @@
+## 0.4.8
+* Fix selection commands
+
 ## 0.4.7
 * Merge pull request #43 from soiamsoNG/patch-1
 * Quote the path (soiamsoNG)
