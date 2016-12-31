@@ -32,9 +32,21 @@ class IdeHaskellReplView
       @element.appendChild @errDiv = document.createElement 'div'
       @errDiv.classList.add 'ide-haskell-repl-error'
     @element.appendChild @promptDiv = document.createElement 'div'
+    @element.appendChild @completionsDiv = document.createElement 'div'
     @element.appendChild @editorDiv = document.createElement 'div'
+    @completionsDiv.classList.add('ide-haskell-repl-completions-few')
+    @completionsDiv.addEventListener 'mousedown', (event) =>
+      if (event.which) isnt 1 then return
+      if event.target.tagName.toLowerCase() == 'a' and @commonPrefix?
+        @finishInsertion = true
+        @editor.setText @commonPrefix + event.target.innerText + ' '
+        @completionsDiv.innerText = ''
     @editorDiv.classList.add('ide-haskell-repl-editor')
     @editorDiv.appendChild @editorContainer = document.createElement 'div'
+    @element.addEventListener 'mouseup', =>
+      if @finishInsertion and @editorElement?
+        @editorElement.focus()
+        @finishInsertion = false
     @editorContainer.classList.add 'editor-container'
     @editorContainer.appendChild @editorElement =
       document.createElement('atom-text-editor')
@@ -43,6 +55,11 @@ class IdeHaskellReplView
       document.createElement('button')
     @interruptButton.classList.add 'interrupt'
     @editor = @editorElement.getModel()
+    @editorElement.addEventListener 'blur', =>
+      @completionsDiv.innerText = ''
+    @editorElement.addEventListener 'keydown', (event) =>
+      return if event.key in ['Tab', 'Shift', 'Control', 'Alt']
+      @completionsDiv.innerText = ''
     atom.views.views.set @editor, @editorElement
     atom.textEditors.add @editor
     @editor.setLineNumberGutterVisible(false)
@@ -148,6 +165,8 @@ class IdeHaskellReplView
       history: @history
       onResponse: (response) =>
         @log response.replace(termEscapeRx, '')
+      onComplete: (completions) =>
+        @setCompletions completions
       onInput: (input) =>
         @logInput input.replace(termEscapeRx, '')
       onMessage: (message) =>
@@ -158,6 +177,10 @@ class IdeHaskellReplView
         @setPrompt prompt.replace(termEscapeRx, '')
       onExit: (code) =>
         atom.workspace.paneForItem(@)?.destroyItem?(@)
+
+  tab: ->
+    currentInput = @editor.getBuffer().getLines().join('\n')
+    @ghci.sendCompletionRequest [currentInput]
 
   execCommand: ->
     if @ghci.writeLines @editor.getBuffer().getLines()
@@ -195,6 +218,46 @@ class IdeHaskellReplView
 
   setPrompt: (prompt) ->
     @promptDiv.innerText = prompt + '>'
+
+  setCompletions: (lines) =>
+    metaDataString = lines[0]
+    split = metaDataString.split(' ')
+    completionsCount = Number(split[0])
+    return if completionsCount == 0
+    @commonPrefix = metaDataString[metaDataString.search('"')..].replace(/"/g, '')
+    completions = lines[1..]
+    for i in [0...completions.length]
+      completions[i] = completions[i].replace(/^"|"$/g, '')
+    if completionsCount > 1
+      if completionsCount < 16
+        @completionsDiv.className = "ide-haskell-repl-completions-few"
+      else
+        @completionsDiv.className = "ide-haskell-repl-completions-many"
+      @completionsDiv.innerHTML = ''
+      for completion in completions
+        elem = document.createElement('a')
+        @completionsDiv.appendChild(elem)
+        elem.innerText = completion
+        @completionsDiv.innerHTML = @completionsDiv.innerHTML + '<br>'
+    resultingText = @commonPrefix + @longestCommonSubstring completions
+    resultingText = resultingText.replace(/\\n/g, '\n')
+    resultingText += if completionsCount > 1 then '' else ' '
+    @editor.setText resultingText
+
+  longestCommonSubstring: (strings) ->
+    return '' if strings.length == 0
+    sorted = strings.sort (l, r) ->
+      l.length - r.length
+    .reverse()
+    longestString = sorted[0]
+    common = ''
+    for i in [0...longestString.length]
+      sample = longestString[0..i]
+      for s in strings
+        unless s.startsWith sample
+          return common
+      common = sample
+    common
 
   setError: (err) ->
     if @errDiv?

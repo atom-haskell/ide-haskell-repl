@@ -11,6 +11,7 @@ class GHCI
     {cwd, atomPath, command, args, load, history} = opts
     @errorBuffer = []
     @responseBuffer = []
+    @completeMode = false
 
     history ?= []
     @history =
@@ -20,7 +21,7 @@ class GHCI
 
     @disposables.add @emitter = new Emitter
 
-    events = ['onResponse', 'onError', 'onFinished', 'onExit', 'onInput', 'onMessage']
+    events = ['onResponse', 'onError', 'onFinished', 'onExit', 'onInput', 'onMessage', 'onComplete']
     for i in events when opts[i]?
       @[i](opts[i])
 
@@ -86,6 +87,10 @@ class GHCI
           if @response
             @emitter.emit 'response', @responseBuffer.join('\n') + '\n'
             @response = false
+          else if @completeMode
+            #@emitter.emit 'complete', @responseBuffer.join('\n') + '\n'
+            @emitter.emit 'complete', @responseBuffer
+            @completeMode = false
           else
             @emitter.emit 'message', @responseBuffer.join('\n') + '\n'
           @responseBuffer = []
@@ -120,6 +125,9 @@ class GHCI
 
   onMessage: (callback) ->
     @emitter.on 'message', callback
+
+  onComplete: (callback) ->
+    @emitter.on 'complete', callback
 
   onInput: (callback) ->
     @emitter.on 'input', callback
@@ -177,6 +185,22 @@ class GHCI
       @ghci.stdin.write lines.join('\n')
       @emitter.emit 'input', "\"#{lines.join('\\n')}\"\n"
       return true
+
+  sendCompletionRequest: (queryString) =>
+    if @finished
+      @finished = false
+      @completeMode = true
+      @ghci.stdout.pause()
+      @ghci.stderr.pause()
+      @responseBuffer = []
+      prefix = ":complete repl 32 "
+      queryString = '"' + queryString + '"'
+      @ghci.stdin.write ":{#{EOL}#{prefix + queryString}#{EOL}:}#{EOL}"
+      @ghci.stdout.resume()
+      @ghci.stderr.resume()
+      return true
+    else
+      return false
 
   historyBack: (current) ->
     if @history.item is @history.back.length

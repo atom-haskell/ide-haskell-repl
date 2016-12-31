@@ -72,6 +72,7 @@ module.exports = IdeHaskellRepl =
 
     @disposables.add atom.commands.add 'atom-text-editor.ide-haskell-repl',
       'ide-haskell-repl:exec-command': commandFunction 'execCommand'
+      'ide-haskell-repl:tab': commandFunction 'tab'
       'ide-haskell-repl:history-back': commandFunction 'historyBack'
       'ide-haskell-repl:history-forward': commandFunction 'historyForward'
       'ide-haskell-repl:ghci-reload': commandFunction 'ghciReload'
