@@ -1,3 +1,6 @@
+## 0.4.9
+* Default output fonts
+
 ## 0.4.8
 * Fix selection commands
 
