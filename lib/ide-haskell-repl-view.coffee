@@ -3,6 +3,7 @@ SubAtom = require 'sub-atom'
 GHCI = require './ghci'
 Util = require 'atom-haskell-utils'
 highlightSync = require './highlight'
+{filter} = require 'fuzzaldrin'
 
 termEscapeRx = /\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/g
 
@@ -32,21 +33,9 @@ class IdeHaskellReplView
       @element.appendChild @errDiv = document.createElement 'div'
       @errDiv.classList.add 'ide-haskell-repl-error'
     @element.appendChild @promptDiv = document.createElement 'div'
-    @element.appendChild @completionsDiv = document.createElement 'div'
     @element.appendChild @editorDiv = document.createElement 'div'
-    @completionsDiv.classList.add('ide-haskell-repl-completions-few')
-    @completionsDiv.addEventListener 'mousedown', (event) =>
-      if (event.which) isnt 1 then return
-      if event.target.tagName.toLowerCase() == 'a' and @commonPrefix?
-        @finishInsertion = true
-        @editor.setText @commonPrefix + event.target.innerText + ' '
-        @completionsDiv.innerText = ''
     @editorDiv.classList.add('ide-haskell-repl-editor')
     @editorDiv.appendChild @editorContainer = document.createElement 'div'
-    @element.addEventListener 'mouseup', =>
-      if @finishInsertion and @editorElement?
-        @editorElement.focus()
-        @finishInsertion = false
     @editorContainer.classList.add 'editor-container'
     @editorContainer.appendChild @editorElement =
       document.createElement('atom-text-editor')
@@ -55,11 +44,6 @@ class IdeHaskellReplView
       document.createElement('button')
     @interruptButton.classList.add 'interrupt'
     @editor = @editorElement.getModel()
-    @editorElement.addEventListener 'blur', =>
-      @completionsDiv.innerText = ''
-    @editorElement.addEventListener 'keydown', (event) =>
-      return if event.key in ['Tab', 'Shift', 'Control', 'Alt']
-      @completionsDiv.innerText = ''
     atom.views.views.set @editor, @editorElement
     atom.textEditors.add @editor
     @editor.setLineNumberGutterVisible(false)
@@ -68,11 +52,9 @@ class IdeHaskellReplView
       atom.grammars.grammarForScopeName 'source.haskell'
 
     @disposables.add atom.config.observe 'editor.fontSize', (fontSize) =>
-      if fontSize?
-        @outputDiv.style.fontSize = "#{fontSize}px"
+      @outputDiv.style.fontSize = "#{fontSize}px" ? ''
     @disposables.add atom.config.observe 'editor.fontFamily', (fontFamily) =>
-      if fontFamily
-        @outputDiv.style.fontFamily = fontFamily
+      @outputDiv.style.fontFamily = fontFamily ? ''
 
     @disposables.add @interruptButton, 'click', =>
       @interrupt()
@@ -165,8 +147,6 @@ class IdeHaskellReplView
       history: @history
       onResponse: (response) =>
         @log response.replace(termEscapeRx, '')
-      onComplete: (completions) =>
-        @setCompletions completions
       onInput: (input) =>
         @logInput input.replace(termEscapeRx, '')
       onMessage: (message) =>
@@ -219,45 +199,19 @@ class IdeHaskellReplView
   setPrompt: (prompt) ->
     @promptDiv.innerText = prompt + '>'
 
-  setCompletions: (lines) =>
-    metaDataString = lines[0]
-    split = metaDataString.split(' ')
-    completionsCount = Number(split[0])
-    return if completionsCount == 0
-    @commonPrefix = metaDataString[metaDataString.search('"')..].replace(/"/g, '')
-    completions = lines[1..]
-    for i in [0...completions.length]
-      completions[i] = completions[i].replace(/^"|"$/g, '')
-    if completionsCount > 1
-      if completionsCount < 16
-        @completionsDiv.className = "ide-haskell-repl-completions-few"
-      else
-        @completionsDiv.className = "ide-haskell-repl-completions-many"
-      @completionsDiv.innerHTML = ''
-      for completion in completions
-        elem = document.createElement('a')
-        @completionsDiv.appendChild(elem)
-        elem.innerText = completion
-        @completionsDiv.innerHTML = @completionsDiv.innerHTML + '<br>'
-    resultingText = @commonPrefix + @longestCommonSubstring completions
-    resultingText = resultingText.replace(/\\n/g, '\n')
-    resultingText += if completionsCount > 1 then '' else ' '
-    @editor.setText resultingText
-
-  longestCommonSubstring: (strings) ->
-    return '' if strings.length == 0
-    sorted = strings.sort (l, r) ->
-      l.length - r.length
-    .reverse()
-    longestString = sorted[0]
-    common = ''
-    for i in [0...longestString.length]
-      sample = longestString[0..i]
-      for s in strings
-        unless s.startsWith sample
-          return common
-      common = sample
-    common
+  getCompletions: (prefix) =>
+    return [] if prefix == '' or prefix == ' '
+    @ghci.sendCompletionRequest prefix
+    new Promise (resolve) =>
+      @completionHandler = @ghci.emitter.on 'complete', (lines) =>
+        suggestions = []
+        for line, i in lines when i > 0
+          lines[i] = line.replace /^"|"$/g, ''
+        results = filter(lines, prefix, {maxResults: 32})
+        for result in results
+          suggestions.push {text: result}
+        resolve (suggestions)
+        if @completionHandler? then @completionHandler.dispose()
 
   setError: (err) ->
     if @errDiv?
@@ -289,7 +243,6 @@ class IdeHaskellReplView
       lines = for line in lines
         line.slice(minIndent)
     lines.join('\n')
-
 
   parseMessage: (raw) ->
     # Regular expression to match against a location in a cabal msg (Foo.hs:3:2)

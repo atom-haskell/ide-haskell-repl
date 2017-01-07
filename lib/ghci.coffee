@@ -21,7 +21,7 @@ class GHCI
 
     @disposables.add @emitter = new Emitter
 
-    events = ['onResponse', 'onError', 'onFinished', 'onExit', 'onInput', 'onMessage', 'onComplete']
+    events = ['onResponse', 'onError', 'onFinished', 'onExit', 'onInput', 'onMessage']
     for i in events when opts[i]?
       @[i](opts[i])
 
@@ -88,7 +88,6 @@ class GHCI
             @emitter.emit 'response', @responseBuffer.join('\n') + '\n'
             @response = false
           else if @completeMode
-            #@emitter.emit 'complete', @responseBuffer.join('\n') + '\n'
             @emitter.emit 'complete', @responseBuffer
             @completeMode = false
           else
@@ -193,14 +192,13 @@ class GHCI
       @ghci.stdout.pause()
       @ghci.stderr.pause()
       @responseBuffer = []
-      prefix = ":complete repl 32 "
-      queryString = '"' + queryString + '"'
-      @ghci.stdin.write ":{#{EOL}#{prefix + queryString}#{EOL}:}#{EOL}"
+      prefix = ':complete repl ""'
+      @ghci.stdin.write ":{#{EOL}#{prefix}#{EOL}:}#{EOL}"
       @ghci.stdout.resume()
       @ghci.stderr.resume()
-      return true
+      true
     else
-      return false
+      false
 
   historyBack: (current) ->
     if @history.item is @history.back.length

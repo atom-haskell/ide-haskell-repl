@@ -1,6 +1,5 @@
 '.platform-linux atom-text-editor.ide-haskell-repl':
   'shift-enter': 'ide-haskell-repl:exec-command'
-  'tab': 'ide-haskell-repl:tab'
   'shift-up': 'ide-haskell-repl:history-back'
   'shift-down': 'ide-haskell-repl:history-forward'
   'ctrl-shift-r': 'ide-haskell-repl:ghci-reload'

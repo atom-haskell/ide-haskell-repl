@@ -29,24 +29,6 @@
   }
 }
 
-.ide-haskell-repl-completions {
-  margin-left: 16px;
-  font-weight: bold;
-  font-family: monospace;
-  max-height: 512px;
-}
-
-div.ide-haskell-repl-completions-few {
-  .ide-haskell-repl-completions;
-  overflow: hidden;
-  display: table;
-}
-
-div.ide-haskell-repl-completions-many {
-  .ide-haskell-repl-completions;
-  overflow: scroll;
-}
-
 div.ide-haskell-repl {
   display: flex;
   flex-direction: column;
@@ -61,9 +43,9 @@ div.ide-haskell-repl {
     flex-grow: 1;
     position: relative;
     overflow-y: scroll;
+    font-family: Menlo, Consolas, 'DejaVu Sans Mono', monospace;
     pre {
       font-size: inherit;
-      font-family: monospace;
       margin-bottom: 0.2em;
     }
     .ide-haskell-repl-output-text {
