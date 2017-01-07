@@ -66,7 +66,6 @@ module.exports = IdeHaskellRepl =
         @open target.getModel()
 
     commandFunction = (func) => ({target}) =>
-      console.log(target.getModel())
       view = @editorMap.get(target.getModel())
       if view?
         view[func]()
@@ -167,4 +166,4 @@ module.exports = IdeHaskellRepl =
     getSuggestions: ({editor, prefix}) =>
       return [] unless @editorMap
       view = @editorMap.get editor
-      view.getCompletions(prefix)
+      view?.getCompletions(prefix)

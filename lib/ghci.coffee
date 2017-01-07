@@ -185,7 +185,7 @@ class GHCI
       @emitter.emit 'input', "\"#{lines.join('\\n')}\"\n"
       return true
 
-  sendCompletionRequest: (queryString) =>
+  sendCompletionRequest: =>
     if @finished
       @finished = false
       @completeMode = true

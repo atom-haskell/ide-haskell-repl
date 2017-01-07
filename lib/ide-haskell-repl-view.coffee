@@ -158,10 +158,6 @@ class IdeHaskellReplView
       onExit: (code) =>
         atom.workspace.paneForItem(@)?.destroyItem?(@)
 
-  tab: ->
-    currentInput = @editor.getBuffer().getLines().join('\n')
-    @ghci.sendCompletionRequest [currentInput]
-
   execCommand: ->
     if @ghci.writeLines @editor.getBuffer().getLines()
       @editor.setText ''
@@ -201,17 +197,16 @@ class IdeHaskellReplView
 
   getCompletions: (prefix) =>
     return [] if prefix == '' or prefix == ' '
-    @ghci.sendCompletionRequest prefix
     new Promise (resolve) =>
-      @completionHandler = @ghci.emitter.on 'complete', (lines) =>
+      if not @ghci.sendCompletionRequest()
+        return []
+      completionHandler = @ghci.onComplete (lines) =>
         suggestions = []
-        for line, i in lines when i > 0
-          lines[i] = line.replace /^"|"$/g, ''
-        results = filter(lines, prefix, {maxResults: 32})
-        for result in results
-          suggestions.push {text: result}
-        resolve (suggestions)
-        if @completionHandler? then @completionHandler.dispose()
+        lines = lines.slice(1).map((line) -> line.slice(1, -1))
+        results = filter(lines, prefix)
+        .map (result) -> text: result
+        resolve (results)
+        completionHandler.dispose()
 
   setError: (err) ->
     if @errDiv?
