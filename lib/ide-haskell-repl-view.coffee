@@ -51,11 +51,9 @@ class IdeHaskellReplView
       atom.grammars.grammarForScopeName 'source.haskell'
 
     @disposables.add atom.config.observe 'editor.fontSize', (fontSize) =>
-      if fontSize?
-        @outputDiv.style.fontSize = "#{fontSize}px"
+      @outputDiv.style.fontSize = "#{fontSize}px" ? ''
     @disposables.add atom.config.observe 'editor.fontFamily', (fontFamily) =>
-      if fontFamily
-        @outputDiv.style.fontFamily = fontFamily
+      @outputDiv.style.fontFamily = fontFamily ? ''
 
     @disposables.add @interruptButton, 'click', =>
       @interrupt()
