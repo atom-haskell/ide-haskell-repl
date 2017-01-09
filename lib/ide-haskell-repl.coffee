@@ -166,4 +166,5 @@ module.exports = IdeHaskellRepl =
     getSuggestions: ({editor, prefix}) =>
       return [] unless @editorMap
       view = @editorMap.get editor
-      view?.getCompletions(prefix)
+      return [] unless view?
+      view.getCompletions(prefix)

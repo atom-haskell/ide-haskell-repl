@@ -196,17 +196,19 @@ class IdeHaskellReplView
     @promptDiv.innerText = prompt + '>'
 
   getCompletions: (prefix) =>
-    return [] if prefix == '' or prefix == ' '
-    new Promise (resolve) =>
-      if not @ghci.sendCompletionRequest()
-        return []
-      completionHandler = @ghci.onComplete (lines) =>
-        suggestions = []
-        lines = lines.slice(1).map((line) -> line.slice(1, -1))
-        results = filter(lines, prefix)
-        .map (result) -> text: result
-        resolve (results)
-        completionHandler.dispose()
+    return [] unless prefix.trim()
+    new Promise (resolve, reject) =>
+      unless @ghci.sendCompletionRequest()
+        @completionHandler?.dispose?()
+      @completionHandler = @ghci.onComplete (lines) =>
+        lines_ =
+          lines.slice(1)
+          .map (line) -> line.slice(1, -1)
+        suggestions =
+          filter(lines_, prefix)
+          .map (result) -> text: result
+        resolve suggestions
+        @completionHandler.dispose()
 
   setError: (err) ->
     if @errDiv?

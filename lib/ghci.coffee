@@ -171,31 +171,26 @@ class GHCI
       @history.item = @history.back.length
       @finished = false
       @response = (not lines[0].startsWith ':') or lines[0].startsWith ':type' or lines[0].startsWith ':t'
-      @ghci.stdout.pause()
-      @ghci.stderr.pause()
       @errorBuffer = []
       @responseBuffer = []
       @ghci.stdin.write ":{#{EOL}#{lines.join(EOL)}#{EOL}:}#{EOL}"
       @emitter.emit 'input', lines.join('\n') + '\n'
-      @ghci.stdout.resume()
-      @ghci.stderr.resume()
       return true
-    else
+    else unless @completeMode
       @ghci.stdin.write lines.join('\n')
       @emitter.emit 'input', "\"#{lines.join('\\n')}\"\n"
       return true
+    else
+      return false
 
   sendCompletionRequest: =>
+    return false unless @isActive()
+    return false unless @started
     if @finished
       @finished = false
       @completeMode = true
-      @ghci.stdout.pause()
-      @ghci.stderr.pause()
       @responseBuffer = []
-      prefix = ':complete repl ""'
-      @ghci.stdin.write ":{#{EOL}#{prefix}#{EOL}:}#{EOL}"
-      @ghci.stdout.resume()
-      @ghci.stderr.resume()
+      @ghci.stdin.write ":complete repl \"\"#{EOL}"
       true
     else
       false
