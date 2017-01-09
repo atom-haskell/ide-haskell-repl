@@ -11,6 +11,7 @@ class GHCI
     {cwd, atomPath, command, args, load, history} = opts
     @errorBuffer = []
     @responseBuffer = []
+    @completeMode = false
 
     history ?= []
     @history =
@@ -86,6 +87,9 @@ class GHCI
           if @response
             @emitter.emit 'response', @responseBuffer.join('\n') + '\n'
             @response = false
+          else if @completeMode
+            @emitter.emit 'complete', @responseBuffer
+            @completeMode = false
           else
             @emitter.emit 'message', @responseBuffer.join('\n') + '\n'
           @responseBuffer = []
@@ -120,6 +124,9 @@ class GHCI
 
   onMessage: (callback) ->
     @emitter.on 'message', callback
+
+  onComplete: (callback) ->
+    @emitter.on 'complete', callback
 
   onInput: (callback) ->
     @emitter.on 'input', callback
@@ -177,6 +184,21 @@ class GHCI
       @ghci.stdin.write lines.join('\n')
       @emitter.emit 'input', "\"#{lines.join('\\n')}\"\n"
       return true
+
+  sendCompletionRequest: =>
+    if @finished
+      @finished = false
+      @completeMode = true
+      @ghci.stdout.pause()
+      @ghci.stderr.pause()
+      @responseBuffer = []
+      prefix = ':complete repl ""'
+      @ghci.stdin.write ":{#{EOL}#{prefix}#{EOL}:}#{EOL}"
+      @ghci.stdout.resume()
+      @ghci.stderr.resume()
+      true
+    else
+      false
 
   historyBack: (current) ->
     if @history.item is @history.back.length

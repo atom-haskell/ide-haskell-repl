@@ -100,7 +100,6 @@ module.exports = IdeHaskellRepl =
           old = @autoRepeatMap.get(ed) ? atom.config.get('ide-haskell-repl.autoReloadRepeat')
           @autoRepeatMap.set(ed, not old)
 
-
     @disposables.add atom.menu.add [
       'label': 'Haskell IDE'
       'submenu': [
@@ -157,3 +156,14 @@ module.exports = IdeHaskellRepl =
         autoScroll: true
 
     upiDisposables
+
+  autocompleteProvider_3_0_0: ->
+    scopeSelector: '.source.haskell'
+    disableForScopeSelector: '.source.haskell .comment'
+    getTextEditorSelector: ->
+      'atom-text-editor.ide-haskell-repl'
+    inclusionPriority: 0
+    getSuggestions: ({editor, prefix}) =>
+      return [] unless @editorMap
+      view = @editorMap.get editor
+      view?.getCompletions(prefix)

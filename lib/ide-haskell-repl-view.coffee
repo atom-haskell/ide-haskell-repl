@@ -3,6 +3,7 @@ SubAtom = require 'sub-atom'
 GHCI = require './ghci'
 Util = require 'atom-haskell-utils'
 highlightSync = require './highlight'
+{filter} = require 'fuzzaldrin'
 
 termEscapeRx = /\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/g
 
@@ -194,6 +195,19 @@ class IdeHaskellReplView
   setPrompt: (prompt) ->
     @promptDiv.innerText = prompt + '>'
 
+  getCompletions: (prefix) =>
+    return [] if prefix == '' or prefix == ' '
+    new Promise (resolve) =>
+      if not @ghci.sendCompletionRequest()
+        return []
+      completionHandler = @ghci.onComplete (lines) =>
+        suggestions = []
+        lines = lines.slice(1).map((line) -> line.slice(1, -1))
+        results = filter(lines, prefix)
+        .map (result) -> text: result
+        resolve (results)
+        completionHandler.dispose()
+
   setError: (err) ->
     if @errDiv?
       @errDiv.innerText = err.trim()
@@ -224,7 +238,6 @@ class IdeHaskellReplView
       lines = for line in lines
         line.slice(minIndent)
     lines.join('\n')
-
 
   parseMessage: (raw) ->
     # Regular expression to match against a location in a cabal msg (Foo.hs:3:2)
