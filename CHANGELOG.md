@@ -1,3 +1,6 @@
+## 0.5.0
+* GHCi-powered autocompletion in REPL input (by @yaeti)
+
 ## 0.4.9
 * Default output fonts
 
