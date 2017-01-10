@@ -45,3 +45,18 @@ You can rebind those in your keymap, e.g.
 ```
 
 Just don't forget to disable default bindings in ide-haskell-repl settings, if you don't want them.
+
+## License
+
+Copyright © 2015 Atom-Haskell.
+
+See [LICENSE.md][LICENSE] for details.
+
+[LICENSE]: https://github.com/atom-haskell/ide-haskell-repl/blob/master/LICENSE.md
+
+Contributors:
+
+* Nikolay Yakimov
+* yaeti
+* Yakov Borevich
+* soiamsoNG
