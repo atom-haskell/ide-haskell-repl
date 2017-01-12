@@ -1,3 +1,9 @@
+## 0.5.1
+* Merge remote-tracking branch 'origin/atom-1.13'
+* s/target/currentTarget/
+* Bump engine version
+* Atom 1.13 updates
+
 ## 0.5.0
 * GHCi-powered autocompletion in REPL input (by @yaeti)
 
