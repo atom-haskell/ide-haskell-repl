@@ -1,3 +1,6 @@
+## 0.5.2
+* Use atom-highlight for highlighting
+
 ## 0.5.1
 * Merge remote-tracking branch 'origin/atom-1.13'
 * s/target/currentTarget/
