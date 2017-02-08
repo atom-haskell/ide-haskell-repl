@@ -2,7 +2,7 @@ SubAtom = require 'sub-atom'
 {Range, Emitter} = require 'atom'
 GHCI = require './ghci'
 Util = require 'atom-haskell-utils'
-highlightSync = require './highlight'
+highlightSync = require 'atom-highlight'
 {filter} = require 'fuzzaldrin'
 
 termEscapeRx = /\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/g
@@ -265,14 +265,14 @@ class IdeHaskellReplView
   log: (text) ->
     pre = document.createElement('pre')
     pre.classList.add 'ide-haskell-repl-output-text'
-    pre.innerHTML = highlightSync(fileContents: text, scopeName: 'source.haskell')
+    pre.innerHTML = highlightSync(fileContents: text, scopeName: 'source.haskell', nbsp: false)
     @outputDiv.appendChild pre
     pre.scrollIntoView()
 
   logInput: (text) ->
     pre = document.createElement('pre')
     pre.classList.add 'ide-haskell-repl-input-text'
-    pre.innerHTML = highlightSync(fileContents: text, scopeName: 'source.haskell')
+    pre.innerHTML = highlightSync(fileContents: text, scopeName: 'source.haskell', nbsp: false)
     @outputDiv.appendChild pre
     pre.scrollIntoView()
 
