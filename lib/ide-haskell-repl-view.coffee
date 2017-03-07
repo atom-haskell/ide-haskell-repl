@@ -173,8 +173,19 @@ class IdeHaskellReplView
     @editor.setText command
     @editorElement.focus()
 
-  runCommand: (command) ->
-    unless @ghci?.finished and @ghci?.writeLines?(command.split('\n'))
+  runCommand: (command, time) ->
+    unless @ghci
+      @setError('runCommand: no GHCi instance')
+      return
+    unless @ghci.isActive()
+      @setError('runCommand: GHCi instance is inactive')
+      return
+    time ?= Date.now()
+    dt = Date.now() - time
+    if dt > 10000
+      @setError("runCommand: timeout after #{dt / 1000} seconds")
+      return
+    unless @ghci.writeLines(command.split('\n'))
       setTimeout (=> @runCommand(command)), 100
 
   historyBack: ->
