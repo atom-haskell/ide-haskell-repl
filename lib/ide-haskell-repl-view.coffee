@@ -73,6 +73,10 @@ class IdeHaskellReplView
       @[name] = btn if name?
 
     addButton
+      cls: 'reload-repeat'
+      tooltip: 'Reload file and repeat last command'
+      command: 'ide-haskell-repl:reload-repeat'
+    addButton
       name: 'syncButton'
       cls: 'auto-reload-repeat'
       tooltip: 'Toggle reload-repeat on file save'
