@@ -71,6 +71,13 @@ class IdeHaskellReplView
     @disposables.add @interruptButton, 'click', =>
       @interrupt()
 
+    @disposables.add atom.tooltips.add @syncButton,
+      title: 'Toggle reload-repeat on file save'
+      keyBindingCommand: 'ide-haskell-repl:toggle-auto-reload-repeat'
+    @disposables.add atom.tooltips.add @interruptButton,
+      title: 'Interrupt current computation'
+      keyBindingCommand: 'ide-haskell-repl:ghci-interrupt'
+
     @editorElement.onDidAttach =>
       @setEditorHeight()
     @editor.onDidChange =>
