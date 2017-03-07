@@ -47,12 +47,6 @@ class IdeHaskellReplView
     @editorContainer.appendChild @editorElement =
       document.createElement('atom-text-editor')
     @editorElement.classList.add 'ide-haskell-repl'
-    @editorDiv.appendChild @syncButton =
-      document.createElement('button')
-    @syncButton.classList.add 'auto-reload-repeat'
-    @editorDiv.appendChild @interruptButton =
-      document.createElement('button')
-    @interruptButton.classList.add 'interrupt'
     @editor = @editorElement.getModel()
     atom.views.views.set @editor, @editorElement
     atom.textEditors.add @editor
@@ -66,17 +60,27 @@ class IdeHaskellReplView
     @disposables.add atom.config.observe 'editor.fontFamily', (fontFamily) =>
       @outputDiv.style.fontFamily = fontFamily ? ''
 
-    @disposables.add @syncButton, 'click', =>
-      @toggleAutoReloadRepeat()
-    @disposables.add @interruptButton, 'click', =>
-      @interrupt()
+    addButton = ({name, cls, tooltip, command, target}) =>
+      target ?= @editorElement
+      btn = @editorDiv.appendChild document.createElement('button')
+      btn.classList.add cls
+      @disposables.add btn, 'click', ->
+        atom.commands.dispatch(target, command)
+      @disposables.add atom.tooltips.add btn,
+        title: tooltip
+        keyBindingCommand: command
+        keyBindingTarget: target
+      @[name] = btn if name?
 
-    @disposables.add atom.tooltips.add @syncButton,
-      title: 'Toggle reload-repeat on file save'
-      keyBindingCommand: 'ide-haskell-repl:toggle-auto-reload-repeat'
-    @disposables.add atom.tooltips.add @interruptButton,
-      title: 'Interrupt current computation'
-      keyBindingCommand: 'ide-haskell-repl:ghci-interrupt'
+    addButton
+      name: 'syncButton'
+      cls: 'auto-reload-repeat'
+      tooltip: 'Toggle reload-repeat on file save'
+      command: 'ide-haskell-repl:toggle-auto-reload-repeat'
+    addButton
+      cls: 'interrupt'
+      tooltip: 'Interrupt current computation'
+      command: 'ide-haskell-repl:ghci-interrupt'
 
     @editorElement.onDidAttach =>
       @setEditorHeight()
