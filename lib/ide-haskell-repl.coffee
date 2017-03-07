@@ -114,13 +114,13 @@ module.exports = IdeHaskellRepl =
         @resolveUPIPromise(null)
       ), 5000
 
-  createReplView: ({uri, upi, content, history}) ->
+  createReplView: ({uri, upi, content, history, autoReloadRepeat}) ->
     upiPromise =
       if upi and not @upi?
         new Promise (@resolveUPIPromise) =>
       else
         Promise.resolve(@upi)
-    view = new IdeHaskellReplView({uri, content, history, upiPromise})
+    view = new IdeHaskellReplView({uri, content, history, upiPromise, autoReloadRepeat})
     view.editorPromise.then (editor) => @editorMap.set(editor, view)
     return view
 

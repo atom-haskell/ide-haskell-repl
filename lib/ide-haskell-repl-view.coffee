@@ -9,7 +9,7 @@ termEscapeRx = /\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/g
 
 module.exports =
 class IdeHaskellReplView
-  constructor: ({@uri, content, @history, upiPromise}) ->
+  constructor: ({@uri, content, @history, upiPromise, @autoReloadRepeat}) ->
     # Create root element
     @disposables = new SubAtom
     @disposables.add @emitter = new Emitter
@@ -18,7 +18,7 @@ class IdeHaskellReplView
     @element = document.createElement 'div'
     @element.classList.add('ide-haskell-repl')
 
-    @autoReloadRepeat = atom.config.get('ide-haskell-repl.autoReloadRepeat')
+    @autoReloadRepeat ?= atom.config.get('ide-haskell-repl.autoReloadRepeat')
 
     @disposables.add atom.workspace.observeTextEditors (editor) =>
       if editor.getURI() is @uri
@@ -78,6 +78,8 @@ class IdeHaskellReplView
     @outputDiv.innerHTML = content if content?
 
     @cwd = Util.getRootDir @uri
+
+    @setAutoReloadRepeat(@autoReloadRepeat)
 
     setImmediate =>
       return @runREPL() unless @upi?
@@ -334,3 +336,4 @@ class IdeHaskellReplView
     upi: @upi?
     content: @outputDiv.innerHTML
     history: @ghci.history.back
+    autoReloadRepeat: @autoReloadRepeat
