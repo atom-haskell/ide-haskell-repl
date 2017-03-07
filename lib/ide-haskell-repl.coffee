@@ -76,6 +76,11 @@ module.exports = IdeHaskellRepl =
       'ide-haskell-repl:ghci-reload': commandFunction 'ghciReload'
       'ide-haskell-repl:ghci-interrupt': commandFunction 'interrupt'
 
+    externalCommandFunction = (func) => ({currentTarget}) =>
+      @open(currentTarget.getModel(), false)
+      .then (model) ->
+        model[func]()
+
     @disposables.add atom.commands.add 'atom-text-editor:not(.ide-haskell-repl)',
       'ide-haskell-repl:copy-selection-to-repl-input':  ({currentTarget}) =>
         ed = currentTarget.getModel()
@@ -89,18 +94,9 @@ module.exports = IdeHaskellRepl =
         @open(ed, false)
         .then (model) ->
           model.runCommand(cmd)
-      'ide-haskell-repl:ghci-reload': ({currentTarget}) =>
-        @open(currentTarget.getModel(), false)
-        .then (model) ->
-          model.ghciReload()
-      'ide-haskell-repl:reload-repeat':  ({currentTarget}) =>
-        @open(currentTarget.getModel(), false)
-        .then (model) ->
-          model.ghciReloadRepeat()
-      'ide-haskell-repl:toggle-auto-reload-repeat':  ({currentTarget}) =>
-        @open(currentTarget.getModel(), false)
-        .then (model) ->
-          model.toggleAutoReloadRepeat()
+      'ide-haskell-repl:ghci-reload': externalCommandFunction 'ghciReload'
+      'ide-haskell-repl:reload-repeat': externalCommandFunction 'ghciReloadRepeat'
+      'ide-haskell-repl:toggle-auto-reload-repeat': externalCommandFunction 'toggleAutoReloadRepeat'
 
     @disposables.add atom.menu.add [
       'label': 'Haskell IDE'
