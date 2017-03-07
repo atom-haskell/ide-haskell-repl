@@ -194,6 +194,10 @@ class IdeHaskellReplView
     @setAutoReloadRepeat(not @getAutoReloadRepeat())
 
   setAutoReloadRepeat: (@autoReloadRepeat) ->
+    if @autoReloadRepeat
+      @editorDiv.classList.add('auto-reload-repeat')
+    else
+      @editorDiv.classList.remove('auto-reload-repeat')
 
   getAutoReloadRepeat: -> @autoReloadRepeat
 

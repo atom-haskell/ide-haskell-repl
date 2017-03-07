@@ -61,6 +61,19 @@ div.ide-haskell-repl {
     position: relative;
     display: flex;
     flex-direction: row;
+    &.auto-reload-repeat::before {
+      font-family: 'Octicons Regular';
+      font-weight: normal;
+      font-style: normal;
+      display: inline-block;
+      line-height: 1;
+      -webkit-font-smoothing: antialiased;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+      font-size: 1.7em;
+      content: @sync;
+    }
     .editor-container {
       flex-grow: 1;
       flex-shrink: 1;
