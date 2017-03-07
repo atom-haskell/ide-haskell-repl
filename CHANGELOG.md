@@ -1,3 +1,19 @@
+## 0.6.0
+* Collect error messages
+* Add reload-repeat button
+* Refactor adding buttons
+* Button tooltips
+* Toggle autoReloadRepeat button
+* Serialize autoReloadRepeat
+* Add some repl-context commands
+* Some error handling for runCommand
+* Hide load\/reload messages
+* Minimal indication that auto-reload-repeat is active
+* Common code, DRY
+* Factor autoReloadRepeat into replView
+* Add reload to editor context
+* Report pre-start errors
+
 ## 0.5.2
 * Use atom-highlight for highlighting
 
