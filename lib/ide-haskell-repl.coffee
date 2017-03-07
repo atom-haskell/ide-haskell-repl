@@ -74,6 +74,9 @@ module.exports = IdeHaskellRepl =
       'ide-haskell-repl:history-back': commandFunction 'historyBack'
       'ide-haskell-repl:history-forward': commandFunction 'historyForward'
       'ide-haskell-repl:ghci-reload': commandFunction 'ghciReload'
+      'ide-haskell-repl:ghci-reload': commandFunction 'ghciReload'
+      'ide-haskell-repl:reload-repeat': commandFunction 'ghciReloadRepeat'
+      'ide-haskell-repl:toggle-auto-reload-repeat': commandFunction 'toggleAutoReloadRepeat'
       'ide-haskell-repl:ghci-interrupt': commandFunction 'interrupt'
 
     externalCommandFunction = (func) => ({currentTarget}) =>
