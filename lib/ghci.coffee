@@ -68,6 +68,10 @@ class GHCI
         rx = /^#~IDEHASKELLREPL~(.*)~#$/
         rxres = rx.exec @responseBuffer.slice(-1)[0]
         if rxres?
+          # emit errors (if any)
+          @emitter.emit 'error', @errorBuffer.join('\n') + '\n'
+          @errorBuffer = []
+
           @finished = true
           @emitter.emit 'finished', rxres[1]
           unless @started
@@ -82,8 +86,6 @@ class GHCI
               @responseBuffer.slice(0, -2)
 
           # TODO: Show that command finished
-          @emitter.emit 'error', @errorBuffer.join('\n') + '\n'
-          @errorBuffer = []
           if @response
             @emitter.emit 'response', @responseBuffer.join('\n') + '\n'
             @response = false
