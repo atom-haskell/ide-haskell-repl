@@ -47,6 +47,9 @@ class IdeHaskellReplView
     @editorContainer.appendChild @editorElement =
       document.createElement('atom-text-editor')
     @editorElement.classList.add 'ide-haskell-repl'
+    @editorDiv.appendChild @syncButton =
+      document.createElement('button')
+    @syncButton.classList.add 'auto-reload-repeat'
     @editorDiv.appendChild @interruptButton =
       document.createElement('button')
     @interruptButton.classList.add 'interrupt'
@@ -63,6 +66,8 @@ class IdeHaskellReplView
     @disposables.add atom.config.observe 'editor.fontFamily', (fontFamily) =>
       @outputDiv.style.fontFamily = fontFamily ? ''
 
+    @disposables.add @syncButton, 'click', =>
+      @toggleAutoReloadRepeat()
     @disposables.add @interruptButton, 'click', =>
       @interrupt()
 
@@ -208,9 +213,9 @@ class IdeHaskellReplView
 
   setAutoReloadRepeat: (@autoReloadRepeat) ->
     if @autoReloadRepeat
-      @editorDiv.classList.add('auto-reload-repeat')
+      @syncButton.classList.add('enabled')
     else
-      @editorDiv.classList.remove('auto-reload-repeat')
+      @syncButton.classList.remove('enabled')
 
   getAutoReloadRepeat: -> @autoReloadRepeat
 

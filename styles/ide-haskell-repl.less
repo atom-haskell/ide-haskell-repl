@@ -61,19 +61,6 @@ div.ide-haskell-repl {
     position: relative;
     display: flex;
     flex-direction: row;
-    &.auto-reload-repeat::before {
-      font-family: 'Octicons Regular';
-      font-weight: normal;
-      font-style: normal;
-      display: inline-block;
-      line-height: 1;
-      -webkit-font-smoothing: antialiased;
-      text-decoration: none;
-      display: block;
-      text-align: center;
-      font-size: 1.7em;
-      content: @sync;
-    }
     .editor-container {
       flex-grow: 1;
       flex-shrink: 1;
@@ -89,11 +76,9 @@ div.ide-haskell-repl {
     background-color: @pane-item-background-color;
     border-top: double 3px @pane-item-border-color;
   }
-  button.interrupt {
-    width: 2em;
-    flex-grow: 0;
+  button {
     flex-shrink: 0;
-    border-radius: @component-border-radius;
+    flex-grow: 0;
     display: inline-block;
     line-height: 1.8em;
     color: @text-color-subtle;
@@ -104,18 +89,26 @@ div.ide-haskell-repl {
     &:active {
       background: transparent;
     }
-    &:before {
-      font-family: 'Octicons Regular';
-      font-weight: normal;
-      font-style: normal;
-      display: inline-block;
-      line-height: 1;
-      -webkit-font-smoothing: antialiased;
-      text-decoration: none;
-      display: block;
-      text-align: center;
-      font-size: 1.7em;
+    font-family: 'Octicons Regular';
+    font-weight: normal;
+    font-style: normal;
+    display: inline-block;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    font-size: 1.7em;
+    &.interrupt:before {
       content: @x;
+    }
+    &.auto-reload-repeat {
+      &.enabled {
+        color: @text-color-success;
+      }
+      &:before{
+        content: @sync;
+      }
     }
   }
 }
