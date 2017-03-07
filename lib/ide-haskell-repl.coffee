@@ -90,6 +90,10 @@ module.exports = IdeHaskellRepl =
         @open(ed, false)
         .then (model) ->
           model.runCommand(cmd)
+      'ide-haskell-repl:ghci-reload': ({currentTarget}) =>
+        @open(currentTarget.getModel(), false)
+        .then (model) ->
+          model.ghciReload()
       'ide-haskell-repl:reload-repeat':  ({currentTarget}) =>
         @open(currentTarget.getModel(), false)
         .then (model) ->
