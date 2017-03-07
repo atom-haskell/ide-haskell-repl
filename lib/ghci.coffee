@@ -77,6 +77,7 @@ class GHCI
           unless @started
             @started = true
             @responseBuffer = []
+            @emitter.emit 'started'
             return
 
           @responseBuffer =
@@ -121,6 +122,9 @@ class GHCI
   onFinished: (callback) ->
     @emitter.on 'finished', callback
 
+  onStarted: (callback) ->
+    @emitter.on 'started', callback
+
   onResponse: (callback) ->
     @emitter.on 'response', callback
 
@@ -141,17 +145,23 @@ class GHCI
 
   load: (uri) ->
     return unless @isActive()
+    @finished = false
+    @started = false
     @ghci.stdin.write ":load #{hsEscapeString uri}#{EOL}"
 
   reload: ->
     return unless @isActive()
+    @finished = false
+    @started = false
     @ghci.stdin.write ":reload#{EOL}"
 
   reloadRepeat: ->
     return unless @isActive()
     return unless @history.back[@history.back.length - 1]?
     @reload()
-    @writeLines([@history.back[@history.back.length - 1]])
+    disp = @onStarted =>
+      @writeLines([@history.back[@history.back.length - 1]])
+      disp.dispose()
 
   interrupt: ->
     if @ghci?
