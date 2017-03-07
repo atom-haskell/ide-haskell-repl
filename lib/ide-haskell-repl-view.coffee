@@ -262,10 +262,22 @@ class IdeHaskellReplView
         @completionHandler.dispose()
 
   setError: (err) ->
-    if @errDiv?
-      @errDiv.innerText = err.trim()
+    time = Date.now()
+    @lastErrorTime ?= time
+    if time - @lastErrorTime > 1000
+      if @errDiv?
+        @errDiv.innerText = err.trim()
+      else
+        @upi.setMessages @splitErrBuffer err
     else
-      @upi.setMessages @splitErrBuffer err
+      if @errDiv?
+        if @errDiv.innerText
+          @errDiv.innerText = "#{@errDiv.innerText.trim()}\n\n#{err.trim()}"
+        else
+          @errDiv.innerText = err.trim()
+      else
+        @upi.addMessages @splitErrBuffer err
+    @lastErrorTime = time
 
   splitErrBuffer: (errBuffer) ->
     # Start of a Cabal message
