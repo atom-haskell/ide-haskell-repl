@@ -18,6 +18,13 @@ class IdeHaskellReplView
     @element = document.createElement 'div'
     @element.classList.add('ide-haskell-repl')
 
+    @autoReloadRepeat = atom.config.get('ide-haskell-repl.autoReloadRepeat')
+
+    @disposables.add atom.workspace.observeTextEditors (editor) =>
+      if editor.getURI() is @uri
+        @disposables.add editor.onDidSave =>
+          @ghciReloadRepeat() if @autoReloadRepeat
+
     @editorPromise = new Promise (resolveEditorPromise) =>
       upiPromise.then (@upi) =>
         atom.packages.getLoadedPackage('ide-haskell-repl').activationPromise
@@ -182,6 +189,13 @@ class IdeHaskellReplView
   ghciReloadRepeat: ->
     return unless @ghci?
     @ghci.reloadRepeat()
+
+  toggleAutoReloadRepeat: ->
+    @setAutoReloadRepeat(not @getAutoReloadRepeat())
+
+  setAutoReloadRepeat: (@autoReloadRepeat) ->
+
+  getAutoReloadRepeat: -> @autoReloadRepeat
 
   interrupt: ->
     @ghci?.interrupt()

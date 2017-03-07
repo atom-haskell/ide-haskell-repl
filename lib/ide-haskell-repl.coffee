@@ -53,7 +53,6 @@ module.exports = IdeHaskellRepl =
   activate: (state) ->
     @disposables = new CompositeDisposable
     @editorMap = new WeakMap
-    @autoRepeatMap = new WeakMap
 
     @disposables.add atom.workspace.addOpener (uriToOpen, options) =>
       m = uriToOpen.match(/^ide-haskell:\/\/repl\/(.*)$/)
@@ -99,10 +98,9 @@ module.exports = IdeHaskellRepl =
         .then (model) ->
           model.ghciReloadRepeat()
       'ide-haskell-repl:toggle-auto-reload-repeat':  ({currentTarget}) =>
-        ed = currentTarget.getModel()
-        if @autoRepeatMap.has(ed)
-          old = @autoRepeatMap.get(ed) ? atom.config.get('ide-haskell-repl.autoReloadRepeat')
-          @autoRepeatMap.set(ed, not old)
+        @open(currentTarget.getModel(), false)
+        .then (model) ->
+          model.toggleAutoReloadRepeat()
 
     @disposables.add atom.menu.add [
       'label': 'Haskell IDE'
@@ -134,17 +132,6 @@ module.exports = IdeHaskellRepl =
       split: 'right'
       searchAllPanes: true
       activatePane: activate
-    .then (model) =>
-      disp = new CompositeDisposable
-      @autoRepeatMap.set(editor, atom.config.get('ide-haskell-repl.autoReloadRepeat'))
-      disp.add editor.onDidSave =>
-        if @autoRepeatMap.get(editor)
-          model.ghciReloadRepeat()
-      disp.add editor.onDidDestroy ->
-        disp.dispose()
-      disp.add model.onDidDestroy ->
-        disp.dispose()
-      return model
 
   deactivate: ->
     @disposables.dispose()
