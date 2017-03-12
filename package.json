@@ -20,6 +20,7 @@
   "dependencies": {
     "atom-haskell-utils": "^0.9.0",
     "atom-highlight": "^0.3.0",
+    "etch": "^0.9.5",
     "fuzzaldrin": "^2.1.0",
     "sub-atom": "^1.0.0",
     "tree-kill": "^1.0.0",
@@ -29,7 +30,7 @@
     "ide-haskell-upi": {
       "description": "Uses ide-haskell's unified pluggable interface",
       "versions": {
-        "^0.2.0": "consumeUPI"
+        "^0.3.0": "consumeUPI"
       }
     }
   },
@@ -42,5 +43,12 @@
   },
   "deserializers": {
     "IdeHaskellReplView": "createReplView"
+  },
+  "devDependencies": {
+    "eslint": "^3.17.1",
+    "eslint-config-standard": "^7.0.1",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-react": "^6.10.0",
+    "eslint-plugin-standard": "^2.1.1"
   }
 }
