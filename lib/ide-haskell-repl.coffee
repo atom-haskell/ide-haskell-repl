@@ -47,7 +47,7 @@ module.exports = IdeHaskellRepl =
       type: 'string'
       default: ''
       description: 'This is intended to fix the "interrupt closes ghci" problem
-                    in Atom -- see README for details. This option has no
+                    on Windows -- see README for details. This option has no
                     effect on other platforms'
       order: 999
   activate: (state) ->
