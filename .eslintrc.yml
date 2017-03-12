@@ -1,0 +1,16 @@
+extends:
+  - standard
+  - "plugin:react/recommended"
+plugins:
+  - standard
+  - promise
+  - react
+env:
+  node: true
+globals:
+  atom: true
+parserOptions:
+  ecmaVersion: 8
+  ecmaFeatures:
+    jsx: true
+  sourceType: module
