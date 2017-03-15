@@ -1,0 +1,55 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "es2015",
+        "moduleResolution": "node",
+        "isolatedModules": false,
+        "jsx": "react",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "declaration": false,
+        "noImplicitAny": false,
+        "noImplicitUseStrict": true,
+        "removeComments": true,
+        "noLib": false,
+        "jsxFactory": "etch.dom",
+        "preserveConstEnums": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "outDir": "lib",
+        "downlevelIteration": false
+    },
+    "exclude": [
+        "node_modules",
+        "typings/browser",
+        "typings/browser.d.ts"
+    ],
+    "filesGlob": [
+        "**/*.ts",
+        "**/*.tsx",
+        "!node_modules/**/*.ts",
+        "!node_modules/**/*.tsx"
+    ],
+    "compileOnSave": true,
+    "buildOnSave": true,
+    "atom": {
+        "rewriteTsconfig": true
+    },
+    "files": [
+        "src/config.ts",
+        "src/ghci.ts",
+        "src/ide-haskell-repl.ts",
+        "src/interactive-process.ts",
+        "typings/atom-generate.d.ts",
+        "typings/atom-haskell-utils.d.ts",
+        "typings/atom-highlight.d.ts",
+        "typings/atom.d.ts",
+        "typings/config.d.ts",
+        "typings/etch.d.ts",
+        "typings/ide-haskell-repl-view.d.ts",
+        "typings/ide-haskell-repl.d.ts",
+        "typings/interactive-process.d.ts",
+        "src/button.tsx",
+        "src/editor.tsx",
+        "src/ide-haskell-repl-view.tsx"
+    ]
+}
