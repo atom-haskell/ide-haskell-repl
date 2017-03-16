@@ -77,7 +77,13 @@ export class GHCI {
   }
 
   public writeLines (lines: string[], callback?: Function) {
-    return this.process.request(`:{${EOL}${lines.join(EOL)}${EOL}:}${EOL}`, callback)
+    return this.process.request(
+      `:{${EOL}${lines.join(EOL)}${EOL}:}${EOL}`,
+      callback,
+      {
+        stderr: /\n\S/,
+      },
+    )
   }
 
   public sendCompletionRequest (callback?: Function) {

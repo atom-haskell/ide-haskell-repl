@@ -10,6 +10,11 @@ interface IRequestResult {
   stderr: string[]
 }
 
+interface ILinePatterns {
+  stdout?: RegExp
+  stderr?: RegExp
+}
+
 export class InteractiveProcess {
   private process: CP.ChildProcess
   private requestQueue: Queue
@@ -26,6 +31,8 @@ export class InteractiveProcess {
       this.process = CP.spawn(cmd, args, opts)
       this.process.stdout.setMaxListeners(100)
       this.process.stderr.setMaxListeners(100)
+      this.process.stdout.setEncoding('utf-8')
+      this.process.stderr.setEncoding('utf-8')
       this.running = true
 
       this.process.on('exit', (code) => {
@@ -39,7 +46,7 @@ export class InteractiveProcess {
   }
 
   public async request (
-    command: string, lineCallback?: Function, endPattern: RegExp = this.endPattern,
+    command: string, lineCallback?: Function, linePatterns?: ILinePatterns, endPattern: RegExp = this.endPattern,
   ): Promise<IRequestResult> {
     return this.requestQueue.add(async () => {
       if (!this.running) {
@@ -57,17 +64,28 @@ export class InteractiveProcess {
         stderr: [],
       }
 
+      let ended = false
+
+      setImmediate(async () => {
+        while (!ended) {
+          let line = await this.readStderr()
+          if (lineCallback) {lineCallback('stderr', line)}
+          res.stderr.push(line)
+        }
+      })
+
       while (true) {
-        let name, line
-        [name, line] = await this.readBoth()
+        let line
+        line = await this.readStdout(linePatterns)
         let pattern = line.match(endPattern)
-        if (name === 'stdout' && pattern) {
+        if (pattern) {
           if (lineCallback) {lineCallback('prompt', pattern)}
           break
         }
-        if (lineCallback) {lineCallback(name, line)}
-        res[name].push(line)
+        if (lineCallback) {lineCallback('stdout', line)}
+        res.stdout.push(line)
       }
+      ended = true
       this.process.stdout.resume()
       this.process.stderr.resume()
 
@@ -89,16 +107,19 @@ export class InteractiveProcess {
     this.process.stdin.write(str)
   }
 
-  private readBoth () {
-    return Promise.race([
-      this.read('stdout', this.process.stdout),
-      this.read('stderr', this.process.stderr),
-    ])
+  private readStdout (linePatterns?: ILinePatterns) {
+    let { stderr = /\n/, stdout = /\n/ } = linePatterns || {}
+    return this.read(this.process.stdout, /\n/)
   }
 
-  private async read (name: string, out: NodeJS.ReadableStream) {
+  private readStderr (linePatterns?: ILinePatterns) {
+    let { stderr = /\n/, stdout = /\n/ } = linePatterns || {}
+    return this.read(this.process.stderr, /\n/)
+  }
+
+  private async read (out: NodeJS.ReadableStream, until: RegExp) {
     let buffer = ''
-    while (!buffer.match(/\n/)) {
+    while (!buffer.match(until)) {
       let read = out.read()
       if (read === null) {
         await new Promise((resolve) => out.once('readable', () => {
@@ -110,6 +131,6 @@ export class InteractiveProcess {
     }
     let [first, ...rest] = buffer.split('\n')
     out.unshift(rest.join('\n'))
-    return [name, first]
+    return first
   }
 }
