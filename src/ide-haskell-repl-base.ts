@@ -31,7 +31,7 @@ type Severity = 'error' | 'warning' | 'repl' | string
 export interface IErrorItem {
   uri?: string,
   position?: [number, number],
-  message: string,
+  message: string | { text: string, highlighter: string },
   context?: string,
   severity: Severity,
   _time: number,
@@ -274,7 +274,10 @@ export abstract class IdeHaskellReplBase {
         return {
           uri: file ? this.cwd.getFile(this.cwd.relativize(file)).getPath() : null,
           position: [parseInt(line as string, 10) - 1, parseInt(col as string, 10) - 1],
-          message: this.unindentMessage(msgany.trimRight()),
+          message: {
+            text: this.unindentMessage(msgany.trimRight()),
+            highlighter: 'hint.message.haskell',
+          },
           context: context as string,
           severity: typ,
           _time: Date.now(),
