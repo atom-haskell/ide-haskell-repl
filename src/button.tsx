@@ -1,8 +1,6 @@
-'use babel'
-
 import { CompositeDisposable } from 'atom'
-import etch from 'etch'
-import IdeHaskellReplView from './ide-haskell-repl-view'
+import etch = require('etch')
+import {IdeHaskellReplView} from './ide-haskell-repl-view'
 
 interface IProps {
     cls: string

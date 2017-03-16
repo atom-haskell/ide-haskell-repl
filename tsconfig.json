@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "es6",
-        "module": "es2015",
+        "module": "commonjs",
         "moduleResolution": "node",
         "isolatedModules": false,
         "jsx": "react",
@@ -9,7 +9,7 @@
         "emitDecoratorMetadata": true,
         "declaration": false,
         "noImplicitAny": false,
-        "noImplicitUseStrict": true,
+        "noImplicitUseStrict": false,
         "removeComments": true,
         "noLib": false,
         "jsxFactory": "etch.dom",

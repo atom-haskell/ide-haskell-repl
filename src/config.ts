@@ -1,5 +1,4 @@
-'use babel'
-export default {
+export let config = {
   defaultRepl: {
     type: 'string',
     enum: ['stack', 'cabal', 'ghci'],

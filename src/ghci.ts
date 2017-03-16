@@ -1,5 +1,3 @@
-'use babel'
-
 import {hsEscapeString} from 'atom-haskell-utils'
 import {EOL} from 'os'
 import {InteractiveProcess} from './interactive-process'

@@ -1,7 +1,6 @@
-'use babel'
 import * as CP from 'child_process'
-import Queue from 'promise-queue'
-import tkill from 'tree-kill'
+import Queue = require('promise-queue')
+import tkill = require('tree-kill')
 
 type ExitCallback = (exitCode: number) => void
 
