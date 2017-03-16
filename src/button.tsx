@@ -1,10 +1,10 @@
 'use babel'
 
+import { CompositeDisposable } from 'atom'
 import etch from 'etch'
-import { CompositeDisposable } from "atom";
-import IdeHaskellReplView from "./ide-haskell-repl-view";
+import IdeHaskellReplView from './ide-haskell-repl-view'
 
-interface Props {
+interface IProps {
     cls: string
     parent: IdeHaskellReplView
     tooltip: string | (() => String)
@@ -12,13 +12,13 @@ interface Props {
   };
 
 export class Button {
-  element: HTMLElement;
-  target: HTMLElement;
-  props: Props;
-  destroyed: boolean;
-  disposables: any;
-  clslst: Set<any>;
-  constructor (props: Props) {
+  private element: HTMLElement
+  private target: HTMLElement
+  private props: IProps
+  private destroyed: boolean
+  private disposables: any
+  private clslst: Set<any>
+  constructor (props: IProps) {
     this.props = props
     this.destroyed = false
     this.disposables = new CompositeDisposable()
@@ -29,11 +29,11 @@ export class Button {
     this.disposables.add(atom.tooltips.add(this.element, {
       title: this.props.tooltip,
       keyBindingCommand: this.props.command,
-      keyBindingTarget: this.target
+      keyBindingTarget: this.target,
     }))
   }
 
-  render () {
+  public render () {
     return (
       <button
         className={Array.from(this.clslst.values()).join(' ')}
@@ -41,19 +41,24 @@ export class Button {
     )
   }
 
-  async destroy () {
+  public async destroy () {
     await etch.destroy(this)
     this.destroyed = true
     this.disposables.dispose()
   }
 
-  update ({state}) {
-    if (state) this.clslst.add('enabled')
-    else this.clslst.delete('enabled')
+  public update ({state}) {
+    if (state) {
+      this.clslst.add('enabled')
+    } else {
+      this.clslst.delete('enabled')
+    }
     etch.update(this)
   }
 
-  click () {
-    if (this.target) atom.commands.dispatch(this.target, this.props.command)
+  public click () {
+    if (this.target) {
+      atom.commands.dispatch(this.target, this.props.command)
+    }
   }
 }
