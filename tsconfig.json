@@ -48,6 +48,7 @@
         "typings/ide-haskell-repl-view.d.ts",
         "typings/ide-haskell-repl.d.ts",
         "typings/interactive-process.d.ts",
+        "typings/promise-queue.d.ts",
         "src/button.tsx",
         "src/editor.tsx",
         "src/ide-haskell-repl-view.tsx"
