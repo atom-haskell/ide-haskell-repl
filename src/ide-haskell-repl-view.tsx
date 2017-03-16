@@ -131,7 +131,7 @@ export default class IdeHaskellReplView {
           break
         default: break
       }
-      this.update() // TODO: update only output
+      this.update()
     })
     for (let err of res.stderr.join('\n').split(/\n(?=\S)/)) {
       err && this.errors.push(this.parseMessage(err))
@@ -167,7 +167,7 @@ export default class IdeHaskellReplView {
 
   public setAutoReloadRepeat (autoReloadRepeat) {
     this.autoReloadRepeat = autoReloadRepeat
-    this.update() // TODO: update only sync button?
+    this.update()
   }
 
   public getAutoReloadRepeat () {
