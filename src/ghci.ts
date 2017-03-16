@@ -2,7 +2,7 @@
 
 import {hsEscapeString} from 'atom-haskell-utils'
 import {EOL} from 'os'
-import { InteractiveProcess } from './interactive-process'
+import {InteractiveProcess} from './interactive-process'
 
 interface IOpts {
   cwd: string
@@ -14,11 +14,10 @@ interface IOpts {
 
 export class GHCI {
   private process: InteractiveProcess
-  private splitrx: RegExp
   private readyPromise: Promise<void>
   private onDidExit: (code: number) => void
   constructor (opts: IOpts) {
-    this.splitrx = /^#~IDEHASKELLREPL~(.*)~#$/
+    let endPattern = /^#~IDEHASKELLREPL~(.*)~#$/
     let { cwd, atomPath, command, args, onExit } = opts
     this.onDidExit = onExit
 
@@ -33,6 +32,7 @@ export class GHCI {
         spawnArgs,
         this.didExit.bind(this),
         { cwd, shell: true },
+        endPattern,
       )
     } else {
       this.process = new InteractiveProcess(
@@ -40,6 +40,7 @@ export class GHCI {
         args,
         this.didExit.bind(this),
         { cwd },
+        endPattern,
       )
     }
 
@@ -80,9 +81,6 @@ export class GHCI {
     return this.process.request(
       `:{${EOL}${lines.join(EOL)}${EOL}:}${EOL}`,
       callback,
-      {
-        stderr: /\n\S/,
-      },
     )
   }
 

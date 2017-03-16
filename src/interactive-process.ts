@@ -10,18 +10,13 @@ interface IRequestResult {
   stderr: string[]
 }
 
-interface ILinePatterns {
-  stdout?: RegExp
-  stderr?: RegExp
-}
-
 export class InteractiveProcess {
   private process: CP.ChildProcess
   private requestQueue: Queue
   private endPattern: RegExp
   private running: boolean
-  constructor (cmd: string, args: string[], onDidExit: ExitCallback, opts: CP.SpawnOptions) {
-    this.endPattern = /^#~IDEHASKELLREPL~(.*)~#$/
+  constructor (cmd: string, args: string[], onDidExit: ExitCallback, opts: CP.SpawnOptions, endPattern: RegExp) {
+    this.endPattern = endPattern
     this.running = false
     this.requestQueue = new Queue(1, 100)
 
@@ -46,7 +41,7 @@ export class InteractiveProcess {
   }
 
   public async request (
-    command: string, lineCallback?: Function, linePatterns?: ILinePatterns, endPattern: RegExp = this.endPattern,
+    command: string, lineCallback?: Function, endPattern: RegExp = this.endPattern,
   ): Promise<IRequestResult> {
     return this.requestQueue.add(async () => {
       if (!this.running) {
@@ -68,7 +63,7 @@ export class InteractiveProcess {
 
       setImmediate(async () => {
         while (!ended) {
-          let line = await this.readStderr()
+          let line = await this.read(this.process.stderr)
           if (lineCallback) {lineCallback('stderr', line)}
           res.stderr.push(line)
         }
@@ -76,7 +71,7 @@ export class InteractiveProcess {
 
       while (true) {
         let line
-        line = await this.readStdout(linePatterns)
+        line = await this.read(this.process.stdout)
         let pattern = line.match(endPattern)
         if (pattern) {
           if (lineCallback) {lineCallback('prompt', pattern)}
@@ -107,19 +102,9 @@ export class InteractiveProcess {
     this.process.stdin.write(str)
   }
 
-  private readStdout (linePatterns?: ILinePatterns) {
-    let { stderr = /\n/, stdout = /\n/ } = linePatterns || {}
-    return this.read(this.process.stdout, /\n/)
-  }
-
-  private readStderr (linePatterns?: ILinePatterns) {
-    let { stderr = /\n/, stdout = /\n/ } = linePatterns || {}
-    return this.read(this.process.stderr, /\n/)
-  }
-
-  private async read (out: NodeJS.ReadableStream, until: RegExp) {
+  private async read (out: NodeJS.ReadableStream) {
     let buffer = ''
-    while (!buffer.match(until)) {
+    while (!buffer.match(/\n/)) {
       let read = out.read()
       if (read === null) {
         await new Promise((resolve) => out.once('readable', () => {
