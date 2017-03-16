@@ -1,15 +1,11 @@
-'use babel'
-/** @jsx etch.dom */
-/* eslint no-control-regex: "off" */
-
 import {
   CompositeDisposable,
   Emitter,
   TextEditor,
 } from 'atom'
 import * as Util from 'atom-haskell-utils'
-import highlightSync from 'atom-highlight'
-import etch from 'etch'
+import highlightSync = require('atom-highlight')
+import etch = require('etch')
 import {filter} from 'fuzzaldrin'
 
 import {Button} from './button'
@@ -20,15 +16,18 @@ const termEscapeRx = /\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/g
 
 type UPI = any
 
-interface IParams {
-  uri: string
-  history: string[]
-  upiPromise: Promise<UPI>
-  autoReloadRepeat: boolean
-  content: IContentItem[]
+export interface IViewState {
+  uri?: string
+  history?: string[]
+  autoReloadRepeat?: boolean
+  content?: IContentItem[]
 }
 
-interface IContentItem {
+interface IViewStateOutput extends IViewState {
+  deserializer: string
+}
+
+export interface IContentItem {
   text: string
   cls: string
   hl?: boolean
@@ -36,7 +35,7 @@ interface IContentItem {
 
 type Severity = 'error' | 'warning' | 'repl' | string
 
-interface IErrorItem {
+export interface IErrorItem {
   uri?: string,
   position?: [number, number],
   message: string,
@@ -49,7 +48,7 @@ declare interface IMyString extends String {
   trimRight (): IMyString
 }
 
-export default class IdeHaskellReplView {
+export class IdeHaskellReplView {
   public refs: {[key: string]: any}
   public editor: TextEditor
   private ghci: GHCI
@@ -66,9 +65,9 @@ export default class IdeHaskellReplView {
   private uri: string
   private upiPromise: Promise<UPI>
   private disposables: CompositeDisposable
-  constructor ({
-    uri, content, history, upiPromise, autoReloadRepeat = atom.config.get('ide-haskell-repl.autoReloadRepeat'),
-  }: IParams) {
+  constructor (upiPromise, {
+    uri, content, history, autoReloadRepeat = atom.config.get('ide-haskell-repl.autoReloadRepeat'),
+  }: IViewState) {
     this.uri = uri
     this.history = history
     this.autoReloadRepeat = autoReloadRepeat
@@ -208,11 +207,10 @@ export default class IdeHaskellReplView {
     this.disposables.dispose()
   }
 
-  public serialize () {
+  public serialize (): IViewStateOutput {
     return {
       deserializer: 'IdeHaskellReplView',
       uri: this.uri,
-      upi: !!(this.upi),
       content: this.messages,
       history: this.history,
       autoReloadRepeat: this.autoReloadRepeat,
