@@ -4,23 +4,27 @@ import config from './config'
 import IdeHaskellReplView from './ide-haskell-repl-view'
 
 export default {
-  config: config,
-  activate: function (state) {
+  config,
+  activate (state) {
     this.disposables = new CompositeDisposable()
-    if(!this.editorMap) this.editorMap = new WeakMap()
+    if (!this.editorMap) {
+      this.editorMap = new WeakMap()
+    }
 
     this.disposables.add(
       atom.workspace.addOpener((uriToOpen, options) => {
         let m = uriToOpen.match(/^ide-haskell:\/\/repl\/(.*)$/)
-        if (!(m && m[1])) return
+        if (!(m && m[1])) {
+          return
+        }
         return this.createReplView({uri: m[1]})
-      })
+      }),
     )
 
     this.disposables.add(
       atom.commands.add('atom-text-editor', {
-        'ide-haskell-repl:toggle': ({currentTarget}) => this.open(currentTarget.getModel())
-      })
+        'ide-haskell-repl:toggle': ({currentTarget}) => this.open(currentTarget.getModel()),
+      }),
     )
 
     let commandFunction = (func) => ({currentTarget}) => {
@@ -36,8 +40,8 @@ export default {
         'ide-haskell-repl:ghci-reload': commandFunction('ghciReload'),
         'ide-haskell-repl:reload-repeat': commandFunction('ghciReloadRepeat'),
         'ide-haskell-repl:toggle-auto-reload-repeat': commandFunction('toggleAutoReloadRepeat'),
-        'ide-haskell-repl:ghci-interrupt': commandFunction('interrupt')
-      })
+        'ide-haskell-repl:ghci-interrupt': commandFunction('interrupt'),
+      }),
     )
 
     let externalCommandFunction = (func) => ({currentTarget}) => {
@@ -59,16 +63,16 @@ export default {
         },
         'ide-haskell-repl:ghci-reload': externalCommandFunction('ghciReload'),
         'ide-haskell-repl:reload-repeat': externalCommandFunction('ghciReloadRepeat'),
-        'ide-haskell-repl:toggle-auto-reload-repeat': externalCommandFunction('toggleAutoReloadRepeat')
-      })
+        'ide-haskell-repl:toggle-auto-reload-repeat': externalCommandFunction('toggleAutoReloadRepeat'),
+      }),
     )
 
     this.disposables.add(atom.menu.add([{
-      'label': 'Haskell IDE',
-      'submenu': [{
-        'label': 'Open REPL',
-        'command': 'ide-haskell-repl:toggle'
-      }]
+      label: 'Haskell IDE',
+      submenu: [{
+        label: 'Open REPL',
+        command: 'ide-haskell-repl:toggle',
+      }],
     }]))
 
     setTimeout(() => {
@@ -76,7 +80,7 @@ export default {
     }, 5000)
   },
 
-  createReplView: function ({uri, upi, content, history, autoReloadRepeat}) {
+  createReplView ({uri, upi, content, history, autoReloadRepeat}) {
     let upiPromise
     if (upi && !this.upi) {
       upiPromise = new Promise((resolve) => { this.resolveUPIPromise = resolve })
@@ -84,14 +88,16 @@ export default {
       upiPromise = Promise.resolve(this.upi)
     }
     let view = new IdeHaskellReplView({uri, content, history, upiPromise, autoReloadRepeat})
-    if(!this.editorMap) this.editorMap = new WeakMap()
+    if (!this.editorMap) { this.editorMap = new WeakMap() }
     this.editorMap.set(view.editor, view)
     return view
   },
 
-  open: function (editor, activate = true) {
-    let grammar, scope, uri
-    if (editor && (grammar = editor.getGrammar()) && (scope = grammar.scopeName) && scope.endsWith('haskell')) {
+  open (editor, activate = true) {
+    let grammar = editor ? editor.getGrammar() : null
+    let scope = grammar ? grammar.scopeName : null
+    let uri
+    if (scope && scope.endsWith('haskell')) {
       uri = editor.getURI()
     } else {
       uri = ''
@@ -99,44 +105,50 @@ export default {
     return atom.workspace.open(`ide-haskell://repl/${uri}`, {
       split: 'right',
       searchAllPanes: true,
-      activatePane: activate
+      activatePane: activate,
     })
   },
 
-  deactivate: function () {
+  deactivate () {
     this.disposables.dispose()
   },
 
-  consumeUPI: function (service) {
+  consumeUPI (service) {
     let disp = service.consume({
       name: 'ide-haskell-repl',
       messageTypes: {
         repl: {
           uriFilter: false,
-          autoScroll: true
-        }
+          autoScroll: true,
+        },
       },
       consumer: (upi) => {
-        if (this.resolveUPIPromise) this.resolveUPIPromise(upi)
+        if (this.resolveUPIPromise) {
+          this.resolveUPIPromise(upi)
+        }
         this.upi = upi
-      }
+      },
     })
     this.disposables.add(disp)
     return disp
   },
 
-  autocompleteProvider_3_0_0: function () {
+  autocompleteProvider_3_0_0 () {
     return {
       scopeSelector: '.source.haskell',
       disableForScopeSelector: '.source.haskell .comment',
       getTextEditorSelector: () => 'atom-text-editor.ide-haskell-repl',
       inclusionPriority: 0,
       getSuggestions: ({editor, prefix}) => {
-        if (!this.editorMap) return []
+        if (!this.editorMap) {
+          return []
+        }
         let view = this.editorMap.get(editor)
-        if (!view) return []
+        if (!view) {
+          return []
+        }
         return view.getCompletions(prefix)
-      }
+      },
     }
-  }
+  },
 }

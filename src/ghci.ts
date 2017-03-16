@@ -1,31 +1,31 @@
 'use babel'
 
-import { InteractiveProcess } from './interactive-process';
-import {EOL} from 'os'
-import tkill from 'tree-kill'
 import {hsEscapeString} from 'atom-haskell-utils'
+import {EOL} from 'os'
+import { InteractiveProcess } from './interactive-process'
+
+interface IOpts {
+  cwd: string
+  atomPath: string
+  command: string
+  args: string[]
+}
 
 export class GHCI {
-  process: InteractiveProcess;
-  history: { back: string[]; curr: string; item: number; };
-  splitrx: RegExp;
-  readyPromise: Promise<void>
-  constructor(opts : any = {}) {
+  private process: InteractiveProcess
+  private splitrx: RegExp
+  private readyPromise: Promise<void>
+  constructor (opts: IOpts) {
     this.splitrx = /^#~IDEHASKELLREPL~(.*)~#$/
-    let { cwd, atomPath, command, args, load, history = [] } = opts
-
-    this.history = {
-      back: history,
-      curr: '',
-      item: history.length
-    }
+    let { cwd, atomPath, command, args } = opts
 
     if (process.platform === 'win32') {
       let spawnArgs = [command, ...args]
       let cmdexe = atom.config.get('ide-haskell-repl.ghciWrapperPath')
-      if (cmdexe)
-        spawnArgs.unshift("\"" + cmdexe + "\"")
-      this.process = new InteractiveProcess("chcp 65001 && ", spawnArgs, { cwd, shell: true })
+      if (cmdexe) {
+        spawnArgs.unshift('\"' + cmdexe + '\"')
+      }
+      this.process = new InteractiveProcess('chcp 65001 && ', spawnArgs, { cwd, shell: true })
     } else {
       this.process = new InteractiveProcess(command, args, { cwd })
     }
@@ -33,40 +33,45 @@ export class GHCI {
     let resolveReadyPromise
     this.readyPromise = new Promise<void>((resolve) => { resolveReadyPromise = resolve })
 
-    this.process.request(`:set editor \"#{atomPath}\"${EOL}:set prompt2 \"\"${EOL}:set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"${EOL}`)
+    this.process.request(
+      `:set editor \"#{atomPath}\"${EOL}` +
+      `:set prompt2 \"\"${EOL}` +
+      `:set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"${EOL}`,
+    )
     .then(resolveReadyPromise)
   }
 
-  load(uri: string, callback?: Function) {
+  public async waitReady () {
+    await this.readyPromise
+  }
+
+  public load (uri: string, callback?: Function) {
     return this.process.request(`:load ${hsEscapeString(uri)}${EOL}`, callback)
   }
 
-  reload(callback?: Function) {
+  public reload (callback?: Function) {
     return this.process.request(`:reload${EOL}`, callback)
   }
 
-  interrupt() {
-    if (this.process)
+  public interrupt () {
+    if (this.process) {
       if (atom.config.get('ide-haskell-repl.ghciWrapperPath') && process.platform === 'win32') {
         this.process.request('\x03')
-      } else
+      } else {
         this.process.interrupt()
+      }
+    }
   }
 
-  writeLines(lines: string[], callback?: Function) {
-    let text
-    if ((text = lines.join(EOL)) && this.history.back[this.history.back.length - 1] !== text)
-      this.history.back.push(text)
-    this.history.curr = ''
-    this.history.item = this.history.back.length
+  public writeLines (lines: string[], callback?: Function) {
     return this.process.request(`:{${EOL}${lines.join(EOL)}${EOL}:}${EOL}`, callback)
   }
 
-  sendCompletionRequest(callback?: Function) {
+  public sendCompletionRequest (callback?: Function) {
     return this.process.request(`:complete repl \"\"${EOL}`, callback)
   }
 
-  destroy() {
+  public destroy () {
     this.process.destroy()
   }
 }

@@ -1,0 +1,13 @@
+{
+    "extends": "tslint:recommended",
+    "rules": {
+      "quotemark": [true, "single", "jsx-double", "avoid-escape"],
+      "semicolon": [true, "never"],
+      "object-literal-sort-keys": false,
+      "space-before-function-paren": true,
+      "one-variable-per-declaration": false,
+      "no-unused-expression": true,
+      "no-unused-new": true,
+      "no-unused-variable": true
+    }
+}
