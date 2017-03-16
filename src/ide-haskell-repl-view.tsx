@@ -8,6 +8,7 @@ import etch = require('etch')
 import {filter} from 'fuzzaldrin'
 
 import {Button} from './button'
+import {CommandHistory} from './command-history'
 import {Editor} from './editor'
 import {GHCI} from './ghci'
 
@@ -59,14 +60,14 @@ export class IdeHaskellReplView {
   private messages: IContentItem[]
   private errors: IErrorItem[]
   private autoReloadRepeat: boolean
-  private history: string[]
+  private history: CommandHistory
   private uri: string
   private disposables: CompositeDisposable
   constructor (upiPromise, {
     uri, content, history, autoReloadRepeat = atom.config.get('ide-haskell-repl.autoReloadRepeat'),
   }: IViewState) {
     this.uri = uri
-    this.history = history
+    this.history = new CommandHistory(history)
     this.setAutoReloadRepeat(autoReloadRepeat)
     this.disposables = new CompositeDisposable()
     this.errors = []
@@ -107,6 +108,7 @@ export class IdeHaskellReplView {
   public async execCommand () {
     let inp = this.editor.getBuffer().getText()
     this.editor.setText('')
+    this.history.save(inp)
     return this.runCommand(inp)
   }
 
@@ -147,19 +149,21 @@ export class IdeHaskellReplView {
   }
 
   public historyBack () {
-    // TODO
+    let current = this.editor.getText()
+    this.editor.setText(this.history.goBack(current))
   }
 
   public historyForward () {
-    // TODO
+    this.editor.setText(this.history.goForward())
   }
 
-  public ghciReload () {
-    this.ghci.reload()
+  public async ghciReload () {
+    return this.ghci.reload()
   }
 
-  public ghciReloadRepeat () {
-    // TODO
+  public async ghciReloadRepeat () {
+    let command = this.history.goBack('')
+    return this.runCommand(command)
   }
 
   public toggleAutoReloadRepeat () {
@@ -209,7 +213,7 @@ export class IdeHaskellReplView {
       deserializer: 'IdeHaskellReplView',
       uri: this.uri,
       content: this.messages,
-      history: this.history,
+      history: this.history.serialize(),
       autoReloadRepeat: this.autoReloadRepeat,
     }
   }
