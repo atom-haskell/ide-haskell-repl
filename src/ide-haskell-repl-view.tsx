@@ -1,6 +1,5 @@
 import {
   CompositeDisposable,
-  Emitter,
   TextEditor,
 } from 'atom'
 import * as Util from 'atom-haskell-utils'
@@ -59,22 +58,17 @@ export class IdeHaskellReplView {
   private outputFontSize: any
   private messages: IContentItem[]
   private errors: IErrorItem[]
-  private emitter: Emitter
   private autoReloadRepeat: boolean
   private history: string[]
   private uri: string
-  private upiPromise: Promise<UPI>
   private disposables: CompositeDisposable
   constructor (upiPromise, {
     uri, content, history, autoReloadRepeat = atom.config.get('ide-haskell-repl.autoReloadRepeat'),
   }: IViewState) {
     this.uri = uri
     this.history = history
-    this.autoReloadRepeat = autoReloadRepeat
-    this.upiPromise = upiPromise
+    this.setAutoReloadRepeat(autoReloadRepeat)
     this.disposables = new CompositeDisposable()
-    this.emitter = new Emitter()
-    this.disposables.add(this.emitter)
     this.errors = []
 
     this.editor = new TextEditor({
@@ -87,8 +81,6 @@ export class IdeHaskellReplView {
 
     this.messages = content || []
 
-    etch.initialize(this)
-
     this.disposables.add(
       atom.workspace.observeTextEditors((editor) => {
         if (editor.getURI() === this.uri) {
@@ -98,14 +90,24 @@ export class IdeHaskellReplView {
         }
       }),
     )
+    this.disposables.add(atom.config.observe('editor.fontSize', (fontSize) => {
+      this.outputFontSize = `${fontSize}px`
+    }))
+    this.disposables.add(atom.config.observe('editor.fontFamily', (fontFamily) => {
+      this.outputFontFamily = fontFamily
+    }))
 
-    this.initialize()
+    this.cwd = Util.getRootDir(this.uri)
+
+    etch.initialize(this)
+
+    this.initialize(upiPromise)
   }
 
-  public execCommand () {
+  public async execCommand () {
     let inp = this.editor.getBuffer().getText()
     this.editor.setText('')
-    this.runCommand(inp)
+    return this.runCommand(inp)
   }
 
   public copyText (command) {
@@ -194,16 +196,11 @@ export class IdeHaskellReplView {
     return `REPL: ${this.uri}`
   }
 
-  public onDidDestroy (callback) {
-    return this.emitter.on('did-destroy', callback)
-  }
-
   public async destroy () {
     etch.destroy(this)
     if (this.ghci) {
       this.ghci.destroy()
     }
-    this.emitter.emit('did-destroy')
     this.disposables.dispose()
   }
 
@@ -287,27 +284,9 @@ export class IdeHaskellReplView {
     return etch.update(this)
   }
 
-  private initialize () {
-    this.disposables.add(atom.config.observe('editor.fontSize', (fontSize) => {
-      this.outputFontSize = `${fontSize}px`
-    }))
-    this.disposables.add(atom.config.observe('editor.fontFamily', (fontFamily) => {
-      this.outputFontFamily = fontFamily
-    }))
-
-    this.editor.setText('')
-
-    this.cwd = Util.getRootDir(this.uri)
-
-    this.setAutoReloadRepeat(this.autoReloadRepeat)
-
-    this.doRunRepl()
-  }
-
-  private async doRunRepl () {
-    this.upi = await this.upiPromise
+  private async initialize (upiPromise: Promise<UPI>) {
+    this.upi = await upiPromise
     if (!this.upi) { return this.runREPL(null) }
-    this.update()
 
     try {
       let builder = await this.upi.params.get('ide-haskell-cabal', 'builder')
@@ -382,7 +361,7 @@ export class IdeHaskellReplView {
       command: commandPath,
       args: commandArgs,
       cwd: this.cwd.getPath(),
-      onExit: (code) => this.destroy(),
+      onExit: async (code) => this.destroy(),
     })
 
     await this.ghci.waitReady()

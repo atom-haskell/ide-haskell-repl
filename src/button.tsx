@@ -35,7 +35,7 @@ export class Button {
     return (
       <button
         className={Array.from(this.clslst.values()).join(' ')}
-        on={{click: this.click}} />
+        on={{click: this.click.bind(this)}} />
     )
   }
 
