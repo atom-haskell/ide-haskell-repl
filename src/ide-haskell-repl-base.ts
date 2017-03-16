@@ -1,14 +1,7 @@
-import {
-  CompositeDisposable,
-  TextEditor,
-} from 'atom'
 import * as Util from 'atom-haskell-utils'
-import highlightSync = require('atom-highlight')
 import {filter} from 'fuzzaldrin'
 
-import {Button} from './button'
 import {CommandHistory} from './command-history'
-import {Editor} from './editor'
 import {GHCI} from './ghci'
 
 type UPI = any

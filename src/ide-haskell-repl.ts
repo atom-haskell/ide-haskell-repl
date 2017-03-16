@@ -2,7 +2,7 @@ import {CompositeDisposable} from 'atom'
 import {
   IdeHaskellReplView,
   IViewState,
-} from './ide-haskell-repl-view'
+} from './views/ide-haskell-repl-view'
 
 export * from './config'
 
