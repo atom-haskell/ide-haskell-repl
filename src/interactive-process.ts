@@ -53,7 +53,7 @@ export class InteractiveProcess {
       this.writeStdin(command)
       if (lineCallback) {lineCallback('stdin', command)}
 
-      let res = {
+      let res: IRequestResult = {
         stdout: [],
         stderr: [],
       }
@@ -69,7 +69,7 @@ export class InteractiveProcess {
       })
 
       while (true) {
-        let line
+        let line: string
         line = await this.read(this.process.stdout)
         let pattern = line.match(endPattern)
         if (pattern) {
