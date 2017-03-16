@@ -13,6 +13,7 @@
       "no-unused-new": true,
       "no-unused-variable": true,
       "no-unbound-method": true,
-      "promise-function-async": true
+      "promise-function-async": true,
+      "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"]
     }
 }
