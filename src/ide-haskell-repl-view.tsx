@@ -38,7 +38,6 @@ export default class IdeHaskellReplView {
   public refs: {[key: string]: any}
   public editor: TextEditor
   private lastErrorTime: number
-  private completionHandler: AtomTypes.Disposable
   private ghci: GHCI
   private cwd: AtomTypes.Directory
   private prompt: string
@@ -93,7 +92,6 @@ export default class IdeHaskellReplView {
     let inp = this.editor.getBuffer().getLines()
     this.editor.setText('')
     return this.ghci.writeLines(inp, (type, text) => {
-      console.error('received', type, text)
       switch (type) {
         case 'stdin':
           this.messages.push({text: inp.join('\n'), hl: true, cls: 'ide-haskell-repl-input-text'})
@@ -258,14 +256,15 @@ export default class IdeHaskellReplView {
 
   private renderOutput () {
     return this.messages.map(({text, cls, hl}: IContentItem) => {
+      let cleanText = text.replace(termEscapeRx, '')
       if (hl) {
         return (
           <pre className={cls}
-            innerHTML={highlightSync({fileContents: text, scopeName: 'source.haskell', nbsp: false})} >
+            innerHTML={highlightSync({fileContents: cleanText, scopeName: 'source.haskell', nbsp: false})} >
           </pre>
         )
       } else {
-        return <pre className={cls}>{text}</pre>
+        return <pre className={cls}>{cleanText}</pre>
       }
     })
   }
@@ -369,7 +368,6 @@ export default class IdeHaskellReplView {
       command: commandPath,
       args: commandArgs,
       cwd: this.cwd.getPath(),
-      history: this.history,
       onExit: (code) => this.destroy(),
     })
 
@@ -466,20 +464,5 @@ export default class IdeHaskellReplView {
         }
       }
     }
-  }
-
-  private log (text) {
-    this.messages.push({text, hl: true, cls: 'ide-haskell-repl-output-text'})
-    this.update() // TODO: update only output
-  }
-
-  private logInput (text) {
-    this.messages.push({text, hl: true, cls: 'ide-haskell-repl-input-text'})
-    this.update() // TODO: update only output
-  }
-
-  private logMessage (text) {
-    this.messages.push({text, cls: 'ide-haskell-repl-message-text'})
-    this.update() // TODO: update only output
   }
 }

@@ -1,31 +1,36 @@
 'use babel'
 import * as CP from 'child_process'
+import Queue from 'promise-queue'
 import tkill from 'tree-kill'
+
+type ExitCallback = (exitCode: number) => void
+
+interface IRequestResult {
+  stdout: string[]
+  stderr: string[]
+}
 
 export class InteractiveProcess {
   private process: CP.ChildProcess
-  private currentRequestPromise: Promise<void>
-  private resolveCurrentRequestPromise: () => void
+  private requestQueue: Queue
   private endPattern: RegExp
   private running: boolean
-  constructor (cmd, args = [], opts: any = {}) {
+  constructor (cmd: string, args: string[], onDidExit: ExitCallback, opts: CP.SpawnOptions) {
     this.endPattern = /^#~IDEHASKELLREPL~(.*)~#$/
     this.running = false
+    this.requestQueue = new Queue(1, 100)
 
     opts.stdio = ['pipe', 'pipe', 'pipe']
 
-    this.currentRequestPromise = Promise.resolve()
-    this.resolveCurrentRequestPromise = () => null
-
     try {
       this.process = CP.spawn(cmd, args, opts)
+      this.process.stdout.setMaxListeners(100)
+      this.process.stderr.setMaxListeners(100)
       this.running = true
 
       this.process.on('exit', (code) => {
-        if (code !== 0) {
-          // TODO
-        }
         this.running = false
+        onDidExit(code)
         this.destroy()
       })
     } catch (error) {
@@ -35,49 +40,45 @@ export class InteractiveProcess {
 
   public async request (
     command: string, lineCallback?: Function, endPattern: RegExp = this.endPattern,
-  ): Promise<{stdout: string[], stderr: string[]}> {
-    await this.currentRequestPromise
-    this.currentRequestPromise = new Promise<void>((resolve) => {this.resolveCurrentRequestPromise = resolve})
-
-    if (!this.running) {
-      throw new Error('Interactive process is not running')
-    }
-
-    this.process.stdout.pause()
-    this.process.stderr.pause()
-
-    this.writeStdin(command)
-    if (lineCallback) {lineCallback('stdin', command)}
-
-    let res = {
-      stdout: [],
-      stderr: [],
-    }
-
-    while (true) {
-      let name, line
-      [name, line] = await this.readBoth()
-      let pattern = line.match(endPattern)
-      if (name === 'stdout' && pattern) {
-        if (lineCallback) {lineCallback('prompt', pattern)}
-        break
+  ): Promise<IRequestResult> {
+    return this.requestQueue.add(async () => {
+      if (!this.running) {
+        throw new Error('Interactive process is not running')
       }
-      if (lineCallback) {lineCallback(name, line)}
-      res[name].push(line)
-    }
-    this.process.stdout.resume()
-    this.process.stderr.resume()
 
-    this.resolveCurrentRequestPromise()
-    console.error(res)
-    return res
+      this.process.stdout.pause()
+      this.process.stderr.pause()
+
+      this.writeStdin(command)
+      if (lineCallback) {lineCallback('stdin', command)}
+
+      let res = {
+        stdout: [],
+        stderr: [],
+      }
+
+      while (true) {
+        let name, line
+        [name, line] = await this.readBoth()
+        let pattern = line.match(endPattern)
+        if (name === 'stdout' && pattern) {
+          if (lineCallback) {lineCallback('prompt', pattern)}
+          break
+        }
+        if (lineCallback) {lineCallback(name, line)}
+        res[name].push(line)
+      }
+      this.process.stdout.resume()
+      this.process.stderr.resume()
+
+      return res
+    })
   }
 
   public destroy () {
     if (this.running) {
       tkill(this.process.pid, 'SIGTERM')
     }
-    this.resolveCurrentRequestPromise()
   }
 
   public interrupt () {
@@ -98,12 +99,11 @@ export class InteractiveProcess {
   private async read (name: string, out: NodeJS.ReadableStream) {
     let buffer = ''
     while (!buffer.match(/\n/)) {
-      if (!out.readable) {
-        await new Promise((resolve) => out.once('readable', resolve))
-      }
       let read = out.read()
       if (read === null) {
-        await new Promise((resolve) => out.once('readable', resolve))
+        await new Promise((resolve) => out.once('readable', () => {
+          resolve()
+        }))
       } else {
         buffer += read
       }

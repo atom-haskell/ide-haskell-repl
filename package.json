@@ -22,6 +22,7 @@
     "atom-highlight": "^0.3.0",
     "etch": "^0.9.5",
     "fuzzaldrin": "^2.1.0",
+    "promise-queue": "^2.2.3",
     "sub-atom": "^1.0.0",
     "tree-kill": "^1.0.0",
     "underscore-plus": "^1.6.6"

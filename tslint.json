@@ -6,8 +6,12 @@
       "object-literal-sort-keys": false,
       "space-before-function-paren": true,
       "one-variable-per-declaration": false,
-      "no-unused-expression": true,
+      "no-unused-expression": [true, "allow-fast-null-checks"],
       "no-unused-new": true,
-      "no-unused-variable": true
+      "no-unused-variable": true,
+      "no-unbound-method": true,
+      "no-unsave-any": true,
+      "strict-type-predicates": true,
+      "no-non-null-assertion": true
     }
 }

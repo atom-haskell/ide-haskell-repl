@@ -9,15 +9,18 @@ interface IOpts {
   atomPath: string
   command: string
   args: string[]
+  onExit: (code: number) => void
 }
 
 export class GHCI {
   private process: InteractiveProcess
   private splitrx: RegExp
   private readyPromise: Promise<void>
+  private onDidExit: (code: number) => void
   constructor (opts: IOpts) {
     this.splitrx = /^#~IDEHASKELLREPL~(.*)~#$/
-    let { cwd, atomPath, command, args } = opts
+    let { cwd, atomPath, command, args, onExit } = opts
+    this.onDidExit = onExit
 
     if (process.platform === 'win32') {
       let spawnArgs = [command, ...args]
@@ -25,9 +28,19 @@ export class GHCI {
       if (cmdexe) {
         spawnArgs.unshift('\"' + cmdexe + '\"')
       }
-      this.process = new InteractiveProcess('chcp 65001 && ', spawnArgs, { cwd, shell: true })
+      this.process = new InteractiveProcess(
+        'chcp 65001 && ',
+        spawnArgs,
+        this.didExit.bind(this),
+        { cwd, shell: true },
+      )
     } else {
-      this.process = new InteractiveProcess(command, args, { cwd })
+      this.process = new InteractiveProcess(
+        command,
+        args,
+        this.didExit.bind(this),
+        { cwd },
+      )
     }
 
     let resolveReadyPromise
@@ -73,5 +86,10 @@ export class GHCI {
 
   public destroy () {
     this.process.destroy()
+  }
+
+  private didExit (code: number) {
+    this.onDidExit(code)
+    this.destroy()
   }
 }
