@@ -119,7 +119,6 @@ export class IdeHaskellReplView {
 
   public async runCommand (command: string) {
     let inp = command.split('\n')
-    this.errors = this.errors.filter(({_time}) => Date.now() - _time < 10000)
     let res = await this.ghci.writeLines(inp, (type, text) => {
       console.error(type, text)
       switch (type) {
@@ -136,15 +135,7 @@ export class IdeHaskellReplView {
       }
       this.update()
     })
-    for (let err of res.stderr.join('\n').split(/\n(?=\S)/)) {
-      err && this.errors.push(this.parseMessage(err))
-    }
-    console.error(this.errors)
-    if (this.upi) {
-      this.upi.messages.set(this.errors)
-    } else {
-      this.update()
-    }
+    this.errorsFromStderr(res.stderr)
     return res
   }
 
@@ -162,15 +153,18 @@ export class IdeHaskellReplView {
   }
 
   public async ghciReloadRepeat () {
-    let command = this.history.goBack('')
-    return this.runCommand(command)
+    let {stderr} = await this.ghci.reload()
+    if (! this.errorsFromStderr(stderr)) {
+      let command = this.history.goBack('')
+      return this.runCommand(command)
+    }
   }
 
   public toggleAutoReloadRepeat () {
     this.setAutoReloadRepeat(!this.getAutoReloadRepeat())
   }
 
-  public setAutoReloadRepeat (autoReloadRepeat) {
+  public setAutoReloadRepeat (autoReloadRepeat: boolean) {
     this.autoReloadRepeat = autoReloadRepeat
     this.update()
   }
@@ -221,7 +215,7 @@ export class IdeHaskellReplView {
   public render () {
     return (
       <div className="ide-haskell-repl">
-        <div className="ide-haskell-repl-output native-key-bindings" tabIndex="-1"
+        <div ref="output" className="ide-haskell-repl-output native-key-bindings" tabIndex="-1"
           style={{fontSize: this.outputFontSize, fontFamily: this.outputFontFamily}}>
           {this.renderOutput()}
         </div>
@@ -284,8 +278,18 @@ export class IdeHaskellReplView {
     })
   }
 
-  private update () {
-    return etch.update(this)
+  private async update () {
+    let atEnd = !!this.refs &&
+      (this.refs.output.scrollTop + this.refs.output.clientHeight >= this.refs.output.scrollHeight)
+    let focused = !!this.refs && !!document.activeElement &&
+      (this.refs.editor.element.contains(document.activeElement))
+    await etch.update(this)
+    if (atEnd) {
+      this.refs.output.scrollTop = this.refs.output.scrollHeight - this.refs.output.clientHeight
+    }
+    if (focused) {
+      this.refs.editor.element.focus()
+    }
   }
 
   private async initialize (upiPromise: Promise<UPI>) {
@@ -376,6 +380,26 @@ export class IdeHaskellReplView {
         this.update()
       }
     })
+  }
+
+  private errorsFromStderr (stderr: string[]): boolean {
+    this.errors = this.errors.filter(({_time}) => Date.now() - _time < 10000)
+    let hasErrors = false
+    for (let err of stderr.join('\n').split(/\n(?=\S)/)) {
+      if (err) {
+        let error = this.parseMessage(err)
+        this.errors.push(error)
+        if (error.severity === 'error') {
+          hasErrors = true
+        }
+      }
+    }
+    if (this.upi) {
+      this.upi.messages.set(this.errors)
+    } else {
+      this.update()
+    }
+    return hasErrors
   }
 
   private unindentMessage (message): string {
