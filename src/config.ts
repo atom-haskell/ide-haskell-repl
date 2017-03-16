@@ -40,6 +40,12 @@ export let config = {
     ide-haskell-repl:toggle-auto-reload-repeat command`,
     order: 50,
   },
+  showTypes: {
+    type: 'boolean',
+    default: true,
+    description: `Show type tooltips in ide-haskell if possible`,
+    order: 60,
+  },
   ghciWrapperPath: {
     type: 'string',
     default: '',
