@@ -64,7 +64,7 @@ export function activate (state) {
       'ide-haskell-repl:run-selection-in-repl': ({currentTarget}) => {
         let ed = currentTarget.getModel()
         let cmd = ed.getLastSelection().getText()
-        open(ed, false).then((model) => model.runCommand(cmd))
+        open(ed, false).then(async (model) => model.runCommand(cmd))
       },
       'ide-haskell-repl:ghci-reload': externalCommandFunction('ghciReload'),
       'ide-haskell-repl:reload-repeat': externalCommandFunction('ghciReloadRepeat'),
@@ -91,7 +91,7 @@ export function createReplView ({uri, content, history, autoReloadRepeat}: IView
   return view
 }
 
-async function open (editor, activate = true) {
+async function open (editor, activate = true): Promise<IdeHaskellReplView> {
   let grammar = editor ? editor.getGrammar() : null
   let scope = grammar ? grammar.scopeName : null
   let uri
@@ -120,6 +120,10 @@ export function consumeUPI (service) {
         autoScroll: true,
       },
     },
+    tooltipEvent: {
+      priority: 200,
+      handler: shouldShowTooltip,
+    },
     consumer: (upi) => {
       UPI = upi
       resolveUPIPromise(upi)
@@ -127,6 +131,14 @@ export function consumeUPI (service) {
   })
   disposables.add(disp)
   return disp
+}
+
+async function shouldShowTooltip (editor: AtomTypes.TextEditor, crange: AtomTypes.Range, type: string) {
+  if (!atom.config.get('ide-haskell-repl.showTypes')) {
+    return null
+  }
+  let view = await open(editor, false)
+  return view.showTypeAt(editor.getPath(), crange)
 }
 
 export function autocompleteProvider_3_0_0 () {
