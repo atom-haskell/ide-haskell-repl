@@ -2,20 +2,16 @@ import {
   CompositeDisposable,
   TextEditor,
 } from 'atom'
-import * as Util from 'atom-haskell-utils'
 import highlightSync = require('atom-highlight')
 import etch = require('etch')
-import {filter} from 'fuzzaldrin'
 
-import {Button} from './button'
-import {CommandHistory} from './command-history'
-import {Editor} from './editor'
-import {GHCI} from './ghci'
 import {
   IContentItem,
   IdeHaskellReplBase,
   IViewState,
-} from './ide-haskell-repl-base'
+} from '../ide-haskell-repl-base'
+import {Button} from './button'
+import {Editor} from './editor'
 
 export {IViewState, IContentItem}
 
