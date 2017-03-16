@@ -16,7 +16,7 @@
         "preserveConstEnums": true,
         "suppressImplicitAnyIndexErrors": true,
         "outDir": "lib",
-        "downlevelIteration": false
+        "sourceMap": true
     },
     "exclude": [
         "node_modules",

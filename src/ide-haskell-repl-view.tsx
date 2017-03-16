@@ -34,18 +34,32 @@ interface IContentItem {
   hl?: boolean
 }
 
+type Severity = 'error' | 'warning' | 'repl' | string
+
+interface IErrorItem {
+  uri?: string,
+  position?: [number, number],
+  message: string,
+  context?: string,
+  severity: Severity,
+  _time: number,
+}
+
+declare interface IMyString extends String {
+  trimRight (): IMyString
+}
+
 export default class IdeHaskellReplView {
   public refs: {[key: string]: any}
   public editor: TextEditor
-  private lastErrorTime: number
   private ghci: GHCI
   private cwd: AtomTypes.Directory
   private prompt: string
-  private errorText: string
   private upi: UPI
   private outputFontFamily: any
   private outputFontSize: any
   private messages: IContentItem[]
+  private errors: IErrorItem[]
   private emitter: Emitter
   private autoReloadRepeat: boolean
   private history: string[]
@@ -62,6 +76,7 @@ export default class IdeHaskellReplView {
     this.disposables = new CompositeDisposable()
     this.emitter = new Emitter()
     this.disposables.add(this.emitter)
+    this.errors = []
 
     this.editor = new TextEditor({
       lineNumberGutterVisible: false,
@@ -89,18 +104,27 @@ export default class IdeHaskellReplView {
   }
 
   public execCommand () {
-    let inp = this.editor.getBuffer().getLines()
+    let inp = this.editor.getBuffer().getText()
     this.editor.setText('')
-    return this.ghci.writeLines(inp, (type, text) => {
+    this.runCommand(inp)
+  }
+
+  public copyText (command) {
+    this.editor.setText(command)
+    this.editor.element.focus()
+  }
+
+  public async runCommand (command: string) {
+    let inp = command.split('\n')
+    this.errors = this.errors.filter(({_time}) => Date.now() - _time < 10000)
+    let res = await this.ghci.writeLines(inp, (type, text) => {
+      console.error(type, text)
       switch (type) {
         case 'stdin':
-          this.messages.push({text: inp.join('\n'), hl: true, cls: 'ide-haskell-repl-input-text'})
+          text && this.messages.push({text: inp.join('\n'), hl: true, cls: 'ide-haskell-repl-input-text'})
           break
         case 'stdout':
-          this.messages.push({text, hl: true, cls: 'ide-haskell-repl-output-text'})
-          break
-        case 'stderr':
-          this.messages.push({text, cls: 'ide-haskell-repl-message-text'})
+          text && this.messages.push({text, hl: true, cls: 'ide-haskell-repl-output-text'})
           break
         case 'prompt':
           this.prompt = text[1]
@@ -109,24 +133,16 @@ export default class IdeHaskellReplView {
       }
       this.update() // TODO: update only output
     })
-  }
-
-  public copyText (command) {
-    this.editor.setText(command)
-    this.editor.element.focus()
-  }
-
-  public runCommand (command, time = Date.now()) {
-    if (!this.ghci) {
-      this.setError('runCommand: no GHCi instance')
-      return
+    for (let err of res.stderr.join('\n').split(/\n(?=\S)/)) {
+      err && this.errors.push(this.parseMessage(err))
     }
-    let dt = Date.now() - time
-    if (dt > 10000) {
-      this.setError('runCommand: timeout after #{dt / 1000} seconds')
-      return
+    console.error(this.errors)
+    if (this.upi) {
+      this.upi.messages.set(this.errors)
+    } else {
+      this.update()
     }
-    if (!this.ghci.writeLines(command.split('\n'))) { setTimeout(() => this.runCommand(command), 100) }
+    return res
   }
 
   public historyBack () {
@@ -242,7 +258,7 @@ export default class IdeHaskellReplView {
     if (!this.upi) {
       return (
         <div className="ide-haskell-repl-error">
-          {this.errorText || ''}
+          {this.errors /*TODO render*/}
         </div>
       )
     } else { return null }
@@ -381,86 +397,51 @@ export default class IdeHaskellReplView {
     })
   }
 
-  private setError (err) {
-    let time = Date.now()
-    if (!this.lastErrorTime) {
-      this.lastErrorTime = time
-    }
-    if (time - this.lastErrorTime > 1000) {
-      if (this.upi) { this.upi.messages.set(this.splitErrBuffer(err)) } else {
-        this.errorText = err.trim()
-        this.update() // TODO: update only error div
-      }
-    } else
-      if (this.upi) { this.upi.messages.add(this.splitErrBuffer(err)) } else {
-        if (this.errorText) {
-          this.errorText = `${this.errorText.trim()}\n\n${err.trim()}`
-        } else {
-          this.errorText = err.trim()
-        }
-      }
-    this.lastErrorTime = time
-  }
-
-  private splitErrBuffer (errBuffer) {
-    // Start of a Cabal message
-    let startOfMessage = /\n\S/
-    let som = errBuffer.search(startOfMessage)
-    function * msgsG () {
-      while (som >= 0) {
-        let errMsg = errBuffer.substr(0, som + 1)
-        errBuffer = errBuffer.substr(som + 1)
-        som = errBuffer.search(startOfMessage)
-        let msg = this.parseMessage(errMsg)
-        if (msg) {
-          yield msg
-        }
-      }
-    }
-    let msgs = Array.from(msgsG.bind(this)())
-    // Try to parse whatever is left in the buffer
-    msgs.push(this.parseMessage(errBuffer))
-    return msgs.filter((msg) => msg)
-  }
-
-  private unindentMessage (message) {
-    let lines = message.split('\n')
+  private unindentMessage (message): string {
+    let lines = message.split('\n').filter((x) => !x.match(/^\s*$/))
     let minIndent = null
     for (let line of lines) {
-      let match = line.match(/^[\t\s]*/)
+      let match = line.match(/^\s*/)
       let lineIndent = match[0].length
       if (lineIndent < minIndent || !minIndent) { minIndent = lineIndent }
     }
+    console.error(minIndent, lines)
     if (minIndent) {
       lines = lines.map((line) => line.slice(minIndent))
     }
     return lines.join('\n')
   }
 
-  private parseMessage (raw) {
-    // Regular expression to match against a location in a cabal msg (Foo.hs:3:2)
-    // The [^] syntax basically means "anything at all" (including newlines)
-    let matchLoc = /(\S+):(\d+):(\d+):( Warning:)?\n?([^]*)/
-    if (raw.trim() !== '') {
+  private parseMessage (raw): IErrorItem {
+    let matchLoc = /^(.+):(\d+):(\d+):(?: (\w+):)?\s*(\[[^\]]+\])?/
+    if (raw && raw.trim() !== '') {
       let matched = raw.match(matchLoc)
       if (matched) {
-        let [file, line, col, rawTyp, msg] = matched.slice(1, 6)
-        let typ = rawTyp ? 'warning' : 'error'
+        let msg = raw.split('\n').slice(1).join('\n')
+        let [file, line, col, rawTyp, context]: String[] = matched.slice(1)
+        let typ: Severity = rawTyp ? rawTyp.toLowerCase() : 'error'
         if (file === '<interactive>') {
-          file = undefined
+          file = null
           typ = 'repl'
         }
 
+        // NOTE: this is done because typescript insists strings dont have
+        // trimRight() method
+        let msgany = msg as IMyString
+
         return {
           uri: file ? this.cwd.getFile(this.cwd.relativize(file)).getPath() : null,
-          position: [parseInt(line, 10) - 1, parseInt(col, 10) - 1],
-          message: this.unindentMessage(msg.trimRight()),
+          position: [parseInt(line as string, 10) - 1, parseInt(col as string, 10) - 1],
+          message: this.unindentMessage(msgany.trimRight()),
+          context: context as string,
           severity: typ,
+          _time: Date.now(),
         }
       } else {
         return {
           message: raw,
           severity: 'repl',
+          _time: Date.now(),
         }
       }
     }
