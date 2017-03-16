@@ -1,5 +1,8 @@
 {
     "extends": "tslint:recommended",
+    "linterOptions": {
+      "typeCheck": true
+    },
     "rules": {
       "quotemark": [true, "single", "jsx-double", "avoid-escape"],
       "semicolon": [true, "never"],
@@ -10,8 +13,6 @@
       "no-unused-new": true,
       "no-unused-variable": true,
       "no-unbound-method": true,
-      "no-unsave-any": true,
-      "strict-type-predicates": true,
-      "no-non-null-assertion": true
+      "promise-function-async": true
     }
 }

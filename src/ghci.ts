@@ -57,11 +57,11 @@ export class GHCI {
     await this.readyPromise
   }
 
-  public load (uri: string, callback?: Function) {
+  public async load (uri: string, callback?: Function) {
     return this.process.request(`:load ${hsEscapeString(uri)}${EOL}`, callback)
   }
 
-  public reload (callback?: Function) {
+  public async reload (callback?: Function) {
     return this.process.request(`:reload${EOL}`, callback)
   }
 
@@ -75,14 +75,14 @@ export class GHCI {
     }
   }
 
-  public writeLines (lines: string[], callback?: Function) {
+  public async writeLines (lines: string[], callback?: Function) {
     return this.process.request(
       `:{${EOL}${lines.join(EOL)}${EOL}:}${EOL}`,
       callback,
     )
   }
 
-  public sendCompletionRequest (callback?: Function) {
+  public async sendCompletionRequest (callback?: Function) {
     return this.process.request(`:complete repl \"\"${EOL}`, callback)
   }
 

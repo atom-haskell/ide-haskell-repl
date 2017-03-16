@@ -28,7 +28,7 @@ export function activate (state) {
 
   disposables.add(
     atom.commands.add('atom-text-editor', {
-      'ide-haskell-repl:toggle': ({currentTarget}) => open(currentTarget.getModel()),
+      'ide-haskell-repl:toggle': async ({currentTarget}) => open(currentTarget.getModel()),
     }),
   )
 
@@ -91,7 +91,7 @@ export function createReplView ({uri, content, history, autoReloadRepeat}: IView
   return view
 }
 
-function open (editor, activate = true) {
+async function open (editor, activate = true) {
   let grammar = editor ? editor.getGrammar() : null
   let scope = grammar ? grammar.scopeName : null
   let uri
