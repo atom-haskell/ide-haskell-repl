@@ -59,7 +59,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
   }
 
   public async execCommand () {
-    let inp = this.editor.getBuffer().getText()
+    const inp = this.editor.getBuffer().getText()
     this.editor.setText('')
     this.history.save(inp)
     return this.runCommand(inp)
@@ -71,7 +71,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
   }
 
   public historyBack () {
-    let current = this.editor.getText()
+    const current = this.editor.getText()
     this.editor.setText(this.history.goBack(current))
   }
 
@@ -109,9 +109,9 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
   }
 
   public async update () {
-    let atEnd = !!this.refs &&
+    const atEnd = !!this.refs &&
       (this.refs.output.scrollTop + this.refs.output.clientHeight >= this.refs.output.scrollHeight)
-    let focused = !!this.refs && !!document.activeElement &&
+    const focused = !!this.refs && !!document.activeElement &&
       (this.refs.editor.element.contains(document.activeElement))
     await etch.update(this)
     if (atEnd) {
@@ -164,7 +164,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
   }
 
   protected async onInitialLoad () {
-    let res = await this.ghci.load(this.uri)
+    const res = await this.ghci.load(this.uri)
     this.prompt = res.prompt[1]
     this.errorsFromStderr (res.stderr)
     return super.onInitialLoad()
@@ -187,13 +187,14 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
   }
 
   private renderOutput () {
-    let maxMsg = atom.config.get('ide-haskell-repl.maxMessages')
+    const maxMsg = atom.config.get('ide-haskell-repl.maxMessages')
     if (maxMsg > 0) {
       this.messages = this.messages.slice(-maxMsg)
     }
     return this.messages.map((msg: IContentItem) => {
-      let {text, cls, hl, hlcache} = msg
-      let cleanText = text.replace(termEscapeRx, '')
+      const {text, cls, hl} = msg
+      let {hlcache} = msg
+      const cleanText = text.replace(termEscapeRx, '')
       if (hl) {
         if (!hlcache) {
           hlcache = msg.hlcache = highlightSync({fileContents: cleanText, scopeName: 'source.haskell', nbsp: false})

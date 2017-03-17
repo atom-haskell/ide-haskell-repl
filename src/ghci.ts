@@ -15,13 +15,13 @@ export class GHCI {
   private readyPromise: Promise<IRequestResult>
   private onDidExit: (code: number) => void
   constructor (opts: IOpts) {
-    let endPattern = /^#~IDEHASKELLREPL~(.*)~#$/
-    let { cwd, atomPath, command, args, onExit } = opts
+    const endPattern = /^#~IDEHASKELLREPL~(.*)~#$/
+    const { cwd, atomPath, command, args, onExit } = opts
     this.onDidExit = onExit
 
     if (process.platform === 'win32') {
-      let spawnArgs = [command, ...args]
-      let cmdexe = atom.config.get('ide-haskell-repl.ghciWrapperPath')
+      const spawnArgs = [command, ...args]
+      const cmdexe = atom.config.get('ide-haskell-repl.ghciWrapperPath')
       if (cmdexe) {
         spawnArgs.unshift('\"' + cmdexe + '\"')
       }

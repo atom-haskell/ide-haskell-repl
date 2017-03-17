@@ -22,17 +22,13 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
     super(upiPromise, state)
   }
 
-  public showTypeAt (uri: string, range: AtomTypes.Range) {
+  public showTypeAt (uri: string, inrange: AtomTypes.Range) {
     if (!this.types) { return }
-    let typeRec = this.types.find((tr) => tr && tr.uri === uri && tr.span.containsRange(range))
+    const typeRec = this.types.find((tr) => tr && tr.uri === uri && tr.span.containsRange(inrange))
     if (!typeRec) { return }
-    return {
-      range: typeRec.span,
-      text: {
-        text: typeRec.type,
-        highlighter: 'hint.type.haskell',
-      },
-    }
+    const {span: range, type: text} = typeRec
+    const highlighter = 'hint.type.haskell'
+    return { range, text: { text, highlighter }}
   }
 
   public async destroy () {
@@ -54,21 +50,21 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
   }
 
   protected async getAllTypes (): Promise<ITypeRecord[]> {
-    let {stdout} = await this.ghci.writeLines([':all-types'])
-    return this.types = stdout.map((line) => {
-      let rx = /^(.*):\((\d+),(\d+)\)-\((\d+),(\d+)\):\s*(.*)$/
-      let match = line.match(rx)
-      if (match) {
-        let m = match.slice(1)
-        let uri = m[0]
-        let type = m[5]
-        let [rowstart, colstart, rowend, colend] = m.slice(1).map((i) => parseInt(i, 10) - 1)
-        return {
-          uri,
-          type,
-          span: Range.fromObject([[rowstart, colstart], [rowend, colend]]),
-        }
+    const {stdout} = await this.ghci.writeLines([':all-types'])
+    this.types = []
+    for (const line of stdout) {
+      const rx = /^(.*):\((\d+),(\d+)\)-\((\d+),(\d+)\):\s*(.*)$/
+      const match = line.match(rx)
+      if (!match) {
+        continue
       }
-    })
+      const m = match.slice(1)
+      const uri = m[0]
+      const type = m[5]
+      const [rowstart, colstart, rowend, colend] = m.slice(1).map((i) => parseInt(i, 10) - 1)
+      const span = Range.fromObject([[rowstart, colstart], [rowend, colend]])
+      this.types.push({uri, type, span})
+    }
+    return this.types
   }
 }

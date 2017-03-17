@@ -54,7 +54,7 @@ export class InteractiveProcess {
       this.writeStdin(command)
       if (lineCallback) {lineCallback('stdin', command)}
 
-      let res: IRequestResult = {
+      const res: IRequestResult = {
         stdout: [],
         stderr: [],
         prompt: [],
@@ -64,7 +64,7 @@ export class InteractiveProcess {
 
       setImmediate(async () => {
         while (!ended) {
-          let line = await this.read(this.process.stderr)
+          const line = await this.read(this.process.stderr)
           if (lineCallback) {lineCallback('stderr', line)}
           res.stderr.push(line)
         }
@@ -73,7 +73,7 @@ export class InteractiveProcess {
       while (true) {
         let line: string
         line = await this.read(this.process.stdout)
-        let pattern = line.match(endPattern)
+        const pattern = line.match(endPattern)
         if (pattern) {
           if (lineCallback) {lineCallback('prompt', pattern)}
           res.prompt = pattern
@@ -107,7 +107,7 @@ export class InteractiveProcess {
   private async read (out: NodeJS.ReadableStream) {
     let buffer = ''
     while (!buffer.match(/\n/)) {
-      let read = out.read()
+      const read = out.read()
       if (read === null) {
         await new Promise((resolve) => out.once('readable', () => {
           resolve()
@@ -116,7 +116,7 @@ export class InteractiveProcess {
         buffer += read
       }
     }
-    let [first, ...rest] = buffer.split('\n')
+    const [first, ...rest] = buffer.split('\n')
     out.unshift(rest.join('\n'))
     return first
   }
