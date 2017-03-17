@@ -176,12 +176,16 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
   }
 
   private renderOutput () {
-    return this.messages.map(({text, cls, hl}: IContentItem) => {
+    return this.messages.map((msg: IContentItem) => {
+      let {text, cls, hl, hlcache} = msg
       let cleanText = text.replace(termEscapeRx, '')
       if (hl) {
+        if (!hlcache) {
+          hlcache = msg.hlcache = highlightSync({fileContents: cleanText, scopeName: 'source.haskell', nbsp: false})
+        }
         return (
           <pre className={cls}
-            innerHTML={highlightSync({fileContents: cleanText, scopeName: 'source.haskell', nbsp: false})} >
+            innerHTML={hlcache}>
           </pre>
         )
       } else {
