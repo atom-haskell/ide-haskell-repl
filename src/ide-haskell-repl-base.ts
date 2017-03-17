@@ -93,21 +93,20 @@ export abstract class IdeHaskellReplBase {
 
   public async runCommand (command: string) {
     const inp = command.split('\n')
-    const res = await this.ghci.writeLines(inp, (type, text) => {
-      console.error(type, text)
-      switch (type) {
+    const res = await this.ghci.writeLines(inp, (lineInfo) => {
+      switch (lineInfo.type) {
         case 'stdin':
-          text && this.messages.push({
+          lineInfo.line && this.messages.push({
             text: inp.join('\n'), hl: true, cls: 'ide-haskell-repl-input-text',
           })
           break
         case 'stdout':
-          text && this.messages.push({
-            text, hl: true, cls: 'ide-haskell-repl-output-text',
+          lineInfo.line && this.messages.push({
+            text: lineInfo.line, hl: true, cls: 'ide-haskell-repl-output-text',
           })
           break
         case 'prompt':
-          this.prompt = text[1]
+          this.prompt = lineInfo.prompt[1]
           break
         default: break
       }
