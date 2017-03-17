@@ -31,10 +31,6 @@ export interface IErrorItem {
   _time: number,
 }
 
-declare interface IMyString extends String {
-  trimRight (): IMyString
-}
-
 interface ITypeRecord {
   uri: string
   type: string
@@ -333,22 +329,18 @@ export abstract class IdeHaskellReplBase {
       let matched = raw.match(matchLoc)
       if (matched) {
         let msg = raw.split('\n').slice(1).join('\n')
-        let [file, line, col, rawTyp, context]: String[] = matched.slice(1)
+        let [file, line, col, rawTyp, context]: string[] = matched.slice(1)
         let typ: Severity = rawTyp ? rawTyp.toLowerCase() : 'error'
         if (file === '<interactive>') {
           file = null
           typ = 'repl'
         }
 
-        // NOTE: this is done because typescript insists strings dont have
-        // trimRight() method
-        let msgany = msg as IMyString
-
         return {
           uri: file ? this.cwd.getFile(this.cwd.relativize(file)).getPath() : null,
           position: [parseInt(line as string, 10) - 1, parseInt(col as string, 10) - 1],
           message: {
-            text: this.unindentMessage(msgany.trimRight()),
+            text: this.unindentMessage(msg.trimRight()),
             highlighter: 'hint.message.haskell',
           },
           context: context as string,
