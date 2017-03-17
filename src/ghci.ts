@@ -1,6 +1,6 @@
 import {hsEscapeString} from 'atom-haskell-utils'
 import {EOL} from 'os'
-import {InteractiveProcess} from './interactive-process'
+import {InteractiveProcess, IRequestResult} from './interactive-process'
 
 interface IOpts {
   cwd: string
@@ -12,7 +12,7 @@ interface IOpts {
 
 export class GHCI {
   private process: InteractiveProcess
-  private readyPromise: Promise<void>
+  private readyPromise: Promise<IRequestResult>
   private onDidExit: (code: number) => void
   constructor (opts: IOpts) {
     let endPattern = /^#~IDEHASKELLREPL~(.*)~#$/
@@ -43,7 +43,7 @@ export class GHCI {
     }
 
     let resolveReadyPromise
-    this.readyPromise = new Promise<void>((resolve) => { resolveReadyPromise = resolve })
+    this.readyPromise = new Promise<IRequestResult>((resolve) => { resolveReadyPromise = resolve })
 
     this.process.request(
       `:set editor \"#{atomPath}\"${EOL}` +
@@ -54,7 +54,7 @@ export class GHCI {
   }
 
   public async waitReady () {
-    await this.readyPromise
+    return await this.readyPromise
   }
 
   public async load (uri: string, callback?: Function) {

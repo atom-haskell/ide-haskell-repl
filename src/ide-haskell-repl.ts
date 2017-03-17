@@ -1,4 +1,5 @@
 import {CompositeDisposable} from 'atom'
+import {IdeHaskellReplBg} from './ide-haskell-repl-bg'
 import {
   IdeHaskellReplView,
   IViewState,
@@ -9,6 +10,7 @@ export * from './config'
 type UPIInterface = any
 let disposables: CompositeDisposable
 let editorMap: WeakMap<AtomTypes.TextEditor, IdeHaskellReplView> = new WeakMap()
+let bgEditorMap: WeakMap<AtomTypes.TextEditor, IdeHaskellReplBg> = new WeakMap()
 let resolveUPIPromise: (upi: UPIInterface) => void
 let upiPromise = new Promise<UPIInterface>((resolve) => { resolveUPIPromise = resolve })
 let UPI: UPIInterface
@@ -137,8 +139,18 @@ async function shouldShowTooltip (editor: AtomTypes.TextEditor, crange: AtomType
   if (!atom.config.get('ide-haskell-repl.showTypes')) {
     return null
   }
-  let view = await open(editor, false)
-  return view.showTypeAt(editor.getPath(), crange)
+  let bg: IdeHaskellReplBg
+  if (bgEditorMap.has(editor)) {
+    bg = bgEditorMap.get(editor)
+  } else {
+    if (!editor.getPath()) {
+      return null
+    }
+    await upiPromise
+    bg = new IdeHaskellReplBg(upiPromise, {uri: editor.getPath()})
+    bgEditorMap.set(editor, bg)
+  }
+  return bg.showTypeAt(editor.getPath(), crange)
 }
 
 export function autocompleteProvider_3_0_0 () {
