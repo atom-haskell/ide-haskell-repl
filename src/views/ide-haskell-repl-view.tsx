@@ -27,7 +27,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
   private outputFontFamily: any
   private outputFontSize: any
   private disposables: CompositeDisposable
-  constructor (upiPromise, state: IViewState) {
+  constructor (upiPromise: Promise<UPIInstance>, state: IViewState) {
     super(upiPromise, state)
     this.disposables = new CompositeDisposable()
 
@@ -40,18 +40,18 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
     atom.textEditors.add(this.editor)
 
     this.disposables.add(
-      atom.workspace.observeTextEditors((editor) => {
-        if (editor.getURI() === this.uri) {
+      atom.workspace.observeTextEditors((editor: TextEditor) => {
+        if (editor.getPath() === this.uri) {
           this.disposables.add(editor.onDidSave(() => {
             if (this.autoReloadRepeat) { this.ghciReloadRepeat() }
           }))
         }
       }),
     )
-    this.disposables.add(atom.config.observe('editor.fontSize', (fontSize) => {
+    this.disposables.add(atom.config.observe('editor.fontSize', (fontSize: number) => {
       this.outputFontSize = `${fontSize}px`
     }))
-    this.disposables.add(atom.config.observe('editor.fontFamily', (fontFamily) => {
+    this.disposables.add(atom.config.observe('editor.fontFamily', (fontFamily: string) => {
       this.outputFontFamily = fontFamily
     }))
 
@@ -65,7 +65,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
     return this.runCommand(inp)
   }
 
-  public copyText (command) {
+  public copyText (command: string) {
     this.editor.setText(command)
     this.editor.element.focus()
   }

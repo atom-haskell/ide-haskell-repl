@@ -2468,6 +2468,7 @@ declare module AtomTypes {
           tokenizing the next line in the file.
          */
         tokenizeLine(line: string, ruleStack: any[], firstLine: boolean): Object;
+        scopeName: string;
     }
 
     /**
@@ -6460,7 +6461,7 @@ declare module AtomTypes {
         /**
          * Get the current {Grammar} of this editor.
          */
-        getGrammar(): void;
+        getGrammar(): Grammar;
         /**
          * Set the current {Grammar} of this editor.
          *

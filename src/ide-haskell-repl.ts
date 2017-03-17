@@ -1,4 +1,4 @@
-import {CompositeDisposable} from 'atom'
+import {CompositeDisposable, TextEditor} from 'atom'
 import {IdeHaskellReplBg} from './ide-haskell-repl-bg'
 import {
   IdeHaskellReplView,
@@ -15,11 +15,20 @@ let resolveUPIPromise: (upi: UPIInterface) => void
 const upiPromise = new Promise<UPIInterface>((resolve) => { resolveUPIPromise = resolve })
 let UPI: UPIInterface
 
-export function activate (state) {
+declare interface IEventDesc {
+  currentTarget: HTMLElement & { getModel (): AtomTypes.TextEditor }
+  abortKeyBinding? (): void
+}
+
+declare interface IState {
+  // TODO
+}
+
+export function activate (state: IState) {
   disposables = new CompositeDisposable()
 
   disposables.add(
-    atom.workspace.addOpener((uriToOpen, options) => {
+    atom.workspace.addOpener((uriToOpen: string) => {
       const m = uriToOpen.match(/^ide-haskell:\/\/repl\/(.*)$/)
       if (!(m && m[1])) {
         return
@@ -30,11 +39,11 @@ export function activate (state) {
 
   disposables.add(
     atom.commands.add('atom-text-editor', {
-      'ide-haskell-repl:toggle': async ({currentTarget}) => open(currentTarget.getModel()),
+      'ide-haskell-repl:toggle': async ({currentTarget}: IEventDesc) => open(currentTarget.getModel()),
     }),
   )
 
-  const commandFunction = (func) => ({currentTarget}) => {
+  const commandFunction = (func: string) => ({currentTarget}: IEventDesc) => {
     const view = editorMap.get(currentTarget.getModel())
     if (view) { view[func]() }
   }
@@ -52,19 +61,19 @@ export function activate (state) {
     }),
   )
 
-  const externalCommandFunction = (func) => ({currentTarget}) => {
+  const externalCommandFunction = (func: string) => ({currentTarget}: IEventDesc) => {
     open(currentTarget.getModel(), false)
     .then((model) => model[func]())
   }
 
   disposables.add(
     atom.commands.add('atom-text-editor:not(.ide-haskell-repl)', {
-      'ide-haskell-repl:copy-selection-to-repl-input': ({currentTarget}) => {
+      'ide-haskell-repl:copy-selection-to-repl-input': ({currentTarget}: IEventDesc) => {
         const ed = currentTarget.getModel()
         const cmd = ed.getLastSelection().getText()
         open(ed).then((model) => model.copyText(cmd))
       },
-      'ide-haskell-repl:run-selection-in-repl': ({currentTarget}) => {
+      'ide-haskell-repl:run-selection-in-repl': ({currentTarget}: IEventDesc) => {
         const ed = currentTarget.getModel()
         const cmd = ed.getLastSelection().getText()
         open(ed, false).then(async (model) => model.runCommand(cmd))
@@ -94,12 +103,12 @@ export function createReplView ({uri, content, history, autoReloadRepeat}: IView
   return view
 }
 
-async function open (editor, activate = true): Promise<IdeHaskellReplView> {
+async function open (editor: TextEditor, activate = true): Promise<IdeHaskellReplView> {
   const grammar = editor ? editor.getGrammar() : null
   const scope = grammar ? grammar.scopeName : null
   let uri
   if (scope && scope.endsWith('haskell')) {
-    uri = editor.getURI()
+    uri = editor.getPath()
   } else {
     uri = ''
   }
@@ -114,7 +123,7 @@ export function deactivate () {
   disposables.dispose()
 }
 
-export function consumeUPI (service) {
+export function consumeUPI (service: UPI) {
   const disp = service.consume({
     name: 'ide-haskell-repl',
     messageTypes: {
@@ -127,7 +136,7 @@ export function consumeUPI (service) {
       priority: 200,
       handler: shouldShowTooltip,
     },
-    consumer: (upi) => {
+    consumer: (upi: UPIInstance) => {
       UPI = upi
       resolveUPIPromise(upi)
     },
@@ -164,7 +173,7 @@ export function autocompleteProvider_3_0_0 () {
     disableForScopeSelector: '.source.haskell .comment',
     getTextEditorSelector: () => 'atom-text-editor.ide-haskell-repl',
     inclusionPriority: 0,
-    getSuggestions: async ({editor, prefix}) => {
+    getSuggestions: async ({editor, prefix}: {editor: TextEditor, prefix: string}) => {
       const view = editorMap.get(editor)
       if (!view) {
         return []

@@ -18,7 +18,7 @@ interface ITypeRecord {
 
 export class IdeHaskellReplBg extends IdeHaskellReplBase {
   private types: ITypeRecord[]
-  constructor (upiPromise, state: IViewState) {
+  constructor (upiPromise: Promise<UPIInstance>, state: IViewState) {
     super(upiPromise, state)
   }
 
