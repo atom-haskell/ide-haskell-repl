@@ -1,8 +1,10 @@
 import {hsEscapeString} from 'atom-haskell-utils'
 import {EOL} from 'os'
-import {InteractiveProcess, IRequestResult} from './interactive-process'
+import {InteractiveProcess, IRequestResult, TLineCallback} from './interactive-process'
 
-interface IOpts {
+export {TLineCallback, IRequestResult}
+
+export interface IOpts {
   cwd: string
   atomPath: string
   command: string
@@ -57,11 +59,11 @@ export class GHCI {
     return await this.readyPromise
   }
 
-  public async load (uri: string, callback?: Function) {
+  public async load (uri: string, callback?: TLineCallback) {
     return this.process.request(`:load ${hsEscapeString(uri)}${EOL}`, callback)
   }
 
-  public async reload (callback?: Function) {
+  public async reload (callback?: TLineCallback) {
     return this.process.request(`:reload${EOL}`, callback)
   }
 
@@ -75,14 +77,14 @@ export class GHCI {
     }
   }
 
-  public async writeLines (lines: string[], callback?: Function) {
+  public async writeLines (lines: string[], callback?: TLineCallback) {
     return this.process.request(
       `:{${EOL}${lines.join(EOL)}${EOL}:}${EOL}`,
       callback,
     )
   }
 
-  public async sendCompletionRequest (callback?: Function) {
+  public async sendCompletionRequest (callback?: TLineCallback) {
     return this.process.request(`:complete repl \"\"${EOL}`, callback)
   }
 

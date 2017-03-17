@@ -9,6 +9,16 @@ export interface IRequestResult {
   stderr: string[]
   prompt: RegExpMatchArray
 }
+export interface ILineIO {
+  type: 'stdin' | 'stdout' | 'stderr'
+  line: string
+}
+export interface ILinePrompt {
+  type: 'prompt'
+  prompt: RegExpMatchArray
+}
+export type TLineType = ILineIO | ILinePrompt
+export type TLineCallback = (line: TLineType) => void
 
 export class InteractiveProcess {
   private process: CP.ChildProcess
@@ -41,7 +51,7 @@ export class InteractiveProcess {
   }
 
   public async request (
-    command: string, lineCallback?: Function, endPattern: RegExp = this.endPattern,
+    command: string, lineCallback?: TLineCallback, endPattern: RegExp = this.endPattern,
   ): Promise<IRequestResult> {
     return this.requestQueue.add(async () => {
       if (!this.running) {
@@ -52,7 +62,7 @@ export class InteractiveProcess {
       this.process.stderr.pause()
 
       this.writeStdin(command)
-      if (lineCallback) {lineCallback('stdin', command)}
+      if (lineCallback) {lineCallback({type: 'stdin', line: command})}
 
       const res: IRequestResult = {
         stdout: [],
@@ -65,7 +75,7 @@ export class InteractiveProcess {
       setImmediate(async () => {
         while (!ended) {
           const line = await this.read(this.process.stderr)
-          if (lineCallback) {lineCallback('stderr', line)}
+          if (lineCallback) {lineCallback({type: 'stderr', line})}
           res.stderr.push(line)
         }
       })
@@ -75,11 +85,11 @@ export class InteractiveProcess {
         line = await this.read(this.process.stdout)
         const pattern = line.match(endPattern)
         if (pattern) {
-          if (lineCallback) {lineCallback('prompt', pattern)}
+          if (lineCallback) {lineCallback({type: 'prompt', prompt: pattern})}
           res.prompt = pattern
           break
         }
-        if (lineCallback) {lineCallback('stdout', line)}
+        if (lineCallback) {lineCallback({type: 'stdout', line})}
         res.stdout.push(line)
       }
       ended = true
