@@ -33,7 +33,7 @@ export interface IErrorItem {
 }
 
 export abstract class IdeHaskellReplBase {
-  public static async getRootDir (uri) {
+  public static async getRootDir (uri: string) {
     return Util.getRootDir(uri)
   }
 
@@ -72,7 +72,7 @@ export abstract class IdeHaskellReplBase {
   protected history: CommandHistory
   protected uri: string
 
-  constructor (upiPromise, {
+  constructor (upiPromise: Promise<UPIInstance>, {
     uri, content, history, autoReloadRepeat = atom.config.get('ide-haskell-repl.autoReloadRepeat'),
   }: IViewState) {
     this.uri = uri || ''
@@ -85,7 +85,7 @@ export abstract class IdeHaskellReplBase {
     setImmediate(async () => this.initialize(upiPromise))
   }
 
-  public abstract update ()
+  public abstract update (): any
 
   public toggleAutoReloadRepeat () {
     this.autoReloadRepeat = ! this.autoReloadRepeat
@@ -143,7 +143,7 @@ export abstract class IdeHaskellReplBase {
     this.ghci.interrupt()
   }
 
-  public async getCompletions (prefix) {
+  public async getCompletions (prefix: string) {
     if (!prefix.trim()) {
       return []
     }
@@ -215,9 +215,9 @@ export abstract class IdeHaskellReplBase {
       ghci: [],
     }
     const extraArgs = {
-      stack: (x) => '--ghci-options="#{x}"',
-      cabal: (x) => '--ghc-option=#{x}',
-      ghci: (x) => x,
+      stack: (x: string) => `--ghci-options="${x}"`,
+      cabal: (x: string) => `--ghc-option=${x}`,
+      ghci: (x: string) => x,
     }
 
     if (!args[builder]) { throw new Error('Unknown builder #{builder}') }
@@ -225,7 +225,7 @@ export abstract class IdeHaskellReplBase {
 
     commandArgs.push(...(atom.config.get('ide-haskell-repl.extraArgs').map(extraArgs[builder])))
 
-    if (comp) {
+    if (comp && cabal) {
       if (builder === 'stack') {
         if (comp.startsWith('lib:')) {
           comp = 'lib'
@@ -272,22 +272,21 @@ export abstract class IdeHaskellReplBase {
     return hasErrors
   }
 
-  protected unindentMessage (message): string {
+  protected unindentMessage (message: string): string {
     let lines = message.split('\n').filter((x) => !x.match(/^\s*$/))
-    let minIndent = null
+    let minIndent: number | null = null
     for (const line of lines) {
-      const match = line.match(/^\s*/)
+      const match = line.match(/^\s*/)!
       const lineIndent = match[0].length
       if (!minIndent || lineIndent < minIndent) { minIndent = lineIndent }
     }
-    console.error(minIndent, lines)
     if (minIndent) {
-      lines = lines.map((line) => line.slice(minIndent))
+      lines = lines.map((line) => line.slice(minIndent!))
     }
     return lines.join('\n')
   }
 
-  protected parseMessage (raw): IErrorItem | undefined {
+  protected parseMessage (raw: string): IErrorItem | undefined {
     const matchLoc = /^(.+):(\d+):(\d+):(?: (\w+):)?\s*(\[[^\]]+\])?/
     if (raw && raw.trim() !== '') {
       const matched = raw.match(matchLoc)
@@ -307,7 +306,7 @@ export abstract class IdeHaskellReplBase {
           uri: file ? this.cwd.getFile(this.cwd.relativize(file)).getPath() : undefined,
           position: [parseInt(line as string, 10) - 1, parseInt(col as string, 10) - 1],
           message: {
-            text: this.unindentMessage(msg.trimRight()),
+            text: this.unindentMessage((msg as any).trimRight()),
             highlighter: 'hint.message.haskell',
           },
           context,

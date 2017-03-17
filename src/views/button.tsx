@@ -45,7 +45,7 @@ export class Button {
     this.disposables.dispose()
   }
 
-  public update ({state}) {
+  public update ({state}: {state: boolean}) {
     if (state) {
       this.clslst.add('enabled')
     } else {

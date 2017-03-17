@@ -46,6 +46,7 @@
     "IdeHaskellReplView": "createReplView"
   },
   "devDependencies": {
+    "@types/fuzzaldrin": "^2.1.0",
     "@types/node": "^7.0.8",
     "typescript": "^2.2.1"
   }
