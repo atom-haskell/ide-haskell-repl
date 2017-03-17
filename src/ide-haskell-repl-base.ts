@@ -18,6 +18,7 @@ export interface IContentItem {
   text: string
   cls: string
   hl?: boolean
+  hlcache?: string
 }
 
 type Severity = 'error' | 'warning' | 'repl' | string
@@ -103,10 +104,14 @@ export abstract class IdeHaskellReplBase {
       console.error(type, text)
       switch (type) {
         case 'stdin':
-          text && this.messages.push({text: inp.join('\n'), hl: true, cls: 'ide-haskell-repl-input-text'})
+          text && this.messages.push({
+            text: inp.join('\n'), hl: true, cls: 'ide-haskell-repl-input-text',
+          })
           break
         case 'stdout':
-          text && this.messages.push({text, hl: true, cls: 'ide-haskell-repl-output-text'})
+          text && this.messages.push({
+            text, hl: true, cls: 'ide-haskell-repl-output-text',
+          })
           break
         case 'prompt':
           this.prompt = text[1]
