@@ -32,12 +32,6 @@ export interface IErrorItem {
   _time: number,
 }
 
-interface ITypeRecord {
-  uri: string
-  type: string
-  span: Range
-}
-
 export abstract class IdeHaskellReplBase {
   public static async getRootDir (uri) {
     return Util.getRootDir(uri)
@@ -77,7 +71,6 @@ export abstract class IdeHaskellReplBase {
   protected _autoReloadRepeat: boolean
   protected history: CommandHistory
   protected uri: string
-  protected types: ITypeRecord[]
 
   constructor (upiPromise, {
     uri, content, history, autoReloadRepeat = atom.config.get('ide-haskell-repl.autoReloadRepeat'),
@@ -158,22 +151,6 @@ export abstract class IdeHaskellReplBase {
     let {stdout} = await this.ghci.sendCompletionRequest()
     stdout.shift()
     return filter(stdout, prefix).map((text) => ({text: text.slice(1, -1)}))
-  }
-
-  public showTypeAt (uri: string, range: AtomTypes.Range) {
-    if (this.types) {
-      for (let tr of this.types) {
-        if (tr && tr.uri === uri && tr.span.containsRange(range)) {
-          return {
-            range: tr.span,
-            text: {
-              text: tr.type,
-              highlighter: 'hint.type.haskell',
-            },
-          }
-        }
-      }
-    }
   }
 
   protected async onInitialLoad () {
@@ -272,25 +249,6 @@ export abstract class IdeHaskellReplBase {
     this.errorsFromStderr (initres.stderr)
     await this.onInitialLoad()
     this.update()
-  }
-
-  protected async getAllTypes (): Promise<ITypeRecord[]> {
-    let {stdout} = await this.ghci.writeLines([':all-types'])
-    return this.types = stdout.map((line) => {
-      let rx = /^(.*):\((\d+),(\d+)\)-\((\d+),(\d+)\):\s*(.*)$/
-      let match = line.match(rx)
-      if (match) {
-        let m = match.slice(1)
-        let uri = m[0]
-        let type = m[5]
-        let [rowstart, colstart, rowend, colend] = m.slice(1).map((i) => parseInt(i, 10) - 1)
-        return {
-          uri,
-          type,
-          span: Range.fromObject([[rowstart, colstart], [rowend, colend]]),
-        }
-      }
-    })
   }
 
   protected errorsFromStderr (stderr: string[]): boolean {
