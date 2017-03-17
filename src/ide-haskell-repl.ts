@@ -48,6 +48,7 @@ export function activate (state) {
       'ide-haskell-repl:reload-repeat': commandFunction('ghciReloadRepeat'),
       'ide-haskell-repl:toggle-auto-reload-repeat': commandFunction('toggleAutoReloadRepeat'),
       'ide-haskell-repl:ghci-interrupt': commandFunction('interrupt'),
+      'ide-haskell-repl:clear-output': commandFunction('clear'),
     }),
   )
 

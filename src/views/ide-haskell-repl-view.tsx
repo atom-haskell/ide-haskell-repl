@@ -79,6 +79,11 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
     this.editor.setText(this.history.goForward())
   }
 
+  public clear () {
+    this.messages = []
+    this.update()
+  }
+
   public getURI () {
     return `ide-haskell://repl/${this.uri}`
   }
@@ -125,12 +130,8 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
           {this.renderOutput()}
         </div>
         {this.renderErrDiv()}
-        {this.renderPrompt()}
-        <div className="ide-haskell-repl-editor">
-          <div className="editor-container">
-            <Editor ref="editor" element={this.editor.element}
-              />
-          </div>
+        <div className="button-container">
+          {this.renderPrompt()}
           <Button
             cls="reload-repeat"
             tooltip="Reload file and repeat last command"
@@ -147,6 +148,16 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
             tooltip="Interrupt current computation"
             command="ide-haskell-repl:ghci-interrupt"
             parent={this}/>
+          <Button
+            cls="clear"
+            tooltip="Clear output"
+            command="ide-haskell-repl:clear-output"
+            parent={this}/>
+        </div>
+        <div className="ide-haskell-repl-editor">
+          <div className="editor-container">
+            <Editor ref="editor" element={this.editor.element} />
+          </div>
         </div>
       </div>
     )
@@ -171,7 +182,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
 
   private renderPrompt () {
     return (
-      <div>{this.prompt || ''}&gt;</div>
+      <div class="repl-prompt">{this.prompt || ''}&gt;</div>
     )
   }
 

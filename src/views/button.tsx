@@ -23,7 +23,7 @@ export class Button {
     this.clslst = new Set()
     this.clslst.add(this.props.cls)
     etch.initialize(this)
-    this.target = this.props.parent.refs.editor.element
+    this.target = this.props.parent.editor.element
     this.disposables.add(atom.tooltips.add(this.element, {
       title: this.props.tooltip,
       keyBindingCommand: this.props.command,

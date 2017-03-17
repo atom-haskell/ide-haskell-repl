@@ -67,6 +67,18 @@ div.ide-haskell-repl {
       position: relative;
     }
   }
+  .button-container {
+    display: flex;
+    flex-direction: row;
+    .repl-prompt {
+      flex-grow: 1;
+      flex-shrink: 1;
+    }
+    button {
+      flex-grow: 0;
+      flex-shrink: 0;
+    }
+  }
   .ide-haskell-repl-error {
     flex-grow: 0;
     flex-shrink: 0;
@@ -104,6 +116,9 @@ div.ide-haskell-repl {
     }
     &.reload-repeat:before {
       content: @issue-reopened;
+    }
+    &.clear:before {
+      content: @trashcan;
     }
     &.auto-reload-repeat {
       &.enabled {
