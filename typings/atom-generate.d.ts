@@ -1558,7 +1558,7 @@ declare module AtomTypes {
          * Reads file entries in this directory from disk asynchronously.
          * @param {Function} A {Function} to call with the following arguments:
          */
-        getEntries(callback: Function): void;
+        getEntries(callback: (error: Error | null, contents: Array<Directory|File>) => void): void;
         /**
          * Determines if the given path (real or symbolic) is inside this
          * directory. This method does not actually check if the path exists, it just
@@ -2043,7 +2043,7 @@ declare module AtomTypes {
          * @param {string} A {String} containing the absolute path to the file
          * @param {boolean} A {Boolean} indicating if the path is a symlink (default: false).
          */
-        constructor(filePath: string, symlink: boolean);
+        constructor(filePath: string, symlink?: boolean);
         /**
          * Creates the file on disk that corresponds to `::getPath()` if no
          * such file already exists.
@@ -2132,17 +2132,17 @@ declare module AtomTypes {
         /**
          * Return the {String} filename without any directory information.
          */
-        getBaseName(): void;
+        getBaseName(): string;
         /**
          * Return the {Directory} that contains this file.
          */
-        getParent(): void;
+        getParent(): Directory;
         /**
          * Reads the contents of the file.
          * @param {boolean} A {Boolean} indicating whether to require a direct read or if a cached copy is acceptable.
          * @returns  Returns a promise that resolves to a String.
          */
-        read(flushCache: boolean): any;
+        read(flushCache?: boolean): any;
         /**
          * @returns  Returns a stream to read the content of the file.
          * @returns {ReadStream} Returns a {ReadStream} object.

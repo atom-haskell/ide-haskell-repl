@@ -42,6 +42,35 @@ interface ITypeRecord {
 }
 
 export abstract class IdeHaskellReplBase {
+  public static async getRootDir (uri) {
+    return Util.getRootDir(uri)
+  }
+
+  public static async getCabalFile (rootDir: AtomTypes.Directory): Promise<AtomTypes.File[]> {
+    let cont = await new Promise<Array<AtomTypes.Directory | AtomTypes.File>>(
+      (resolve, reject) => rootDir.getEntries((error, contents) => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve(contents)
+        }
+      }),
+    )
+    return cont.filter((file) =>
+        file.isFile() && file.getBaseName().endsWith('.cabal')) as AtomTypes.File[]
+  }
+
+  public static async parseCabalFile (cabalFile: AtomTypes.File): Promise<Util.IDotCabal> {
+    let cabalContents = await cabalFile.read()
+    return Util.parseDotCabal(cabalContents)
+  }
+
+  public static async getComponent (cabalFile: AtomTypes.File, uri: string): Promise<string[]> {
+    let cabalContents = await cabalFile.read()
+    let cwd = cabalFile.getParent()
+    return Util.getComponentFromFile(cabalContents, cwd.relativize(uri))
+  }
+
   protected ghci: GHCI
   protected cwd: AtomTypes.Directory
   protected prompt: string
@@ -52,6 +81,7 @@ export abstract class IdeHaskellReplBase {
   protected history: CommandHistory
   protected uri: string
   protected types: ITypeRecord[]
+
   constructor (upiPromise, {
     uri, content, history, autoReloadRepeat = atom.config.get('ide-haskell-repl.autoReloadRepeat'),
   }: IViewState) {
@@ -95,7 +125,7 @@ export abstract class IdeHaskellReplBase {
 
   public async ghciReload () {
     let res = await this.ghci.reload()
-    this.getAllTypes()
+    this.onReload()
     return res
   }
 
@@ -145,6 +175,18 @@ export abstract class IdeHaskellReplBase {
     }
   }
 
+  protected async onInitialLoad () {
+    return this.onLoad()
+  }
+
+  protected async onReload () {
+    return this.onLoad()
+  }
+
+  protected async onLoad () {
+    // noop
+  }
+
   protected async destroy () {
     if (this.ghci) {
       this.ghci.destroy()
@@ -180,17 +222,13 @@ export abstract class IdeHaskellReplBase {
     }
     builder = (subst[builder] || builder)
 
-    this.cwd = Util.getRootDir(this.uri)
+    this.cwd = await IdeHaskellReplBase.getRootDir(this.uri)
+    let [cabalFile] = await IdeHaskellReplBase.getCabalFile(this.cwd)
 
-    let [cabalFile] =
-      this.cwd.getEntriesSync().filter((file) =>
-        file.isFile() && file.getBaseName().endsWith('.cabal'))
-
-    let cabal, comp
+    let comp, cabal
     if (cabalFile) {
-      let cabalContents = cabalFile.readSync()
-      cabal = Util.parseDotCabalSync(cabalContents)
-      [comp] = Util.getComponentFromFileSync(cabalContents, this.cwd.relativize(this.uri))
+      cabal = await IdeHaskellReplBase.parseCabalFile(cabalFile);
+      [comp] = await IdeHaskellReplBase.getComponent(cabalFile, this.cwd.relativize(this.uri))
     }
     let commandPath = atom.config.get(`ide-haskell-repl.${builder}Path`)
 
@@ -228,18 +266,11 @@ export abstract class IdeHaskellReplBase {
       onExit: async (code) => this.destroy(),
     })
 
-    await this.ghci.waitReady()
-
-    await this.ghci.writeLines([':set +c'])
-
-    let res = await this.ghci.load(this.uri, (type, text) => {
-      if (type === 'prompt') {
-        this.prompt = text[1]
-        this.update()
-      }
-    })
-    this.errorsFromStderr (res.stderr)
-    this.getAllTypes()
+    let initres = await this.ghci.waitReady()
+    this.prompt = initres.prompt[1]
+    this.errorsFromStderr (initres.stderr)
+    await this.onInitialLoad()
+    this.update()
   }
 
   protected async getAllTypes (): Promise<ITypeRecord[]> {

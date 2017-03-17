@@ -4,9 +4,10 @@ import tkill = require('tree-kill')
 
 type ExitCallback = (exitCode: number) => void
 
-interface IRequestResult {
+export interface IRequestResult {
   stdout: string[]
   stderr: string[]
+  prompt: RegExpMatchArray
 }
 
 export class InteractiveProcess {
@@ -56,6 +57,7 @@ export class InteractiveProcess {
       let res: IRequestResult = {
         stdout: [],
         stderr: [],
+        prompt: [],
       }
 
       let ended = false
@@ -74,6 +76,7 @@ export class InteractiveProcess {
         let pattern = line.match(endPattern)
         if (pattern) {
           if (lineCallback) {lineCallback('prompt', pattern)}
+          res.prompt = pattern
           break
         }
         if (lineCallback) {lineCallback('stdout', line)}

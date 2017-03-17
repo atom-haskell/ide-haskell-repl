@@ -152,6 +152,13 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
     )
   }
 
+  protected async onInitialLoad () {
+    let res = await this.ghci.load(this.uri)
+    this.prompt = res.prompt[1]
+    this.errorsFromStderr (res.stderr)
+    return super.onInitialLoad()
+  }
+
   private renderErrDiv () {
     if (!this.upi) {
       return (
