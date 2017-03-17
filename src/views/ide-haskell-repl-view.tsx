@@ -176,6 +176,10 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
   }
 
   private renderOutput () {
+    let maxMsg = atom.config.get('ide-haskell-repl.maxMessages')
+    if (maxMsg > 0) {
+      this.messages = this.messages.slice(-maxMsg)
+    }
     return this.messages.map((msg: IContentItem) => {
       let {text, cls, hl, hlcache} = msg
       let cleanText = text.replace(termEscapeRx, '')
