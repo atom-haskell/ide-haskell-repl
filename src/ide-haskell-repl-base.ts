@@ -38,7 +38,7 @@ export abstract class IdeHaskellReplBase {
   }
 
   public static async getCabalFile (rootDir: AtomTypes.Directory): Promise<AtomTypes.File[]> {
-    let cont = await new Promise<Array<AtomTypes.Directory | AtomTypes.File>>(
+    const cont = await new Promise<Array<AtomTypes.Directory | AtomTypes.File>>(
       (resolve, reject) => rootDir.getEntries((error, contents) => {
         if (error) {
           reject(error)
@@ -51,14 +51,14 @@ export abstract class IdeHaskellReplBase {
         file.isFile() && file.getBaseName().endsWith('.cabal')) as AtomTypes.File[]
   }
 
-  public static async parseCabalFile (cabalFile: AtomTypes.File): Promise<Util.IDotCabal> {
-    let cabalContents = await cabalFile.read()
+  public static async parseCabalFile (cabalFile: AtomTypes.File): Promise<Util.IDotCabal | null> {
+    const cabalContents = await cabalFile.read()
     return Util.parseDotCabal(cabalContents)
   }
 
   public static async getComponent (cabalFile: AtomTypes.File, uri: string): Promise<string[]> {
-    let cabalContents = await cabalFile.read()
-    let cwd = cabalFile.getParent()
+    const cabalContents = await cabalFile.read()
+    const cwd = cabalFile.getParent()
     return Util.getComponentFromFile(cabalContents, cwd.relativize(uri))
   }
 
@@ -75,7 +75,7 @@ export abstract class IdeHaskellReplBase {
   constructor (upiPromise, {
     uri, content, history, autoReloadRepeat = atom.config.get('ide-haskell-repl.autoReloadRepeat'),
   }: IViewState) {
-    this.uri = uri
+    this.uri = uri || ''
     this.history = new CommandHistory(history)
     this._autoReloadRepeat = autoReloadRepeat
     this.errors = []
@@ -92,8 +92,8 @@ export abstract class IdeHaskellReplBase {
   }
 
   public async runCommand (command: string) {
-    let inp = command.split('\n')
-    let res = await this.ghci.writeLines(inp, (type, text) => {
+    const inp = command.split('\n')
+    const res = await this.ghci.writeLines(inp, (type, text) => {
       console.error(type, text)
       switch (type) {
         case 'stdin':
@@ -118,15 +118,15 @@ export abstract class IdeHaskellReplBase {
   }
 
   public async ghciReload () {
-    let res = await this.ghci.reload()
+    const res = await this.ghci.reload()
     this.onReload()
     return res
   }
 
   public async ghciReloadRepeat () {
-    let {stderr} = await this.ghciReload()
+    const {stderr} = await this.ghciReload()
     if (! this.errorsFromStderr(stderr)) {
-      let command = this.history.goBack('')
+      const command = this.history.goBack('')
       return this.runCommand(command)
     }
   }
@@ -148,7 +148,7 @@ export abstract class IdeHaskellReplBase {
     if (!prefix.trim()) {
       return []
     }
-    let {stdout} = await this.ghci.sendCompletionRequest()
+    const {stdout} = await this.ghci.sendCompletionRequest()
     stdout.shift()
     return filter(stdout, prefix).map((text) => ({text: text.slice(1, -1)}))
   }
@@ -176,7 +176,7 @@ export abstract class IdeHaskellReplBase {
     if (!this.upi) { return this.runREPL(null) }
 
     try {
-      let builder = await this.upi.params.get('ide-haskell-cabal', 'builder')
+      const builder = await this.upi.params.get('ide-haskell-cabal', 'builder')
       this.runREPL((builder || {}).name)
     } catch (error) {
       if (error) {
@@ -192,37 +192,37 @@ export abstract class IdeHaskellReplBase {
     }
   }
 
-  protected async runREPL (builder: string) {
-    if (!builder) { builder = atom.config.get('ide-haskell-repl.defaultRepl') }
-    let subst = {
+  protected async runREPL (inbuilder: string | null) {
+    let builder = inbuilder || atom.config.get('ide-haskell-repl.defaultRepl')
+    const subst = {
       'nix-build': 'cabal',
       'none': 'ghci',
     }
     builder = (subst[builder] || builder)
 
     this.cwd = await IdeHaskellReplBase.getRootDir(this.uri)
-    let [cabalFile] = await IdeHaskellReplBase.getCabalFile(this.cwd)
+    const [cabalFile] = await IdeHaskellReplBase.getCabalFile(this.cwd)
 
     let comp, cabal
     if (cabalFile) {
       cabal = await IdeHaskellReplBase.parseCabalFile(cabalFile);
       [comp] = await IdeHaskellReplBase.getComponent(cabalFile, this.cwd.relativize(this.uri))
     }
-    let commandPath = atom.config.get(`ide-haskell-repl.${builder}Path`)
+    const commandPath = atom.config.get(`ide-haskell-repl.${builder}Path`)
 
-    let args = {
+    const args = {
       stack: ['ghci'],
       cabal: ['repl'],
       ghci: [],
     }
-    let extraArgs = {
+    const extraArgs = {
       stack: (x) => '--ghci-options="#{x}"',
       cabal: (x) => '--ghc-option=#{x}',
       ghci: (x) => x,
     }
 
     if (!args[builder]) { throw new Error('Unknown builder #{builder}') }
-    let commandArgs = args[builder]
+    const commandArgs = args[builder]
 
     commandArgs.push(...(atom.config.get('ide-haskell-repl.extraArgs').map(extraArgs[builder])))
 
@@ -244,7 +244,7 @@ export abstract class IdeHaskellReplBase {
       onExit: async (code) => this.destroy(),
     })
 
-    let initres = await this.ghci.waitReady()
+    const initres = await this.ghci.waitReady()
     this.prompt = initres.prompt[1]
     this.errorsFromStderr (initres.stderr)
     await this.onInitialLoad()
@@ -254,12 +254,14 @@ export abstract class IdeHaskellReplBase {
   protected errorsFromStderr (stderr: string[]): boolean {
     this.errors = this.errors.filter(({_time}) => Date.now() - _time < 10000)
     let hasErrors = false
-    for (let err of stderr.join('\n').split(/\n(?=\S)/)) {
+    for (const err of stderr.join('\n').split(/\n(?=\S)/)) {
       if (err) {
-        let error = this.parseMessage(err)
-        this.errors.push(error)
-        if (error.severity === 'error') {
-          hasErrors = true
+        const error = this.parseMessage(err)
+        if (error) {
+          this.errors.push(error)
+          if (error.severity === 'error') {
+            hasErrors = true
+          }
         }
       }
     }
@@ -274,10 +276,10 @@ export abstract class IdeHaskellReplBase {
   protected unindentMessage (message): string {
     let lines = message.split('\n').filter((x) => !x.match(/^\s*$/))
     let minIndent = null
-    for (let line of lines) {
-      let match = line.match(/^\s*/)
-      let lineIndent = match[0].length
-      if (lineIndent < minIndent || !minIndent) { minIndent = lineIndent }
+    for (const line of lines) {
+      const match = line.match(/^\s*/)
+      const lineIndent = match[0].length
+      if (!minIndent || lineIndent < minIndent) { minIndent = lineIndent }
     }
     console.error(minIndent, lines)
     if (minIndent) {
@@ -286,27 +288,30 @@ export abstract class IdeHaskellReplBase {
     return lines.join('\n')
   }
 
-  protected parseMessage (raw): IErrorItem {
-    let matchLoc = /^(.+):(\d+):(\d+):(?: (\w+):)?\s*(\[[^\]]+\])?/
+  protected parseMessage (raw): IErrorItem | undefined {
+    const matchLoc = /^(.+):(\d+):(\d+):(?: (\w+):)?\s*(\[[^\]]+\])?/
     if (raw && raw.trim() !== '') {
-      let matched = raw.match(matchLoc)
+      const matched = raw.match(matchLoc)
       if (matched) {
-        let msg = raw.split('\n').slice(1).join('\n')
-        let [file, line, col, rawTyp, context]: string[] = matched.slice(1)
+        const msg = raw.split('\n').slice(1).join('\n')
+        const [filec, line, col, rawTyp, context]: Array<string | undefined> = matched.slice(1)
         let typ: Severity = rawTyp ? rawTyp.toLowerCase() : 'error'
-        if (file === '<interactive>') {
-          file = null
+        let file: string | undefined
+        if (filec === '<interactive>') {
+          file = undefined
           typ = 'repl'
+        } else {
+          file = filec
         }
 
         return {
-          uri: file ? this.cwd.getFile(this.cwd.relativize(file)).getPath() : null,
+          uri: file ? this.cwd.getFile(this.cwd.relativize(file)).getPath() : undefined,
           position: [parseInt(line as string, 10) - 1, parseInt(col as string, 10) - 1],
           message: {
             text: this.unindentMessage(msg.trimRight()),
             highlighter: 'hint.message.haskell',
           },
-          context: context as string,
+          context,
           severity: typ,
           _time: Date.now(),
         }
