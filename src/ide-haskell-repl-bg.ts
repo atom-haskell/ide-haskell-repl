@@ -23,18 +23,15 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
   }
 
   public showTypeAt (uri: string, range: AtomTypes.Range) {
-    if (this.types) {
-      for (let tr of this.types) {
-        if (tr && tr.uri === uri && tr.span.containsRange(range)) {
-          return {
-            range: tr.span,
-            text: {
-              text: tr.type,
-              highlighter: 'hint.type.haskell',
-            },
-          }
-        }
-      }
+    if (!this.types) { return }
+    let typeRec = this.types.find((tr) => tr && tr.uri === uri && tr.span.containsRange(range))
+    if (!typeRec) { return }
+    return {
+      range: typeRec.span,
+      text: {
+        text: typeRec.type,
+        highlighter: 'hint.type.haskell',
+      },
     }
   }
 
