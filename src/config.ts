@@ -40,11 +40,18 @@ export let config = {
     ide-haskell-repl:toggle-auto-reload-repeat command`,
     order: 50,
   },
+  maxMessages: {
+    type: 'number',
+    default: 100,
+    minimum: 0,
+    description: `Maximum number of ghci messages shown. 0 means unlimited.`,
+    order: 60,
+  },
   showTypes: {
     type: 'boolean',
     default: true,
     description: `Show type tooltips in ide-haskell if possible`,
-    order: 60,
+    order: 70,
   },
   ghciWrapperPath: {
     type: 'string',
