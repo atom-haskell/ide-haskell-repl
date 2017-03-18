@@ -48,7 +48,7 @@ export class GHCI {
     this.readyPromise = new Promise<IRequestResult>((resolve) => { resolveReadyPromise = resolve })
 
     this.process.request(
-      `:set editor \"#{atomPath}\"${EOL}` +
+      `:set editor \"${atomPath}\"${EOL}` +
       `:set prompt2 \"\"${EOL}` +
       `:set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"${EOL}`,
     )

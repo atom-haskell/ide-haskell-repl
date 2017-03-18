@@ -220,7 +220,7 @@ export abstract class IdeHaskellReplBase {
       ghci: (x: string) => x,
     }
 
-    if (!args[builder]) { throw new Error('Unknown builder #{builder}') }
+    if (!args[builder]) { throw new Error(`Unknown builder ${builder}`) }
     const commandArgs = args[builder]
 
     commandArgs.push(...(atom.config.get('ide-haskell-repl.extraArgs').map(extraArgs[builder])))
