@@ -15,8 +15,8 @@ export class Button {
   private target: HTMLElement
   private props: IProps
   private destroyed: boolean
-  private disposables: any
-  private clslst: Set<any>
+  private disposables: CompositeDisposable
+  private clslst: Set<string>
   constructor (props: IProps) {
     this.props = props
     this.destroyed = false

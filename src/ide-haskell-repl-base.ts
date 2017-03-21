@@ -84,7 +84,7 @@ export abstract class IdeHaskellReplBase {
     this.initialize(upiPromise)
   }
 
-  public abstract update (): any
+  public abstract async update (): Promise<void>
 
   public toggleAutoReloadRepeat () {
     this.autoReloadRepeat = ! this.autoReloadRepeat
@@ -295,7 +295,7 @@ export abstract class IdeHaskellReplBase {
     if (raw && raw.trim() !== '') {
       const matched = raw.match(matchLoc)
       if (matched) {
-        const msg = raw.split('\n').slice(1).join('\n')
+        const msg = raw.split('\n').slice(1).join('\n') as string & { trimRight (): string }
         const [filec, line, col, rawTyp, context]: Array<string | undefined> = matched.slice(1)
         let typ: Severity = rawTyp ? rawTyp.toLowerCase() : 'error'
         let file: string | undefined
@@ -310,7 +310,7 @@ export abstract class IdeHaskellReplBase {
           uri: file ? this.cwd.getFile(this.cwd.relativize(file)).getPath() : undefined,
           position: [parseInt(line as string, 10) - 1, parseInt(col as string, 10) - 1],
           message: {
-            text: this.unindentMessage((msg as any).trimRight()),
+            text: this.unindentMessage(msg.trimRight()),
             highlighter: 'hint.message.haskell',
           },
           context,

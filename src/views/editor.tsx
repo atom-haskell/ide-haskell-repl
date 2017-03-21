@@ -1,5 +1,5 @@
 export class Editor {
-  private element: HTMLElement
+  public element: HTMLElement
   constructor ({element}: {element: HTMLElement}) {
     this.element = element
     element.classList.add('ide-haskell-repl')

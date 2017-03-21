@@ -23,7 +23,10 @@ interface IViewStateOutput extends IViewState {
 
 export class IdeHaskellReplView extends IdeHaskellReplBase {
   // tslint:disable-next-line:no-uninitialized-class-properties
-  public refs: {[key: string]: any}
+  public refs: {
+    output: HTMLElement
+    editor: Editor
+  }
   public editor: TextEditor
   // tslint:disable-next-line:no-uninitialized-class-properties
   private outputFontFamily: string
