@@ -9,7 +9,7 @@ export * from './config'
 
 let disposables: CompositeDisposable
 const editorMap: WeakMap<AtomTypes.TextEditor, IdeHaskellReplView> = new WeakMap()
-const bgEditorMap: WeakMap<AtomTypes.TextEditor, IdeHaskellReplBg> = new WeakMap()
+const bgEditorMap: WeakMap<AtomTypes.TextBuffer, IdeHaskellReplBg> = new WeakMap()
 let resolveUPIPromise: (upi?: UPI.IUPIInstance) => void
 const upiPromise = new Promise<UPI.IUPIInstance>((resolve) => { resolveUPIPromise = resolve })
 let UPI: UPI.IUPIInstance | undefined
@@ -135,6 +135,9 @@ export function consumeUPI (service: UPI.IUPIService) {
       priority: 200,
       handler: shouldShowTooltip,
     },
+    events: {
+      onDidSaveBuffer: didSaveBuffer
+    },
   })
   resolveUPIPromise(UPI)
   disposables.add(UPI)
@@ -149,7 +152,7 @@ async function shouldShowTooltip (editor: AtomTypes.TextEditor, crange: AtomType
   // should have one ghci instance per project component
   // not per file.
   let bg: IdeHaskellReplBg
-  const bgt = bgEditorMap.get(editor)
+  const bgt = bgEditorMap.get(editor.getBuffer())
   if (bgt) {
     bg = bgt
   } else {
@@ -158,9 +161,23 @@ async function shouldShowTooltip (editor: AtomTypes.TextEditor, crange: AtomType
     }
     await upiPromise
     bg = new IdeHaskellReplBg(upiPromise, {uri: editor.getPath()})
-    bgEditorMap.set(editor, bg)
+    bgEditorMap.set(editor.getBuffer(), bg)
   }
   return bg.showTypeAt(editor.getPath(), crange)
+}
+
+async function didSaveBuffer (buffer: AtomTypes.TextBuffer) {
+  const bgt = bgEditorMap.get(buffer)
+  if (bgt) {
+    bgt.ghciReload()
+  } else {
+    if (!buffer.getPath()) {
+      return
+    }
+    await upiPromise
+    const bg = new IdeHaskellReplBg(upiPromise, {uri: buffer.getPath()})
+    bgEditorMap.set(buffer, bg)
+  }
 }
 
 export function autocompleteProvider_3_0_0 () {
