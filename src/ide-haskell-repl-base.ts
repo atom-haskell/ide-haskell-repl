@@ -5,8 +5,6 @@ import {filter} from 'fuzzaldrin'
 import {CommandHistory} from './command-history'
 import {GHCI} from './ghci'
 
-type UPI = any
-
 export interface IViewState {
   uri?: string
   history?: string[]
@@ -62,27 +60,28 @@ export abstract class IdeHaskellReplBase {
     return Util.getComponentFromFile(cabalContents, cwd.relativize(uri))
   }
 
-  protected ghci: GHCI
-  protected cwd: AtomTypes.Directory
+  protected ghci?: GHCI
+  protected cwd?: AtomTypes.Directory
   protected prompt: string
-  protected upi: UPI
+  protected upi?: UPI.IUPIInstance
   protected messages: IContentItem[]
   protected errors: IErrorItem[]
   protected _autoReloadRepeat: boolean
   protected history: CommandHistory
   protected uri: string
 
-  constructor (upiPromise: Promise<UPIInstance>, {
+  constructor (upiPromise: Promise<UPI.IUPIInstance>, {
     uri, content, history, autoReloadRepeat = atom.config.get('ide-haskell-repl.autoReloadRepeat'),
   }: IViewState) {
     this.uri = uri || ''
     this.history = new CommandHistory(history)
     this._autoReloadRepeat = autoReloadRepeat
     this.errors = []
+    this.prompt = ''
 
     this.messages = content || []
 
-    setImmediate(async () => this.initialize(upiPromise))
+    this.initialize(upiPromise)
   }
 
   public abstract update (): any
@@ -92,6 +91,7 @@ export abstract class IdeHaskellReplBase {
   }
 
   public async runCommand (command: string) {
+    if (!this.ghci) { throw new Error('No GHCI instance!') }
     const inp = command.split('\n')
     const res = await this.ghci.writeLines(inp, (lineInfo) => {
       switch (lineInfo.type) {
@@ -117,6 +117,7 @@ export abstract class IdeHaskellReplBase {
   }
 
   public async ghciReload () {
+    if (!this.ghci) { throw new Error('No GHCI instance!') }
     const res = await this.ghci.reload()
     this.onReload()
     return res
@@ -140,6 +141,7 @@ export abstract class IdeHaskellReplBase {
   }
 
   public interrupt () {
+    if (!this.ghci) { throw new Error('No GHCI instance!') }
     this.ghci.interrupt()
   }
 
@@ -147,6 +149,7 @@ export abstract class IdeHaskellReplBase {
     if (!prefix.trim()) {
       return []
     }
+    if (!this.ghci) { throw new Error('No GHCI instance!') }
     const {stdout} = await this.ghci.sendCompletionRequest()
     stdout.shift()
     return filter(stdout, prefix).map((text) => ({text: text.slice(1, -1)}))
@@ -170,12 +173,12 @@ export abstract class IdeHaskellReplBase {
     }
   }
 
-  protected async initialize (upiPromise: Promise<UPI>) {
+  protected async initialize (upiPromise: Promise<UPI.IUPIInstance>) {
     this.upi = await upiPromise
     if (!this.upi) { return this.runREPL(null) }
 
     try {
-      const builder = await this.upi.params.get('ide-haskell-cabal', 'builder')
+      const builder = await this.upi.getOthersConfigParam('ide-haskell-cabal', 'builder') as {name: string}
       this.runREPL((builder || {}).name)
     } catch (error) {
       if (error) {
@@ -265,7 +268,7 @@ export abstract class IdeHaskellReplBase {
       }
     }
     if (this.upi) {
-      this.upi.messages.set(this.errors)
+      this.upi.setMessages(this.errors)
     } else {
       this.update()
     }
@@ -287,6 +290,7 @@ export abstract class IdeHaskellReplBase {
   }
 
   protected parseMessage (raw: string): IErrorItem | undefined {
+    if (!this.cwd) { return }
     const matchLoc = /^(.+):(\d+):(\d+):(?: (\w+):)?\s*(\[[^\]]+\])?/
     if (raw && raw.trim() !== '') {
       const matched = raw.match(matchLoc)

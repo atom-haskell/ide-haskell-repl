@@ -17,8 +17,8 @@ interface ITypeRecord {
 }
 
 export class IdeHaskellReplBg extends IdeHaskellReplBase {
-  private types: ITypeRecord[]
-  constructor (upiPromise: Promise<UPIInstance>, state: IViewState) {
+  private types?: ITypeRecord[]
+  constructor (upiPromise: Promise<UPI.IUPIInstance>, state: IViewState) {
     super(upiPromise, state)
   }
 
@@ -44,12 +44,14 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
   }
 
   protected async onInitialLoad () {
+    if (!this.ghci) { throw new Error('No GHCI instance!') }
     await this.ghci.writeLines([':set +c'])
     await this.ghciReload()
     return super.onInitialLoad()
   }
 
   protected async getAllTypes (): Promise<ITypeRecord[]> {
+    if (!this.ghci) { throw new Error('No GHCI instance!') }
     const {stdout} = await this.ghci.writeLines([':all-types'])
     this.types = []
     for (const line of stdout) {
