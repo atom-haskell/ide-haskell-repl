@@ -20,6 +20,7 @@
       "align": [true, "parameters", "statements", "arguments"],
       "arrow-return-shorthand": [true, "multiline"],
       "no-unnecessary-qualifier": true,
-      "no-non-null-assertion": false
+      "no-non-null-assertion": false,
+      "no-uninitialized-class-properties": true
     }
 }

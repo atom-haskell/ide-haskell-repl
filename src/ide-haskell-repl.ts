@@ -123,8 +123,8 @@ export function deactivate () {
   disposables.dispose()
 }
 
-export function consumeUPI (service: UPI) {
-  const disp = service.consume({
+export function consumeUPI (service: UPI.IUPIService) {
+  UPI = service.register({
     name: 'ide-haskell-repl',
     messageTypes: {
       repl: {
@@ -132,22 +132,19 @@ export function consumeUPI (service: UPI) {
         autoScroll: true,
       },
     },
-    tooltipEvent: {
+    tooltip: {
       priority: 200,
       handler: shouldShowTooltip,
     },
-    consumer: (upi: UPIInstance) => {
-      UPI = upi
-      resolveUPIPromise(upi)
-    },
   })
-  disposables.add(disp)
-  return disp
+  resolveUPIPromise(UPI)
+  disposables.add(UPI)
+  return UPI
 }
 
 async function shouldShowTooltip (editor: AtomTypes.TextEditor, crange: AtomTypes.Range, type: string) {
   if (!atom.config.get('ide-haskell-repl.showTypes')) {
-    return null
+    return
   }
   // TODO: more effective bgEditorMap
   // should have one ghci instance per project component
@@ -158,7 +155,7 @@ async function shouldShowTooltip (editor: AtomTypes.TextEditor, crange: AtomType
     bg = bgt
   } else {
     if (!editor.getPath()) {
-      return null
+      return
     }
     await upiPromise
     bg = new IdeHaskellReplBg(upiPromise, {uri: editor.getPath()})

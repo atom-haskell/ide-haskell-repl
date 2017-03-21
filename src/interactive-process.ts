@@ -21,6 +21,7 @@ export type TLineType = ILineIO | ILinePrompt
 export type TLineCallback = (line: TLineType) => void
 
 export class InteractiveProcess {
+  // tslint:disable-next-line:no-uninitialized-class-properties
   private process: CP.ChildProcess
   private requestQueue: Queue
   private endPattern: RegExp

@@ -10,6 +10,7 @@ interface IProps {
   };
 
 export class Button {
+  // tslint:disable-next-line:no-uninitialized-class-properties
   private element: HTMLElement
   private target: HTMLElement
   private props: IProps

@@ -22,12 +22,15 @@ interface IViewStateOutput extends IViewState {
 }
 
 export class IdeHaskellReplView extends IdeHaskellReplBase {
+  // tslint:disable-next-line:no-uninitialized-class-properties
   public refs: {[key: string]: any}
   public editor: TextEditor
-  private outputFontFamily: any
-  private outputFontSize: any
+  // tslint:disable-next-line:no-uninitialized-class-properties
+  private outputFontFamily: string
+  // tslint:disable-next-line:no-uninitialized-class-properties
+  private outputFontSize: string
   private disposables: CompositeDisposable
-  constructor (upiPromise: Promise<UPIInstance>, state: IViewState) {
+  constructor (upiPromise: Promise<UPI.IUPIInstance>, state: IViewState) {
     super(upiPromise, state)
     this.disposables = new CompositeDisposable()
 
@@ -164,6 +167,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
   }
 
   protected async onInitialLoad () {
+    if (!this.ghci) { throw new Error('No GHCI instance!') }
     const res = await this.ghci.load(this.uri)
     this.prompt = res.prompt[1]
     this.errorsFromStderr (res.stderr)
