@@ -7,13 +7,12 @@ import {
 
 export * from './config'
 
-type UPIInterface = any
 let disposables: CompositeDisposable
 const editorMap: WeakMap<AtomTypes.TextEditor, IdeHaskellReplView> = new WeakMap()
 const bgEditorMap: WeakMap<AtomTypes.TextEditor, IdeHaskellReplBg> = new WeakMap()
-let resolveUPIPromise: (upi: UPIInterface) => void
-const upiPromise = new Promise<UPIInterface>((resolve) => { resolveUPIPromise = resolve })
-let UPI: UPIInterface
+let resolveUPIPromise: (upi?: UPI.IUPIInstance) => void
+const upiPromise = new Promise<UPI.IUPIInstance>((resolve) => { resolveUPIPromise = resolve })
+let UPI: UPI.IUPIInstance | undefined
 
 declare interface IEventDesc {
   currentTarget: HTMLElement & { getModel (): AtomTypes.TextEditor }
@@ -93,7 +92,7 @@ export function activate (state: IState) {
   }]))
 
   setTimeout(() => {
-    if (resolveUPIPromise && !UPI) { resolveUPIPromise(null) }
+    if (resolveUPIPromise && !UPI) { resolveUPIPromise() }
   },         5000)
 }
 
