@@ -111,9 +111,7 @@ export interface IShowTooltipParams {
     tooltip: TTooltipFunction | ITooltipData;
 }
 
-export interface IUPIService {
-  register(options: IRegistrationOptions): IUPIInstance
-}
+export type IUPIRegistration = (options: IRegistrationOptions) => IUPIInstance
 
 export interface IUPIInstance {
   setMenu(name: string, menu: TAtomMenu[]): AtomTypes.Disposable;

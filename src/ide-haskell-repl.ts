@@ -122,8 +122,8 @@ export function deactivate () {
   disposables.dispose()
 }
 
-export function consumeUPI (service: UPI.IUPIService) {
-  UPI = service.register({
+export function consumeUPI (register: UPI.IUPIRegistration) {
+  UPI = register({
     name: 'ide-haskell-repl',
     messageTypes: {
       repl: {
