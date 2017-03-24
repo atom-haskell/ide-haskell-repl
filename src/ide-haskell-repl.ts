@@ -167,6 +167,9 @@ async function shouldShowTooltip (editor: AtomTypes.TextEditor, crange: AtomType
 }
 
 async function didSaveBuffer (buffer: AtomTypes.TextBuffer) {
+  if (!atom.config.get('ide-haskell-repl.checkOnSave')) {
+    return
+  }
   const bgt = bgEditorMap.get(buffer)
   if (bgt) {
     bgt.ghciReload()
