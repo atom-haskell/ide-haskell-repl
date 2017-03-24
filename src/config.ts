@@ -49,9 +49,16 @@ export let config = {
   },
   showTypes: {
     type: 'boolean',
-    default: true,
+    default: false,
     description: `Show type tooltips in ide-haskell if possible`,
     order: 70,
+  },
+  checkOnSave: {
+    type: 'boolean',
+    default: false,
+    description: `Reload project in background when file is saved, will effectively
+    check for errors`,
+    order: 80,
   },
   ghciWrapperPath: {
     type: 'string',
