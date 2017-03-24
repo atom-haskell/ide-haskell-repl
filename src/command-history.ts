@@ -16,7 +16,15 @@ export class CommandHistory {
     if (this.current >= this.back.length) {
       this.current = this.back.length - 1
     }
+    if (this.current < 0) {
+      this.current = -1
+      return this.temp
+    }
     return this.back[this.current]
+  }
+
+  public peek (shift: number): string | undefined {
+    return this.back[this.current - shift]
   }
 
   public goForward (): string {
