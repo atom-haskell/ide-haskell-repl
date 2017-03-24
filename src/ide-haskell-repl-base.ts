@@ -126,8 +126,10 @@ export abstract class IdeHaskellReplBase {
   public async ghciReloadRepeat () {
     const {stderr} = await this.ghciReload()
     if (! this.errorsFromStderr(stderr)) {
-      const command = this.history.goBack('')
-      return this.runCommand(command)
+      const command = this.history.peek(-1)
+      if (command) {
+        return this.runCommand(command)
+      }
     }
   }
 
