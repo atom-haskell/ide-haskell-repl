@@ -293,12 +293,11 @@ export abstract class IdeHaskellReplBase {
 
   protected parseMessage (raw: string): IErrorItem | undefined {
     if (!this.cwd) { return }
-    const matchLoc = /^(.+):(\d+):(\d+):(?: (\w+):)?\s*(\[[^\]]+\])?/
+    const matchLoc = /^(.+):(\d+):(\d+):(?: (\w+):)?[ \t]*(\[[^\]]+\])?[ \t]*\n?([^]*)/
     if (raw && raw.trim() !== '') {
       const matched = raw.match(matchLoc)
       if (matched) {
-        const msg = raw.split('\n').slice(1).join('\n') as string & { trimRight (): string }
-        const [filec, line, col, rawTyp, context]: Array<string | undefined> = matched.slice(1)
+        const [filec, line, col, rawTyp, context, msg]: Array<string | undefined> = matched.slice(1)
         let typ: Severity = rawTyp ? rawTyp.toLowerCase() : 'error'
         let file: string | undefined
         if (filec === '<interactive>') {
@@ -312,7 +311,7 @@ export abstract class IdeHaskellReplBase {
           uri: file ? this.cwd.getFile(this.cwd.relativize(file)).getPath() : undefined,
           position: [parseInt(line as string, 10) - 1, parseInt(col as string, 10) - 1],
           message: {
-            text: this.unindentMessage(msg.trimRight()),
+            text: this.unindentMessage((msg as string & {trimRight (): string}).trimRight()),
             highlighter: 'hint.message.haskell',
           },
           context,
