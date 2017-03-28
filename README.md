@@ -4,7 +4,7 @@
 
 This package provides a way to interact with ghci (or, more precisely, `cabal repl` or `stack ghci`) from Atom.
 
-![image](https://cloud.githubusercontent.com/assets/7275622/24383419/70fe12ae-1365-11e7-8e62-2c5093d1f4f7.png)
+![image](https://cloud.githubusercontent.com/assets/7275622/24383478/c3ae1ae4-1365-11e7-88a6-0c4877b23fc1.png)
 
 ## Documentation
 
