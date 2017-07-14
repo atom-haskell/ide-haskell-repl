@@ -5,9 +5,9 @@ import {IdeHaskellReplView} from './ide-haskell-repl-view'
 interface IProps {
     cls: string
     parent: IdeHaskellReplView
-    tooltip: string | (() => String)
+    tooltip: string | (() => string)
     command: string
-  };
+  }
 
 export class Button {
   // tslint:disable-next-line:no-uninitialized-class-properties
