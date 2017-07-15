@@ -67,8 +67,13 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
   public async execCommand () {
     const inp = this.editor.getBuffer().getText()
     this.editor.setText('')
-    this.history.save(inp)
-    return this.runCommand(inp)
+    if (this.ghci && this.ghci.isBusy()) {
+      this.messages.push({text: inp, hl: false, cls: 'ide-haskell-repl-input-text'})
+      this.ghci.writeRaw(inp)
+    } else {
+      this.history.save(inp)
+      return this.runCommand(inp)
+    }
   }
 
   public copyText (command: string) {

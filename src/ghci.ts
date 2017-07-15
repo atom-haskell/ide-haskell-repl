@@ -60,6 +60,10 @@ export class GHCI {
     return await this.readyPromise
   }
 
+  public isBusy () {
+    return this.process.isBusy()
+  }
+
   public async load (uri: string, callback?: TLineCallback) {
     return this.process.request(`:load ${hsEscapeString(uri)}${EOL}`, callback)
   }
@@ -83,6 +87,10 @@ export class GHCI {
       `:{${EOL}${lines.join(EOL)}${EOL}:}${EOL}`,
       callback,
     )
+  }
+
+  public writeRaw (raw: string) {
+    this.process.writeStdin(raw)
   }
 
   public async sendCompletionRequest (callback?: TLineCallback) {

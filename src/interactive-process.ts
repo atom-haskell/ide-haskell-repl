@@ -116,7 +116,11 @@ export class InteractiveProcess {
     tkill(this.process.pid, 'SIGINT')
   }
 
-  private writeStdin (str: string) {
+  public isBusy () {
+    return this.requestQueue.getPendingLength() > 0
+  }
+
+  public writeStdin (str: string) {
     this.process.stdin.write(str)
   }
 
