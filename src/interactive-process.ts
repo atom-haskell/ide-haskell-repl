@@ -73,17 +73,20 @@ export class InteractiveProcess {
 
       let ended = false
 
+      const stdErrLine = (line?: string) => {
+        if (line === undefined) { return }
+        if (lineCallback) {lineCallback({type: 'stderr', line})}
+        res.stderr.push(line)
+      }
+
       setImmediate(async () => {
         while (!ended) {
-          const line = await this.read(this.process.stderr)
-          if (lineCallback) {lineCallback({type: 'stderr', line})}
-          res.stderr.push(line)
+          stdErrLine(await this.read(this.process.stderr, () => ended))
         }
       })
 
       while (true) {
-        let line: string
-        line = await this.read(this.process.stdout)
+        const line = await this.read(this.process.stdout)
         const pattern = line.match(endPattern)
         if (pattern) {
           if (lineCallback) {lineCallback({type: 'prompt', prompt: pattern})}
@@ -93,10 +96,13 @@ export class InteractiveProcess {
         if (lineCallback) {lineCallback({type: 'stdout', line})}
         res.stdout.push(line)
       }
+      const restErr: string = this.process.stderr.read()
+      if (restErr) {
+        restErr.split('\n').forEach(stdErrLine)
+      }
       ended = true
       this.process.stdout.resume()
       this.process.stderr.resume()
-
       return res
     })
   }
@@ -115,7 +121,9 @@ export class InteractiveProcess {
     this.process.stdin.write(str)
   }
 
-  private async read (out: NodeJS.ReadableStream) {
+  private async read (out: NodeJS.ReadableStream): Promise<string>
+  private async read (out: NodeJS.ReadableStream, isEnded: () => boolean): Promise<string | undefined>
+  private async read (out: NodeJS.ReadableStream, isEnded?: () => boolean) {
     let buffer = ''
     while (!buffer.match(/\n/)) {
       const read = out.read()
@@ -123,12 +131,19 @@ export class InteractiveProcess {
         await new Promise((resolve) => out.once('readable', () => {
           resolve()
         }))
+        if (isEnded && isEnded()) {
+          if (buffer) {
+            out.unshift(buffer)
+          }
+          return
+        }
       } else {
         buffer += read
       }
     }
     const [first, ...rest] = buffer.split('\n')
-    out.unshift(rest.join('\n'))
+    const rev = rest.join('\n')
+    if (rev) { out.unshift(rev) }
     return first
   }
 }
