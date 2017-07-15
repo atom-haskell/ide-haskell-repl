@@ -4,6 +4,8 @@ import tkill = require('tree-kill')
 
 type ExitCallback = (exitCode: number) => void
 
+(Symbol as any).asyncIterator = Symbol.asyncIterator || Symbol.for('Symbol.asyncIterator')
+
 export interface IRequestResult {
   stdout: string[]
   stderr: string[]
@@ -71,36 +73,33 @@ export class InteractiveProcess {
         prompt: [],
       }
 
-      let ended = false
+      const isEnded = () => res.prompt.length > 0
 
-      const stdErrLine = (line?: string) => {
-        if (line === undefined) { return }
+      const stdErrLine = (line: string) => {
         if (lineCallback) {lineCallback({type: 'stderr', line})}
         res.stderr.push(line)
       }
 
       setImmediate(async () => {
-        while (!ended) {
-          stdErrLine(await this.read(this.process.stderr, () => ended))
+        for await (const line of this.readgen(this.process.stderr, isEnded)) {
+          stdErrLine(line)
         }
       })
 
-      while (true) {
-        const line = await this.read(this.process.stdout)
+      for await (const line of this.readgen(this.process.stdout, isEnded)) {
         const pattern = line.match(endPattern)
         if (pattern) {
           if (lineCallback) {lineCallback({type: 'prompt', prompt: pattern})}
           res.prompt = pattern
-          break
+        } else {
+          if (lineCallback) {lineCallback({type: 'stdout', line})}
+          res.stdout.push(line)
         }
-        if (lineCallback) {lineCallback({type: 'stdout', line})}
-        res.stdout.push(line)
       }
       const restErr: string = this.process.stderr.read()
       if (restErr) {
         restErr.split('\n').forEach(stdErrLine)
       }
-      ended = true
       this.process.stdout.resume()
       this.process.stderr.resume()
       return res
@@ -121,29 +120,27 @@ export class InteractiveProcess {
     this.process.stdin.write(str)
   }
 
-  private async read (out: NodeJS.ReadableStream): Promise<string>
-  private async read (out: NodeJS.ReadableStream, isEnded: () => boolean): Promise<string | undefined>
-  private async read (out: NodeJS.ReadableStream, isEnded?: () => boolean) {
+  private async waitReadable (stream: NodeJS.ReadableStream) {
+    return new Promise((resolve) => stream.once('readable', () => {
+      resolve()
+    }))
+  }
+
+  private async *readgen (out: NodeJS.ReadableStream, isEnded: () => boolean) {
     let buffer = ''
-    while (!buffer.match(/\n/)) {
+    while (! isEnded()) {
       const read = out.read()
-      if (read === null) {
-        await new Promise((resolve) => out.once('readable', () => {
-          resolve()
-        }))
-        if (isEnded && isEnded()) {
-          if (buffer) {
-            out.unshift(buffer)
-          }
-          return
+      if (read !== null) {
+        buffer += read
+        if (buffer.match(/\n/)) {
+          const arr = buffer.split('\n')
+          buffer = arr.pop() || ''
+          yield* arr
         }
       } else {
-        buffer += read
+        await this.waitReadable(out)
       }
     }
-    const [first, ...rest] = buffer.split('\n')
-    const rev = rest.join('\n')
-    if (rev) { out.unshift(rev) }
-    return first
+    if (buffer) { out.unshift(buffer) }
   }
 }

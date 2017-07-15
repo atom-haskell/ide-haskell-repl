@@ -18,7 +18,12 @@
         "outDir": "lib",
         "inlineSources": true,
         "inlineSourceMap": true,
-        "strictNullChecks": true
+        "strictNullChecks": true,
+        "lib": [
+          "dom",
+          "es6",
+          "esnext.asynciterable"
+        ]
     },
     "exclude": [
         "node_modules"
