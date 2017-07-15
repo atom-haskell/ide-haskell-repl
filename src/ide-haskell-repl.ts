@@ -151,11 +151,8 @@ async function shouldShowTooltip (editor: AtomTypes.TextEditor, crange: AtomType
   // TODO: more effective bgEditorMap
   // should have one ghci instance per project component
   // not per file.
-  let bg: IdeHaskellReplBg
-  const bgt = bgEditorMap.get(editor.getBuffer())
-  if (bgt) {
-    bg = bgt
-  } else {
+  let bg = bgEditorMap.get(editor.getBuffer())
+  if (!bg) {
     if (!editor.getPath()) {
       return
     }
