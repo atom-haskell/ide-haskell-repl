@@ -1,4 +1,5 @@
 import {CompositeDisposable, TextEditor} from 'atom'
+import {IdeHaskellReplBase} from './ide-haskell-repl-base'
 import {IdeHaskellReplBg} from './ide-haskell-repl-bg'
 import {
   IdeHaskellReplView,
@@ -9,7 +10,7 @@ export * from './config'
 
 let disposables: CompositeDisposable
 const editorMap: WeakMap<AtomTypes.TextEditor, IdeHaskellReplView> = new WeakMap()
-const bgEditorMap: WeakMap<AtomTypes.TextBuffer, IdeHaskellReplBg> = new WeakMap()
+const bgEditorMap: Map<string, IdeHaskellReplBg> = new Map()
 let resolveUPIPromise: (upi?: UPI.IUPIInstance) => void
 const upiPromise = new Promise<UPI.IUPIInstance>((resolve) => { resolveUPIPromise = resolve })
 let UPI: UPI.IUPIInstance | undefined
@@ -144,17 +145,16 @@ async function shouldShowTooltip (editor: AtomTypes.TextEditor, crange: AtomType
   if (!atom.config.get('ide-haskell-repl.showTypes')) {
     return
   }
-  // TODO: more effective bgEditorMap
-  // should have one ghci instance per project component
-  // not per file.
-  let bg = bgEditorMap.get(editor.getBuffer())
+  const {cwd, cabal, comp} = await IdeHaskellReplBase.componentFromURI(editor.getPath())
+  const hash = `${cwd.getPath()}::${cabal.name}::${comp[0]}`
+  let bg = bgEditorMap.get(hash)
   if (!bg) {
     if (!editor.getPath()) {
       return
     }
     await upiPromise
     bg = new IdeHaskellReplBg(upiPromise, {uri: editor.getPath()})
-    bgEditorMap.set(editor.getBuffer(), bg)
+    bgEditorMap.set(hash, bg)
   }
   return bg.showTypeAt(editor.getPath(), crange)
 }
@@ -163,7 +163,9 @@ async function didSaveBuffer (buffer: AtomTypes.TextBuffer) {
   if (!atom.config.get('ide-haskell-repl.checkOnSave')) {
     return
   }
-  const bgt = bgEditorMap.get(buffer)
+  const {cwd, cabal, comp} = await IdeHaskellReplBase.componentFromURI(buffer.getPath())
+  const hash = `${cwd.getPath()}::${cabal.name}::${comp[0]}`
+  const bgt = bgEditorMap.get(hash)
   if (bgt) {
     bgt.ghciReload()
   } else {
@@ -172,7 +174,7 @@ async function didSaveBuffer (buffer: AtomTypes.TextBuffer) {
     }
     await upiPromise
     const bg = new IdeHaskellReplBg(upiPromise, {uri: buffer.getPath()})
-    bgEditorMap.set(buffer, bg)
+    bgEditorMap.set(hash, bg)
   }
 }
 

@@ -60,6 +60,18 @@ export abstract class IdeHaskellReplBase {
     return Util.getComponentFromFile(cabalContents, cwd.relativize(uri))
   }
 
+  public static async componentFromURI (uri: string) {
+    const cwd = await IdeHaskellReplBase.getRootDir(uri)
+    const [cabalFile] = await IdeHaskellReplBase.getCabalFile(cwd)
+
+    let comp, cabal
+    if (cabalFile) {
+      cabal = await IdeHaskellReplBase.parseCabalFile(cabalFile);
+      [comp] = await IdeHaskellReplBase.getComponent(cabalFile, cwd.relativize(uri))
+    }
+    return {cwd, comp, cabal}
+  }
+
   protected ghci?: GHCI
   protected cwd?: AtomTypes.Directory
   protected prompt: string
@@ -204,14 +216,9 @@ export abstract class IdeHaskellReplBase {
     }
     builder = (subst[builder] || builder)
 
-    this.cwd = await IdeHaskellReplBase.getRootDir(this.uri)
-    const [cabalFile] = await IdeHaskellReplBase.getCabalFile(this.cwd)
+    const {cwd, comp, cabal} = await IdeHaskellReplBase.componentFromURI(this.uri)
+    this.cwd = cwd
 
-    let comp, cabal
-    if (cabalFile) {
-      cabal = await IdeHaskellReplBase.parseCabalFile(cabalFile);
-      [comp] = await IdeHaskellReplBase.getComponent(cabalFile, this.cwd.relativize(this.uri))
-    }
     const commandPath = atom.config.get(`ide-haskell-repl.${builder}Path`)
 
     const args = {
@@ -232,12 +239,14 @@ export abstract class IdeHaskellReplBase {
 
     if (comp && cabal) {
       if (builder === 'stack') {
-        if (comp.startsWith('lib:')) {
-          comp = 'lib'
-        }
-        comp = `${cabal.name}:${comp}`
-        commandArgs.push('--main-is', comp)
-      } else { commandArgs.push(comp) }
+        const compc =
+          comp.startsWith('lib:')
+          ? 'lib'
+          : comp
+        commandArgs.push('--main-is', `${cabal.name}:${compc}`)
+      } else {
+        commandArgs.push(comp)
+      }
     }
 
     this.ghci = new GHCI({
