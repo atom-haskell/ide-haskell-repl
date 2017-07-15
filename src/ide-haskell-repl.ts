@@ -19,11 +19,7 @@ declare interface IEventDesc {
   abortKeyBinding? (): void
 }
 
-declare interface IState {
-  // TODO
-}
-
-export function activate (state: IState) {
+export function activate () {
   disposables = new CompositeDisposable()
 
   disposables.add(
