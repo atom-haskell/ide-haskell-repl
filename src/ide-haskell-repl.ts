@@ -93,8 +93,8 @@ export function activate () {
   },         5000)
 }
 
-export function createReplView ({uri, content, history, autoReloadRepeat}: IViewState) {
-  const view = new IdeHaskellReplView(upiPromise, {uri, content, history, autoReloadRepeat})
+export function createReplView (state: IViewState) {
+  const view = new IdeHaskellReplView({upiPromise, state})
   editorMap.set(view.editor, view)
   return view
 }

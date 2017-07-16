@@ -2,23 +2,22 @@ import { CompositeDisposable } from 'atom'
 import etch = require('etch')
 import {IdeHaskellReplView} from './ide-haskell-repl-view'
 
-interface IProps {
+interface IProps extends JSX.Props {
     cls: string
     parent: IdeHaskellReplView
     tooltip: string | (() => string)
     command: string
+    state?: boolean
   }
 
-export class Button {
+export class Button implements JSX.ElementClass {
   // tslint:disable-next-line:no-uninitialized-class-properties
   private element: HTMLElement
   private target: HTMLElement
-  private props: IProps
   private destroyed: boolean
   private disposables: CompositeDisposable
   private clslst: Set<string>
-  constructor (props: IProps) {
-    this.props = props
+  constructor (public props: IProps) {
     this.destroyed = false
     this.disposables = new CompositeDisposable()
     this.clslst = new Set()
@@ -46,13 +45,15 @@ export class Button {
     this.disposables.dispose()
   }
 
-  public update ({state}: {state: boolean}) {
-    if (state) {
+  public async update (props: IProps) {
+    if (this.props.state === props.state) { return Promise.resolve() }
+    this.props.state = props.state
+    if (this.props.state) {
       this.clslst.add('enabled')
     } else {
       this.clslst.delete('enabled')
     }
-    etch.update(this)
+    return etch.update(this)
   }
 
   public click () {

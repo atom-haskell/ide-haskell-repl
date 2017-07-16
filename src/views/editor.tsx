@@ -1,12 +1,15 @@
-export class Editor {
+export interface IProps extends JSX.Props {element: HTMLElement}
+
+export class Editor implements JSX.ElementClass {
   public element: HTMLElement
-  constructor ({element}: {element: HTMLElement}) {
-    this.element = element
-    element.classList.add('ide-haskell-repl')
+  constructor (public props: IProps) {
+    this.element = props.element
+    this.element.classList.add('ide-haskell-repl')
   }
 
-  public update ({element}: {element: HTMLElement}) {
-    this.element = element
-    element.classList.add('ide-haskell-repl')
+  public async update (props: IProps) {
+    this.element = props.element
+    this.element.classList.add('ide-haskell-repl')
+    return Promise.resolve()
   }
 }

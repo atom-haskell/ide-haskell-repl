@@ -21,7 +21,9 @@ interface IViewStateOutput extends IViewState {
   deserializer: string
 }
 
-export class IdeHaskellReplView extends IdeHaskellReplBase {
+export interface IProps extends JSX.Props {upiPromise: Promise<UPI.IUPIInstance>, state: IViewState}
+
+export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.ElementClass {
   // tslint:disable-next-line:no-uninitialized-class-properties
   public refs: {
     output: HTMLElement
@@ -33,8 +35,8 @@ export class IdeHaskellReplView extends IdeHaskellReplBase {
   // tslint:disable-next-line:no-uninitialized-class-properties
   private outputFontSize: string
   private disposables: CompositeDisposable
-  constructor (upiPromise: Promise<UPI.IUPIInstance>, state: IViewState) {
-    super(upiPromise, state)
+  constructor (public props: IProps) {
+    super(props.upiPromise, props.state)
     this.disposables = new CompositeDisposable()
 
     this.editor = new TextEditor({
