@@ -39,11 +39,11 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
     super(props.upiPromise, props.state)
     this.disposables = new CompositeDisposable()
 
-    this.editor = new TextEditor({
+    this.editor = atom.workspace.buildTextEditor({
       lineNumberGutterVisible: false,
       softWrapped: true,
-      grammar: atom.grammars.grammarForScopeName('source.haskell'),
     })
+    this.editor.setGrammar(atom.grammars.grammarForScopeName('source.haskell'))
 
     atom.textEditors.add(this.editor)
 
@@ -80,7 +80,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
 
   public copyText (command: string) {
     this.editor.setText(command)
-    this.editor.element.focus()
+    atom.views.getView(this.editor).focus()
   }
 
   public historyBack () {
@@ -169,7 +169,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
         </div>
         <div className="ide-haskell-repl-editor">
           <div className="editor-container">
-            <Editor ref="editor" element={this.editor.element} />
+            <Editor ref="editor" element={atom.views.getView(this.editor)} />
           </div>
         </div>
       </div>
