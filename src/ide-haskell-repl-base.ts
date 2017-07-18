@@ -19,16 +19,7 @@ export interface IContentItem {
   hlcache?: string
 }
 
-type Severity = 'error' | 'warning' | 'repl' | string
-
-export interface IErrorItem {
-  uri?: string,
-  position?: [number, number],
-  message: string | { text: string, highlighter: string },
-  context?: string,
-  severity: Severity,
-  _time: number,
-}
+export interface IErrorItem extends UPI.IResultItem { _time: number }
 
 export abstract class IdeHaskellReplBase {
   public static async getRootDir (uri: string) {
@@ -307,7 +298,7 @@ export abstract class IdeHaskellReplBase {
       const matched = raw.match(matchLoc)
       if (matched) {
         const [filec, line, col, rawTyp, context, msg]: Array<string | undefined> = matched.slice(1)
-        let typ: Severity = rawTyp ? rawTyp.toLowerCase() : 'error'
+        let typ: UPI.TSeverity = rawTyp ? rawTyp.toLowerCase() : 'error'
         let file: string | undefined
         if (filec === '<interactive>') {
           file = undefined
