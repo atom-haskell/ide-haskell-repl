@@ -1,3 +1,10 @@
+## 0.7.0
+* Rewrite in TypeScript
+* Use etch UI
+* Migrate to UPI 0.3
+* Updates for Atom 1.19
+* Bump min. Atom version to 1.19
+
 ## 0.6.0
 * Collect error messages
 * Add reload-repeat button
