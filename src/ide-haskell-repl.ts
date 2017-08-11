@@ -1,4 +1,4 @@
-import {CompositeDisposable, TextEditor} from 'atom'
+import {CompositeDisposable, IEventDesc, TextEditor} from 'atom'
 import {IdeHaskellReplBase} from './ide-haskell-repl-base'
 import {IdeHaskellReplBg} from './ide-haskell-repl-bg'
 import {
@@ -14,11 +14,6 @@ const bgEditorMap: Map<string, IdeHaskellReplBg> = new Map()
 let resolveUPIPromise: (upi?: UPI.IUPIInstance) => void
 const upiPromise = new Promise<UPI.IUPIInstance>((resolve) => { resolveUPIPromise = resolve })
 let UPI: UPI.IUPIInstance | undefined
-
-declare interface IEventDesc {
-  currentTarget: HTMLElement & { getModel (): AtomTypes.TextEditor }
-  abortKeyBinding? (): void
-}
 
 export function activate () {
   disposables = new CompositeDisposable()
