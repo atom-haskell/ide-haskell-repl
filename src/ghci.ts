@@ -1,8 +1,8 @@
-import {hsEscapeString} from 'atom-haskell-utils'
-import {EOL} from 'os'
-import {InteractiveProcess, IRequestResult, TLineCallback} from './interactive-process'
+import { hsEscapeString } from 'atom-haskell-utils'
+import { EOL } from 'os'
+import { InteractiveProcess, IRequestResult, TLineCallback } from './interactive-process'
 
-export {TLineCallback, IRequestResult}
+export { TLineCallback, IRequestResult }
 
 export interface IOpts {
   cwd: string
@@ -13,11 +13,11 @@ export interface IOpts {
 }
 
 export class GHCI {
-  // tslint:disable-next-line:no-uninitialized-class-properties
+  // tslint:disable-next-line:no-uninitialized
   private process: InteractiveProcess
   private readyPromise: Promise<IRequestResult>
   private onDidExit: (code: number) => void
-  constructor (opts: IOpts) {
+  constructor(opts: IOpts) {
     const endPattern = /^#~IDEHASKELLREPL~(.*)~#$/
     const { cwd, atomPath, command, args, onExit } = opts
     this.onDidExit = onExit
@@ -53,26 +53,26 @@ export class GHCI {
       `:set prompt2 \"\"${EOL}` +
       `:set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"${EOL}`,
     )
-    .then(resolveReadyPromise)
+      .then(resolveReadyPromise)
   }
 
-  public async waitReady () {
+  public async waitReady() {
     return await this.readyPromise
   }
 
-  public isBusy () {
+  public isBusy() {
     return this.process.isBusy()
   }
 
-  public async load (uri: string, callback?: TLineCallback) {
+  public async load(uri: string, callback?: TLineCallback) {
     return this.process.request(`:load ${hsEscapeString(uri)}${EOL}`, callback)
   }
 
-  public async reload (callback?: TLineCallback) {
+  public async reload(callback?: TLineCallback) {
     return this.process.request(`:reload${EOL}`, callback)
   }
 
-  public interrupt () {
+  public interrupt() {
     if (this.process) {
       if (atom.config.get('ide-haskell-repl.ghciWrapperPath') && process.platform === 'win32') {
         this.process.request('\x03')
@@ -82,26 +82,26 @@ export class GHCI {
     }
   }
 
-  public async writeLines (lines: string[], callback?: TLineCallback) {
+  public async writeLines(lines: string[], callback?: TLineCallback) {
     return this.process.request(
       `:{${EOL}${lines.join(EOL)}${EOL}:}${EOL}`,
       callback,
     )
   }
 
-  public writeRaw (raw: string) {
+  public writeRaw(raw: string) {
     this.process.writeStdin(raw)
   }
 
-  public async sendCompletionRequest (callback?: TLineCallback) {
+  public async sendCompletionRequest(callback?: TLineCallback) {
     return this.process.request(`:complete repl \"\"${EOL}`, callback)
   }
 
-  public destroy () {
+  public destroy() {
     this.process.destroy()
   }
 
-  private didExit (code: number) {
+  private didExit(code: number) {
     this.onDidExit(code)
     this.destroy()
   }

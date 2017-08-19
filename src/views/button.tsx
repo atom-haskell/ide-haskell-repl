@@ -1,23 +1,23 @@
 import { CompositeDisposable } from 'atom'
 import etch = require('etch')
-import {IdeHaskellReplView} from './ide-haskell-repl-view'
+import { IdeHaskellReplView } from './ide-haskell-repl-view'
 
 interface IProps extends JSX.Props {
-    cls: string
-    parent: IdeHaskellReplView
-    tooltip: string | (() => string)
-    command: string
-    state?: boolean
-  }
+  cls: string
+  parent: IdeHaskellReplView
+  tooltip: string | (() => string)
+  command: string
+  state?: boolean
+}
 
 export class Button implements JSX.ElementClass {
-  // tslint:disable-next-line:no-uninitialized-class-properties
+  // tslint:disable-next-line:no-uninitialized
   private element: HTMLElement
   private target: HTMLElement
   private destroyed: boolean
   private disposables: CompositeDisposable
   private clslst: Set<string>
-  constructor (public props: IProps) {
+  constructor(public props: IProps) {
     this.destroyed = false
     this.disposables = new CompositeDisposable()
     this.clslst = new Set()
@@ -31,21 +31,22 @@ export class Button implements JSX.ElementClass {
     }))
   }
 
-  public render () {
+  public render() {
     return (
       <button
         className={Array.from(this.clslst.values()).join(' ')}
-        on={{click: this.click.bind(this)}} />
+        on={{ click: this.click.bind(this) }}
+      />
     )
   }
 
-  public async destroy () {
+  public async destroy() {
     await etch.destroy(this)
     this.destroyed = true
     this.disposables.dispose()
   }
 
-  public async update (props: IProps) {
+  public async update(props: IProps) {
     if (this.props.state === props.state) { return Promise.resolve() }
     this.props.state = props.state
     if (this.props.state) {
@@ -56,7 +57,7 @@ export class Button implements JSX.ElementClass {
     return etch.update(this)
   }
 
-  public click () {
+  public click() {
     if (this.target) {
       atom.commands.dispatch(this.target, this.props.command)
     }

@@ -31,5 +31,6 @@
     "include": [
         "**/*.ts",
         "**/*.tsx"
-    ]
+    ],
+    "compileOnSave": true
 }

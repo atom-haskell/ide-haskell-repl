@@ -1,9 +1,8 @@
-import {Range} from 'atom'
 import * as Util from 'atom-haskell-utils'
-import {filter} from 'fuzzaldrin'
+import { filter } from 'fuzzaldrin'
 
-import {CommandHistory} from './command-history'
-import {GHCI} from './ghci'
+import { CommandHistory } from './command-history'
+import { GHCI } from './ghci'
 
 export interface IViewState {
   uri?: string
@@ -22,47 +21,6 @@ export interface IContentItem {
 export interface IErrorItem extends UPI.IResultItem { _time: number }
 
 export abstract class IdeHaskellReplBase {
-  public static async getRootDir (uri: string) {
-    return Util.getRootDir(uri)
-  }
-
-  public static async getCabalFile (rootDir: AtomTypes.Directory): Promise<AtomTypes.File[]> {
-    const cont = await new Promise<Array<AtomTypes.Directory | AtomTypes.File>>(
-      (resolve, reject) => rootDir.getEntries((error, contents) => {
-        if (error) {
-          reject(error)
-        } else {
-          resolve(contents)
-        }
-      }),
-    )
-    return cont.filter((file) =>
-        file.isFile() && file.getBaseName().endsWith('.cabal')) as AtomTypes.File[]
-  }
-
-  public static async parseCabalFile (cabalFile: AtomTypes.File): Promise<Util.IDotCabal | null> {
-    const cabalContents = await cabalFile.read()
-    return Util.parseDotCabal(cabalContents)
-  }
-
-  public static async getComponent (cabalFile: AtomTypes.File, uri: string): Promise<string[]> {
-    const cabalContents = await cabalFile.read()
-    const cwd = cabalFile.getParent()
-    return Util.getComponentFromFile(cabalContents, cwd.relativize(uri))
-  }
-
-  public static async componentFromURI (uri: string) {
-    const cwd = await IdeHaskellReplBase.getRootDir(uri)
-    const [cabalFile] = await IdeHaskellReplBase.getCabalFile(cwd)
-
-    let comp, cabal
-    if (cabalFile) {
-      cabal = await IdeHaskellReplBase.parseCabalFile(cabalFile);
-      [comp] = await IdeHaskellReplBase.getComponent(cabalFile, cwd.relativize(uri))
-    }
-    return {cwd, comp, cabal}
-  }
-
   protected ghci?: GHCI
   protected cwd?: AtomTypes.Directory
   protected prompt: string
@@ -73,7 +31,7 @@ export abstract class IdeHaskellReplBase {
   protected history: CommandHistory
   protected uri: string
 
-  constructor (upiPromise: Promise<UPI.IUPIInstance>, {
+  constructor(upiPromise: Promise<UPI.IUPIInstance>, {
     uri, content, history, autoReloadRepeat = atom.config.get('ide-haskell-repl.autoReloadRepeat'),
   }: IViewState) {
     this.uri = uri || ''
@@ -87,13 +45,55 @@ export abstract class IdeHaskellReplBase {
     this.initialize(upiPromise)
   }
 
-  public abstract async update (): Promise<void>
-
-  public toggleAutoReloadRepeat () {
-    this.autoReloadRepeat = ! this.autoReloadRepeat
+  public static async getRootDir(uri: string) {
+    return Util.getRootDir(uri)
   }
 
-  public async runCommand (command: string) {
+  public static async getCabalFile(rootDir: AtomTypes.Directory): Promise<AtomTypes.File[]> {
+    const cont = await new Promise<Array<AtomTypes.Directory | AtomTypes.File>>(
+      (resolve, reject) => rootDir.getEntries((error, contents) => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve(contents)
+        }
+      }),
+    )
+    return cont.filter((file) =>
+      file.isFile() && file.getBaseName().endsWith('.cabal')) as AtomTypes.File[]
+  }
+
+  public static async parseCabalFile(cabalFile: AtomTypes.File): Promise<Util.IDotCabal | null> {
+    const cabalContents = await cabalFile.read()
+    return Util.parseDotCabal(cabalContents)
+  }
+
+  public static async getComponent(cabalFile: AtomTypes.File, uri: string): Promise<string[]> {
+    const cabalContents = await cabalFile.read()
+    const cwd = cabalFile.getParent()
+    return Util.getComponentFromFile(cabalContents, cwd.relativize(uri))
+  }
+
+  public static async componentFromURI(uri: string) {
+    const cwd = await IdeHaskellReplBase.getRootDir(uri)
+    const [cabalFile] = await IdeHaskellReplBase.getCabalFile(cwd)
+
+    let comp
+    let cabal
+    if (cabalFile) {
+      cabal = await IdeHaskellReplBase.parseCabalFile(cabalFile);
+      [comp] = await IdeHaskellReplBase.getComponent(cabalFile, cwd.relativize(uri))
+    }
+    return { cwd, comp, cabal }
+  }
+
+  public abstract async update(): Promise<void>
+
+  public toggleAutoReloadRepeat() {
+    this.autoReloadRepeat = !this.autoReloadRepeat
+  }
+
+  public async runCommand(command: string) {
     if (!this.ghci) { throw new Error('No GHCI instance!') }
     const inp = command.split('\n')
     const res = await this.ghci.writeLines(inp, (lineInfo) => {
@@ -119,16 +119,16 @@ export abstract class IdeHaskellReplBase {
     return res
   }
 
-  public async ghciReload () {
+  public async ghciReload() {
     if (!this.ghci) { throw new Error('No GHCI instance!') }
     const res = await this.ghci.reload()
     this.onReload()
     return res
   }
 
-  public async ghciReloadRepeat () {
-    const {stderr} = await this.ghciReload()
-    if (! this.errorsFromStderr(stderr)) {
+  public async ghciReloadRepeat() {
+    const { stderr } = await this.ghciReload()
+    if (!this.errorsFromStderr(stderr)) {
       const command = this.history.peek(-1)
       if (command) {
         return this.runCommand(command)
@@ -136,54 +136,54 @@ export abstract class IdeHaskellReplBase {
     }
   }
 
-  public set autoReloadRepeat (autoReloadRepeat: boolean) {
+  public set autoReloadRepeat(autoReloadRepeat: boolean) {
     this._autoReloadRepeat = autoReloadRepeat
     this.update()
   }
 
-  public get autoReloadRepeat () {
+  public get autoReloadRepeat() {
     return this._autoReloadRepeat
   }
 
-  public interrupt () {
+  public interrupt() {
     if (!this.ghci) { throw new Error('No GHCI instance!') }
     this.ghci.interrupt()
   }
 
-  public async getCompletions (prefix: string) {
+  public async getCompletions(prefix: string) {
     if (!prefix.trim()) {
       return []
     }
     if (!this.ghci) { throw new Error('No GHCI instance!') }
-    const {stdout} = await this.ghci.sendCompletionRequest()
+    const { stdout } = await this.ghci.sendCompletionRequest()
     stdout.shift()
-    return filter(stdout, prefix).map((text) => ({text: text.slice(1, -1)}))
+    return filter(stdout, prefix).map((text) => ({ text: text.slice(1, -1) }))
   }
 
-  protected async onInitialLoad () {
+  protected async onInitialLoad() {
     return this.onLoad()
   }
 
-  protected async onReload () {
+  protected async onReload() {
     return this.onLoad()
   }
 
-  protected async onLoad () {
+  protected async onLoad() {
     // noop
   }
 
-  protected async destroy () {
+  protected async destroy() {
     if (this.ghci) {
       this.ghci.destroy()
     }
   }
 
-  protected async initialize (upiPromise: Promise<UPI.IUPIInstance>) {
+  protected async initialize(upiPromise: Promise<UPI.IUPIInstance>) {
     this.upi = await upiPromise
-    if (!this.upi) { return this.runREPL(null) }
+    if (!this.upi) { return this.runREPL() }
 
     try {
-      const builder = await this.upi.getOthersConfigParam('ide-haskell-cabal', 'builder') as {name: string}
+      const builder = await this.upi.getOthersConfigParam('ide-haskell-cabal', 'builder') as { name: string }
       this.runREPL((builder || {}).name)
     } catch (error) {
       if (error) {
@@ -199,7 +199,7 @@ export abstract class IdeHaskellReplBase {
     }
   }
 
-  protected async runREPL (inbuilder: string | null) {
+  protected async runREPL(inbuilder?: string) {
     let builder = inbuilder || atom.config.get('ide-haskell-repl.defaultRepl')
     const subst = {
       'nix-build': 'cabal',
@@ -207,7 +207,7 @@ export abstract class IdeHaskellReplBase {
     }
     builder = (subst[builder] || builder)
 
-    const {cwd, comp, cabal} = await IdeHaskellReplBase.componentFromURI(this.uri)
+    const { cwd, comp, cabal } = await IdeHaskellReplBase.componentFromURI(this.uri)
     this.cwd = cwd
 
     const commandPath = atom.config.get(`ide-haskell-repl.${builder}Path`)
@@ -232,8 +232,8 @@ export abstract class IdeHaskellReplBase {
       if (builder === 'stack') {
         const compc =
           comp.startsWith('lib:')
-          ? 'lib'
-          : comp
+            ? 'lib'
+            : comp
         commandArgs.push('--main-is', `${cabal.name}:${compc}`)
       } else {
         commandArgs.push(comp)
@@ -250,13 +250,13 @@ export abstract class IdeHaskellReplBase {
 
     const initres = await this.ghci.waitReady()
     this.prompt = initres.prompt[1]
-    this.errorsFromStderr (initres.stderr)
+    this.errorsFromStderr(initres.stderr)
     await this.onInitialLoad()
     this.update()
   }
 
-  protected errorsFromStderr (stderr: string[]): boolean {
-    this.errors = this.errors.filter(({_time}) => Date.now() - _time < 10000)
+  protected errorsFromStderr(stderr: string[]): boolean {
+    this.errors = this.errors.filter(({ _time }) => Date.now() - _time < 10000)
     let hasErrors = false
     for (const err of stderr.join('\n').split(/\n(?=\S)/)) {
       if (err) {
@@ -277,22 +277,25 @@ export abstract class IdeHaskellReplBase {
     return hasErrors
   }
 
-  protected unindentMessage (message: string): string {
+  protected unindentMessage(message: string): string {
     let lines = message.split('\n').filter((x) => !x.match(/^\s*$/))
-    let minIndent: number | null = null
+    let minIndent: number | undefined
     for (const line of lines) {
-      const match = line.match(/^\s*/)!
-      const lineIndent = match[0].length
-      if (!minIndent || lineIndent < minIndent) { minIndent = lineIndent }
+      const match = line.match(/^\s*/)
+      if (match) {
+        const lineIndent = match[0].length
+        if (!minIndent || lineIndent < minIndent) { minIndent = lineIndent }
+      }
     }
-    if (minIndent) {
-      lines = lines.map((line) => line.slice(minIndent!))
+    if (minIndent !== undefined) {
+      const mi = minIndent
+      lines = lines.map((line) => line.slice(mi))
     }
     return lines.join('\n')
   }
 
-  protected parseMessage (raw: string): IErrorItem | undefined {
-    if (!this.cwd) { return }
+  protected parseMessage(raw: string): IErrorItem | undefined {
+    if (!this.cwd) { return undefined }
     const matchLoc = /^(.+):(\d+):(\d+):(?: (\w+):)?[ \t]*(\[[^\]]+\])?[ \t]*\n?([^]*)/
     if (raw && raw.trim() !== '') {
       const matched = raw.match(matchLoc)
@@ -311,7 +314,7 @@ export abstract class IdeHaskellReplBase {
           uri: file ? this.cwd.getFile(this.cwd.relativize(file)).getPath() : undefined,
           position: [parseInt(line as string, 10) - 1, parseInt(col as string, 10) - 1],
           message: {
-            text: this.unindentMessage((msg as string & {trimRight (): string}).trimRight()),
+            text: this.unindentMessage((msg as string & { trimRight(): string }).trimRight()),
             highlighter: 'hint.message.haskell',
           },
           context,

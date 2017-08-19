@@ -8,9 +8,9 @@ import {
   IViewState,
 } from './ide-haskell-repl-base'
 
-export {IViewState, IContentItem, ITypeRecord}
+export {IViewState, IContentItem}
 
-interface ITypeRecord {
+export interface ITypeRecord {
   uri: string
   type: string
   span: Range
@@ -23,9 +23,9 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
   }
 
   public showTypeAt (uri: string, inrange: AtomTypes.Range) {
-    if (!this.types) { return }
+    if (!this.types) { return undefined }
     const typeRec = this.types.find((tr) => tr && tr.uri === uri && tr.span.containsRange(inrange))
-    if (!typeRec) { return }
+    if (!typeRec) { return undefined }
     const {span: range, type: text} = typeRec
     const highlighter = 'hint.type.haskell'
     return { range, text: { text, highlighter }}

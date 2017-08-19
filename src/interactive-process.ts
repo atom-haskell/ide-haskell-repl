@@ -23,7 +23,7 @@ export type TLineType = ILineIO | ILinePrompt
 export type TLineCallback = (line: TLineType) => void
 
 export class InteractiveProcess {
-  // tslint:disable-next-line:no-uninitialized-class-properties
+  // tslint:disable-next-line:no-uninitialized
   private process: CP.ChildProcess
   private requestQueue: Queue
   private endPattern: RegExp
@@ -65,7 +65,9 @@ export class InteractiveProcess {
       this.process.stderr.pause()
 
       this.writeStdin(command)
-      if (lineCallback) {lineCallback({type: 'stdin', line: command})}
+      if (lineCallback) {
+        lineCallback({type: 'stdin', line: command})
+      }
 
       const res: IRequestResult = {
         stdout: [],
@@ -76,7 +78,9 @@ export class InteractiveProcess {
       const isEnded = () => res.prompt.length > 0
 
       const stdErrLine = (line: string) => {
-        if (lineCallback) {lineCallback({type: 'stderr', line})}
+        if (lineCallback) {
+          lineCallback({type: 'stderr', line})
+        }
         res.stderr.push(line)
       }
 
@@ -89,10 +93,14 @@ export class InteractiveProcess {
       for await (const line of this.readgen(this.process.stdout, isEnded)) {
         const pattern = line.match(endPattern)
         if (pattern) {
-          if (lineCallback) {lineCallback({type: 'prompt', prompt: pattern})}
+          if (lineCallback) {
+            lineCallback({type: 'prompt', prompt: pattern})
+          }
           res.prompt = pattern
         } else {
-          if (lineCallback) {lineCallback({type: 'stdout', line})}
+          if (lineCallback) {
+            lineCallback({type: 'stdout', line})
+          }
           res.stdout.push(line)
         }
       }
@@ -134,7 +142,7 @@ export class InteractiveProcess {
     let buffer = ''
     while (! isEnded()) {
       const read = out.read()
-      if (read !== null) {
+      if (read != null) { // tslint:disable-line: no-null-keyword strict-type-predicates
         buffer += read
         if (buffer.match(/\n/)) {
           const arr = buffer.split('\n')
