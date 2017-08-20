@@ -1,3 +1,8 @@
+## 0.7.1
+* Fallback on default repl in case of UPI-reladted errors
+* Enforce code style
+* Update typings
+
 ## 0.7.0
 * Rewrite in TypeScript
 * Use etch UI
