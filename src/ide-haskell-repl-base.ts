@@ -183,19 +183,20 @@ export abstract class IdeHaskellReplBase {
     if (!this.upi) { return this.runREPL() }
 
     try {
-      const builder = await this.upi.getOthersConfigParam('ide-haskell-cabal', 'builder') as { name: string }
-      this.runREPL((builder || {}).name)
+      const builder = await this.upi.getOthersConfigParam<{ name: string }>('ide-haskell-cabal', 'builder')
+      this.runREPL(builder && builder.name)
     } catch (error) {
       if (error) {
         atom.notifications.addFatalError(error.toString(), {
           detail: error,
           dismissable: true,
+          stack: error.stack,
         })
-        this.destroy()
-      } else {
-        atom.notifications.addWarning("Can't run REPL without knowing what builder to use")
-        this.destroy()
       }
+      atom.notifications.addWarning("ide-haskell-repl: Couldn't get builder. Falling back to default REPL", {
+        dismissable: true,
+      })
+      this.runREPL()
     }
   }
 
