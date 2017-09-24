@@ -1,3 +1,6 @@
+## 0.7.2
+* Fix EOL on Windows
+
 ## 0.7.1
 * Fallback on default repl in case of UPI-reladted errors
 * Enforce code style
