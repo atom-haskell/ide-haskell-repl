@@ -1,6 +1,7 @@
 import * as CP from 'child_process'
 import Queue = require('promise-queue')
 import tkill = require('tree-kill')
+import { EOL } from 'os'
 
 type ExitCallback = (exitCode: number) => void
 
@@ -144,8 +145,8 @@ export class InteractiveProcess {
       const read = out.read()
       if (read != null) { // tslint:disable-line: no-null-keyword strict-type-predicates
         buffer += read
-        if (buffer.match(/\n/)) {
-          const arr = buffer.split('\n')
+        if (buffer.match(EOL)) {
+          const arr = buffer.split(EOL)
           buffer = arr.pop() || ''
           yield* arr
         }
