@@ -50,6 +50,11 @@ export class InteractiveProcess {
         this.destroy()
       })
     } catch (error) {
+      atom.notifications.addFatalError('Error spawning REPL', {
+        dismissable: true,
+        stack: error.stack,
+        detail: `Tried to run "${cmd}" with arguments: ${args}`,
+      })
       this.destroy()
     }
   }
@@ -122,7 +127,9 @@ export class InteractiveProcess {
   }
 
   public interrupt () {
-    tkill(this.process.pid, 'SIGINT')
+    if (this.running) {
+      tkill(this.process.pid, 'SIGINT')
+    }
   }
 
   public isBusy () {
@@ -130,6 +137,9 @@ export class InteractiveProcess {
   }
 
   public writeStdin (str: string) {
+    if (!this.running) {
+      throw new Error('Interactive process is not running')
+    }
     this.process.stdin.write(str)
   }
 
