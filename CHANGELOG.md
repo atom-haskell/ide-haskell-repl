@@ -1,3 +1,6 @@
+## 0.7.3
+* Better reporting of startup errors
+
 ## 0.7.2
 * Fix EOL on Windows
 
