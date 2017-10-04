@@ -211,12 +211,25 @@ export abstract class IdeHaskellReplBase {
     const { cwd, comp, cabal } = await IdeHaskellReplBase.componentFromURI(this.uri)
     this.cwd = cwd
 
-    const commandPath = atom.config.get(`ide-haskell-repl.${builder}Path`)
+    let commandPath
+    switch (builder) {
+      case 'cabal':
+        commandPath = atom.config.get('ide-haskell-repl.cabalPath')
+        break
+      case 'stack':
+        commandPath = atom.config.get('ide-haskell-repl.stackPath')
+        break
+      case 'ghci':
+        commandPath = atom.config.get('ide-haskell-repl.ghciPath')
+        break
+      default:
+        throw new Error(`Unknown builder ${builder}`)
+    }
 
     const args = {
       stack: ['ghci'],
       cabal: ['repl'],
-      ghci: [],
+      ghci: [] as string[],
     }
     const extraArgs = {
       stack: (x: string) => `--ghci-options="${x}"`,
