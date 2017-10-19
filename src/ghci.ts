@@ -51,6 +51,7 @@ export class GHCI {
     this.process.request(
       `:set editor \"${atomPath}\"${EOL}` +
       `:set prompt2 \"\"${EOL}` +
+      `:set prompt-cont \"\"${EOL}` +
       `:set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"${EOL}`,
     )
       .then(resolveReadyPromise)
