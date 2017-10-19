@@ -1,6 +1,7 @@
 import {
   CompositeDisposable,
   TextEditor,
+  Point,
 } from 'atom'
 import highlightSync = require('atom-highlight')
 import etch = require('etch')
@@ -9,6 +10,7 @@ import {
   IContentItem,
   IdeHaskellReplBase,
   IViewState,
+  IErrorItem,
 } from '../ide-haskell-repl-base'
 import { Button } from './button'
 import { Editor } from './editor'
@@ -196,10 +198,30 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
     if (!this.upi) {
       return (
         <div className="ide-haskell-repl-error">
-          {this.errors/*TODO render*/}
+          {this.renderErrors()}
         </div>
       )
     } else { return null } // tslint:disable-line: no-null-keyword
+  }
+
+  private renderErrors() {
+    return this.errors.map(err => this.renderError(err))
+  }
+
+  private renderError(error: IErrorItem) {
+    const pos = error.position ? Point.fromObject(error.position) : undefined
+    const uri = error.uri || '<interactive>'
+    const positionText =
+        pos
+          ? `${uri}: ${pos.row + 1}, ${pos.column + 1}`
+          : uri
+    const context = error.context || ''
+    return (
+      <div>
+        {positionText}: {error.severity}: {context}
+        {error.message}
+      </div>
+    )
   }
 
   private renderPrompt() {

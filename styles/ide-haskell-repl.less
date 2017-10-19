@@ -85,10 +85,12 @@ div.ide-haskell-repl {
     flex-grow: 0;
     flex-shrink: 0;
     max-height: 50%;
-    white-space: pre;
     overflow: auto;
     background-color: @pane-item-background-color;
     border-top: double 3px @pane-item-border-color;
+    &>div {
+      white-space: pre;
+    }
   }
   button {
     flex-shrink: 0;
