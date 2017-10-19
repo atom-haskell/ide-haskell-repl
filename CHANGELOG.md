@@ -1,3 +1,7 @@
+## 0.7.4
+* Unset continuation prompt (GHC 8.2 compatibility)
+* Fix error rendering in absence of ide-haskell
+
 ## 0.7.3
 * Better reporting of startup errors
 
