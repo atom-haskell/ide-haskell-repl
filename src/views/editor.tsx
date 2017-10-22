@@ -1,5 +1,6 @@
 export interface IProps extends JSX.Props {element: HTMLElement}
 
+// tslint:disable-next-line:no-unsafe-any
 export class Editor implements JSX.ElementClass {
   public element: HTMLElement
   constructor (public props: IProps) {

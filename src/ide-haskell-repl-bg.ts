@@ -32,7 +32,7 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
   }
 
   public async destroy () {
-    super.destroy()
+    return super.destroy()
   }
 
   public async update () {
@@ -40,7 +40,7 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
   }
 
   protected async onLoad () {
-    this.getAllTypes ()
+    await this.getAllTypes()
   }
 
   protected async onInitialLoad () {

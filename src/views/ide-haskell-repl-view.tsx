@@ -25,6 +25,7 @@ interface IViewStateOutput extends IViewState {
 
 export interface IProps extends JSX.Props { upiPromise: Promise<UPI.IUPIInstance>, state: IViewState }
 
+// tslint:disable-next-line:no-unsafe-any
 export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.ElementClass {
   // tslint:disable-next-line:no-uninitialized
   public refs: {
@@ -47,12 +48,14 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
     })
     this.editor.setGrammar(atom.grammars.grammarForScopeName('source.haskell'))
 
+    // tslint:disable-next-line:no-unsafe-any
     atom.textEditors.add(this.editor)
 
     this.disposables.add(
       atom.workspace.observeTextEditors((editor: TextEditor) => {
         if (editor.getPath() === this.uri) {
           this.disposables.add(editor.onDidSave(() => {
+            // tslint:disable-next-line:no-floating-promises
             if (this.autoReloadRepeat) { this.ghciReloadRepeat() }
           }))
         }
@@ -96,6 +99,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
 
   public clear() {
     this.messages = []
+    // tslint:disable-next-line:no-floating-promises
     this.update()
   }
 
@@ -108,9 +112,9 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
   }
 
   public async destroy() {
-    etch.destroy(this)
+    await etch.destroy(this)
     this.disposables.dispose()
-    super.destroy()
+    return super.destroy()
   }
 
   public serialize(): IViewStateOutput {
@@ -139,6 +143,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
 
   public render() {
     return (
+      // tslint:disable:no-unsafe-any
       <div className="ide-haskell-repl">
         <div
           ref="output"
@@ -183,6 +188,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
           </div>
         </div>
       </div>
+      // tslint:enable:no-unsafe-any
     )
   }
 
@@ -197,9 +203,11 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
   private renderErrDiv() {
     if (!this.upi) {
       return (
+        // tslint:disable:no-unsafe-any
         <div className="ide-haskell-repl-error">
           {this.renderErrors()}
         </div>
+        // tslint:enable:no-unsafe-any
       )
     } else { return null } // tslint:disable-line: no-null-keyword
   }
@@ -217,15 +225,18 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
           : uri
     const context = error.context || ''
     return (
+      // tslint:disable:no-unsafe-any
       <div>
         {positionText}: {error.severity}: {context}
         {error.message}
       </div>
+      // tslint:enable:no-unsafe-any
     )
   }
 
   private renderPrompt() {
     return (
+      // tslint:disable-next-line:no-unsafe-any
       <div class="repl-prompt">{this.prompt || ''}&gt;</div>
     )
   }
@@ -244,9 +255,11 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
           hlcache = msg.hlcache = highlightSync({ fileContents: cleanText, scopeName: 'source.haskell', nbsp: false })
         }
         return (
+          // tslint:disable-next-line:no-unsafe-any
           <pre className={cls} innerHTML={hlcache} />
         )
       } else {
+        // tslint:disable-next-line:no-unsafe-any
         return <pre className={cls}>{cleanText}</pre>
       }
     })

@@ -45,20 +45,16 @@ export class GHCI {
       )
     }
 
-    let resolveReadyPromise
-    this.readyPromise = new Promise<IRequestResult>((resolve) => { resolveReadyPromise = resolve })
-
-    this.process.request(
+    this.readyPromise = this.process.request(
       `:set editor \"${atomPath}\"${EOL}` +
       `:set prompt2 \"\"${EOL}` +
       `:set prompt-cont \"\"${EOL}` +
       `:set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"${EOL}`,
     )
-      .then(resolveReadyPromise)
   }
 
   public async waitReady() {
-    return await this.readyPromise
+    return this.readyPromise
   }
 
   public isBusy() {
@@ -73,10 +69,10 @@ export class GHCI {
     return this.process.request(`:reload${EOL}`, callback)
   }
 
-  public interrupt() {
+  public async interrupt() {
     if (this.process) {
       if (atom.config.get('ide-haskell-repl.ghciWrapperPath') && process.platform === 'win32') {
-        this.process.request('\x03')
+        await this.process.request('\x03')
       } else {
         this.process.interrupt()
       }

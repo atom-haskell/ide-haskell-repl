@@ -36,7 +36,7 @@ export function activate() {
 
   const commandFunction = (func: string) => ({ currentTarget }: IEventDesc) => {
     const view = editorMap.get(currentTarget.getModel())
-    if (view) { view[func]() }
+    if (view) { (view[func] as () => void)() }
   }
 
   disposables.add(
@@ -53,8 +53,9 @@ export function activate() {
   )
 
   const externalCommandFunction = (func: string) => ({ currentTarget }: IEventDesc) => {
+    // tslint:disable-next-line:no-floating-promises
     open(currentTarget.getModel(), false)
-      .then((model) => model[func]())
+      .then((model) => (model[func] as () => void)())
   }
 
   disposables.add(
@@ -62,11 +63,13 @@ export function activate() {
       'ide-haskell-repl:copy-selection-to-repl-input': ({ currentTarget }: IEventDesc) => {
         const ed = currentTarget.getModel()
         const cmd = ed.getLastSelection().getText()
+        // tslint:disable-next-line:no-floating-promises
         open(ed).then((model) => model.copyText(cmd))
       },
       'ide-haskell-repl:run-selection-in-repl': ({ currentTarget }: IEventDesc) => {
         const ed = currentTarget.getModel()
         const cmd = ed.getLastSelection().getText()
+        // tslint:disable-next-line:no-floating-promises
         open(ed, false).then(async (model) => model.runCommand(cmd))
       },
       'ide-haskell-repl:ghci-reload': externalCommandFunction('ghciReload'),
@@ -144,7 +147,7 @@ async function shouldShowTooltip(editor: AtomTypes.TextEditor, crange: AtomTypes
     return undefined
   }
   const { cwd, cabal, comp } = await IdeHaskellReplBase.componentFromURI(editor.getPath())
-  const hash = `${cwd.getPath()}::${cabal.name}::${comp[0]}`
+  const hash = `${cwd.getPath()}::${cabal && cabal.name}::${comp && comp[0]}`
   let bg = bgEditorMap.get(hash)
   if (!bg) {
     if (!editor.getPath()) {
@@ -162,9 +165,10 @@ async function didSaveBuffer(buffer: AtomTypes.TextBuffer) {
     return
   }
   const { cwd, cabal, comp } = await IdeHaskellReplBase.componentFromURI(buffer.getPath())
-  const hash = `${cwd.getPath()}::${cabal.name}::${comp[0]}`
+  const hash = `${cwd.getPath()}::${cabal && cabal.name}::${comp && comp[0]}`
   const bgt = bgEditorMap.get(hash)
   if (bgt) {
+    // tslint:disable-next-line:no-floating-promises
     bgt.ghciReload()
   } else {
     if (!buffer.getPath()) {

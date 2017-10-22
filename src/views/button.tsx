@@ -10,6 +10,7 @@ interface IProps extends JSX.Props {
   state?: boolean
 }
 
+// tslint:disable-next-line:no-unsafe-any
 export class Button implements JSX.ElementClass {
   // tslint:disable-next-line:no-uninitialized
   private element: HTMLElement
@@ -33,10 +34,12 @@ export class Button implements JSX.ElementClass {
 
   public render() {
     return (
+      // tslint:disable:no-unsafe-any
       <button
         className={Array.from(this.clslst.values()).join(' ')}
         on={{ click: this.click.bind(this) }}
       />
+      // tslint:enable:no-unsafe-any
     )
   }
 

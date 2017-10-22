@@ -52,6 +52,7 @@ export class InteractiveProcess {
     } catch (error) {
       atom.notifications.addFatalError('Error spawning REPL', {
         dismissable: true,
+        // tslint:disable-next-line:no-unsafe-any
         stack: error.stack,
         detail: `Tried to run "${cmd}" with arguments: ${args}`,
       })
@@ -110,6 +111,7 @@ export class InteractiveProcess {
           res.stdout.push(line)
         }
       }
+      // tslint:disable-next-line:no-unsafe-any
       const restErr: string = this.process.stderr.read()
       if (restErr) {
         restErr.split('\n').forEach(stdErrLine)

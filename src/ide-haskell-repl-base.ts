@@ -42,6 +42,7 @@ export abstract class IdeHaskellReplBase {
 
     this.messages = content || []
 
+    // tslint:disable-next-line:no-floating-promises
     this.initialize(upiPromise)
   }
 
@@ -78,10 +79,10 @@ export abstract class IdeHaskellReplBase {
     const cwd = await IdeHaskellReplBase.getRootDir(uri)
     const [cabalFile] = await IdeHaskellReplBase.getCabalFile(cwd)
 
-    let comp
-    let cabal
+    let comp: string | undefined
+    let cabal: Util.IDotCabal | undefined
     if (cabalFile) {
-      cabal = await IdeHaskellReplBase.parseCabalFile(cabalFile);
+      cabal = await IdeHaskellReplBase.parseCabalFile(cabalFile) || undefined;
       [comp] = await IdeHaskellReplBase.getComponent(cabalFile, cwd.relativize(uri))
     }
     return { cwd, comp, cabal }
@@ -113,6 +114,7 @@ export abstract class IdeHaskellReplBase {
           break
         default: break
       }
+      // tslint:disable-next-line:no-floating-promises
       this.update()
     })
     this.errorsFromStderr(res.stderr)
@@ -122,7 +124,7 @@ export abstract class IdeHaskellReplBase {
   public async ghciReload() {
     if (!this.ghci) { throw new Error('No GHCI instance!') }
     const res = await this.ghci.reload()
-    this.onReload()
+    await this.onReload()
     return res
   }
 
@@ -138,6 +140,7 @@ export abstract class IdeHaskellReplBase {
 
   public set autoReloadRepeat(autoReloadRepeat: boolean) {
     this._autoReloadRepeat = autoReloadRepeat
+    // tslint:disable-next-line:no-floating-promises
     this.update()
   }
 
@@ -147,6 +150,7 @@ export abstract class IdeHaskellReplBase {
 
   public interrupt() {
     if (!this.ghci) { throw new Error('No GHCI instance!') }
+    // tslint:disable-next-line:no-floating-promises
     this.ghci.interrupt()
   }
 
@@ -184,8 +188,9 @@ export abstract class IdeHaskellReplBase {
 
     try {
       const builder = await this.upi.getOthersConfigParam<{ name: string }>('ide-haskell-cabal', 'builder')
-      this.runREPL(builder && builder.name)
-    } catch (error) {
+      return this.runREPL(builder && builder.name)
+    } catch (e) {
+      const error = e as Error
       if (error) {
         atom.notifications.addFatalError(error.toString(), {
           detail: error,
@@ -196,7 +201,7 @@ export abstract class IdeHaskellReplBase {
       atom.notifications.addWarning("ide-haskell-repl: Couldn't get builder. Falling back to default REPL", {
         dismissable: true,
       })
-      this.runREPL()
+      return this.runREPL()
     }
   }
 
@@ -211,7 +216,7 @@ export abstract class IdeHaskellReplBase {
     const { cwd, comp, cabal } = await IdeHaskellReplBase.componentFromURI(this.uri)
     this.cwd = cwd
 
-    let commandPath
+    let commandPath: string
     switch (builder) {
       case 'cabal':
         commandPath = atom.config.get('ide-haskell-repl.cabalPath')
@@ -266,7 +271,7 @@ export abstract class IdeHaskellReplBase {
     this.prompt = initres.prompt[1]
     this.errorsFromStderr(initres.stderr)
     await this.onInitialLoad()
-    this.update()
+    return this.update()
   }
 
   protected errorsFromStderr(stderr: string[]): boolean {
@@ -286,6 +291,7 @@ export abstract class IdeHaskellReplBase {
     if (this.upi) {
       this.upi.setMessages(this.errors)
     } else {
+      // tslint:disable-next-line:no-floating-promises
       this.update()
     }
     return hasErrors
