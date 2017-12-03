@@ -1,3 +1,7 @@
+## 0.7.5
+* Don't use --main-is, broken on new stack versions
+* Updates to lints, typings, minor fixes
+
 ## 0.7.4
 * Unset continuation prompt (GHC 8.2 compatibility)
 * Fix error rendering in absence of ide-haskell
