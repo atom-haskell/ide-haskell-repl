@@ -253,7 +253,7 @@ export abstract class IdeHaskellReplBase {
           comp.startsWith('lib:')
             ? 'lib'
             : comp
-        commandArgs.push('--main-is', `${cabal.name}:${compc}`)
+        commandArgs.push(`${cabal.name}:${compc}`)
       } else {
         commandArgs.push(comp)
       }
