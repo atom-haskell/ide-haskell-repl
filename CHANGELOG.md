@@ -1,3 +1,6 @@
+## 0.7.6
+* Bump atom-haskell-utils (getComponentsFromFile bug)
+
 ## 0.7.5
 * Don't use --main-is, broken on new stack versions
 * Updates to lints, typings, minor fixes
