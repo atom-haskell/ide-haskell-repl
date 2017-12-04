@@ -1,4 +1,4 @@
-# IDE-Haskell REPL
+# IDE-Haskell REPL ![](https://david-dm.org/atom-haskell/ide-haskell-repl.svg)
 
 ***This package is in beta.***
 
