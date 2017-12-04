@@ -18,7 +18,7 @@
     "atom": ">=1.19.0 <2.0.0"
   },
   "dependencies": {
-    "atom-haskell-utils": "^1.0.0",
+    "atom-haskell-utils": "^1.0.1",
     "atom-highlight": "^0.3.0",
     "etch": "^0.12.5",
     "fuzzaldrin": "^2.1.0",
