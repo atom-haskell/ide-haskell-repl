@@ -7,6 +7,8 @@ import {
   IdeHaskellReplBase,
   IViewState,
 } from './ide-haskell-repl-base'
+import * as UPI from 'atom-haskell-upi'
+import * as AtomTypes from 'atom'
 
 export {IViewState, IContentItem}
 

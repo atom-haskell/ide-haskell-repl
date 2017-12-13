@@ -3,6 +3,8 @@ import { filter } from 'fuzzaldrin'
 
 import { CommandHistory } from './command-history'
 import { GHCI } from './ghci'
+import * as UPI from 'atom-haskell-upi'
+import * as AtomTypes from 'atom'
 
 export interface IViewState {
   uri?: string
@@ -36,7 +38,7 @@ export abstract class IdeHaskellReplBase {
   }: IViewState) {
     this.uri = uri || ''
     this.history = new CommandHistory(history)
-    this._autoReloadRepeat = autoReloadRepeat
+    this._autoReloadRepeat = !!autoReloadRepeat
     this.errors = []
     this.prompt = ''
 
@@ -136,6 +138,7 @@ export abstract class IdeHaskellReplBase {
         return this.runCommand(command)
       }
     }
+    return undefined
   }
 
   public set autoReloadRepeat(autoReloadRepeat: boolean) {
@@ -193,7 +196,7 @@ export abstract class IdeHaskellReplBase {
       const error = e as Error
       if (error) {
         atom.notifications.addFatalError(error.toString(), {
-          detail: error,
+          detail: error.toString(),
           dismissable: true,
           stack: error.stack,
         })
@@ -207,7 +210,8 @@ export abstract class IdeHaskellReplBase {
 
   protected async runREPL(inbuilder?: string) {
     let builder = inbuilder || atom.config.get('ide-haskell-repl.defaultRepl')
-    const subst = {
+    if (!builder) throw new Error(`Default REPL not specified`)
+    const subst: {[i: string]: string | undefined} = {
       'nix-build': 'cabal',
       'none': 'ghci',
     }
@@ -216,7 +220,7 @@ export abstract class IdeHaskellReplBase {
     const { cwd, comp, cabal } = await IdeHaskellReplBase.componentFromURI(this.uri)
     this.cwd = cwd
 
-    let commandPath: string
+    let commandPath: string | undefined
     switch (builder) {
       case 'cabal':
         commandPath = atom.config.get('ide-haskell-repl.cabalPath')
@@ -230,6 +234,7 @@ export abstract class IdeHaskellReplBase {
       default:
         throw new Error(`Unknown builder ${builder}`)
     }
+    if (commandPath === undefined) throw new Error(`Undefined commandPath for builder ${builder}`)
 
     const args = {
       stack: ['ghci'],
@@ -245,7 +250,8 @@ export abstract class IdeHaskellReplBase {
     if (!args[builder]) { throw new Error(`Unknown builder ${builder}`) }
     const commandArgs = args[builder]
 
-    commandArgs.push(...(atom.config.get('ide-haskell-repl.extraArgs').map(extraArgs[builder])))
+    const extraArgsList = atom.config.get('ide-haskell-repl.extraArgs') || []
+    commandArgs.push(...(extraArgsList.map(extraArgs[builder])))
 
     if (comp && cabal) {
       if (builder === 'stack') {
@@ -264,7 +270,7 @@ export abstract class IdeHaskellReplBase {
       command: commandPath,
       args: commandArgs,
       cwd: this.cwd.getPath(),
-      onExit: async (code) => this.destroy(),
+      onExit: async () => this.destroy(),
     })
 
     const initres = await this.ghci.waitReady()
@@ -348,6 +354,8 @@ export abstract class IdeHaskellReplBase {
           _time: Date.now(),
         }
       }
+    } else {
+      return undefined
     }
   }
 }

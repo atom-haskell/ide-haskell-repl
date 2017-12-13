@@ -1,10 +1,12 @@
-import { CompositeDisposable, IEventDesc, TextEditor } from 'atom'
+import { CompositeDisposable, CommandEvent, TextEditor } from 'atom'
 import { IdeHaskellReplBase } from './ide-haskell-repl-base'
 import { IdeHaskellReplBg } from './ide-haskell-repl-bg'
 import {
   IdeHaskellReplView,
   IViewState,
 } from './views/ide-haskell-repl-view'
+import * as UPI from 'atom-haskell-upi'
+import * as AtomTypes from 'atom'
 
 export * from './config'
 
@@ -13,7 +15,7 @@ const editorMap: WeakMap<AtomTypes.TextEditor, IdeHaskellReplView> = new WeakMap
 const bgEditorMap: Map<string, IdeHaskellReplBg> = new Map()
 let resolveUPIPromise: (upi?: UPI.IUPIInstance) => void
 const upiPromise = new Promise<UPI.IUPIInstance>((resolve) => { resolveUPIPromise = resolve })
-let UPI: UPI.IUPIInstance | undefined
+let upi: UPI.IUPIInstance | undefined
 
 export function activate() {
   disposables = new CompositeDisposable()
@@ -30,11 +32,11 @@ export function activate() {
 
   disposables.add(
     atom.commands.add('atom-text-editor', {
-      'ide-haskell-repl:toggle': async ({ currentTarget }: IEventDesc) => open(currentTarget.getModel()),
+      'ide-haskell-repl:toggle': async ({ currentTarget }: CommandEvent) => open(currentTarget.getModel()),
     }),
   )
 
-  const commandFunction = (func: string) => ({ currentTarget }: IEventDesc) => {
+  const commandFunction = (func: string) => ({ currentTarget }: CommandEvent) => {
     const view = editorMap.get(currentTarget.getModel())
     if (view) { (view[func] as () => void)() }
   }
@@ -52,7 +54,7 @@ export function activate() {
     }),
   )
 
-  const externalCommandFunction = (func: string) => ({ currentTarget }: IEventDesc) => {
+  const externalCommandFunction = (func: string) => ({ currentTarget }: CommandEvent) => {
     // tslint:disable-next-line:no-floating-promises
     open(currentTarget.getModel(), false)
       .then((model) => (model[func] as () => void)())
@@ -60,13 +62,13 @@ export function activate() {
 
   disposables.add(
     atom.commands.add('atom-text-editor:not(.ide-haskell-repl)', {
-      'ide-haskell-repl:copy-selection-to-repl-input': ({ currentTarget }: IEventDesc) => {
+      'ide-haskell-repl:copy-selection-to-repl-input': ({ currentTarget }: CommandEvent) => {
         const ed = currentTarget.getModel()
         const cmd = ed.getLastSelection().getText()
         // tslint:disable-next-line:no-floating-promises
         open(ed).then((model) => model.copyText(cmd))
       },
-      'ide-haskell-repl:run-selection-in-repl': ({ currentTarget }: IEventDesc) => {
+      'ide-haskell-repl:run-selection-in-repl': ({ currentTarget }: CommandEvent) => {
         const ed = currentTarget.getModel()
         const cmd = ed.getLastSelection().getText()
         // tslint:disable-next-line:no-floating-promises
@@ -88,7 +90,7 @@ export function activate() {
 
   setTimeout(
     () => {
-      if (resolveUPIPromise && !UPI) { resolveUPIPromise() }
+      if (resolveUPIPromise && !upi) { resolveUPIPromise() }
     },
     5000,
   )
@@ -113,7 +115,7 @@ async function open(editor: TextEditor, activate = true): Promise<IdeHaskellRepl
     split: 'right',
     searchAllPanes: true,
     activatePane: activate,
-  })
+  }) as Promise<IdeHaskellReplView>
 }
 
 export function deactivate() {
@@ -121,7 +123,7 @@ export function deactivate() {
 }
 
 export function consumeUPI(register: UPI.IUPIRegistration) {
-  UPI = register({
+  upi = register({
     name: 'ide-haskell-repl',
     messageTypes: {
       repl: {
@@ -137,16 +139,18 @@ export function consumeUPI(register: UPI.IUPIRegistration) {
       onDidSaveBuffer: didSaveBuffer,
     },
   })
-  resolveUPIPromise(UPI)
-  disposables.add(UPI)
-  return UPI
+  resolveUPIPromise(upi)
+  disposables.add(upi)
+  return upi
 }
 
-async function shouldShowTooltip(editor: AtomTypes.TextEditor, crange: AtomTypes.Range, type: string) {
+async function shouldShowTooltip(editor: AtomTypes.TextEditor, crange: AtomTypes.Range, _type: string) {
   if (!atom.config.get('ide-haskell-repl.showTypes')) {
     return undefined
   }
-  const { cwd, cabal, comp } = await IdeHaskellReplBase.componentFromURI(editor.getPath())
+  const path = editor.getPath()
+  if (!path) return undefined
+  const { cwd, cabal, comp } = await IdeHaskellReplBase.componentFromURI(path)
   const hash = `${cwd.getPath()}::${cabal && cabal.name}::${comp && comp[0]}`
   let bg = bgEditorMap.get(hash)
   if (!bg) {
@@ -157,14 +161,16 @@ async function shouldShowTooltip(editor: AtomTypes.TextEditor, crange: AtomTypes
     bg = new IdeHaskellReplBg(upiPromise, { uri: editor.getPath() })
     bgEditorMap.set(hash, bg)
   }
-  return bg.showTypeAt(editor.getPath(), crange)
+  return bg.showTypeAt(path, crange)
 }
 
 async function didSaveBuffer(buffer: AtomTypes.TextBuffer) {
   if (!atom.config.get('ide-haskell-repl.checkOnSave')) {
     return
   }
-  const { cwd, cabal, comp } = await IdeHaskellReplBase.componentFromURI(buffer.getPath())
+  const path = buffer.getPath()
+  if (!path) return
+  const { cwd, cabal, comp } = await IdeHaskellReplBase.componentFromURI(path)
   const hash = `${cwd.getPath()}::${cabal && cabal.name}::${comp && comp[0]}`
   const bgt = bgEditorMap.get(hash)
   if (bgt) {

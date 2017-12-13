@@ -1,5 +1,6 @@
-declare namespace AtomTypes {
-  interface ConfigInterface {
+export {}
+declare module 'atom' {
+  interface ConfigValues {
     'ide-haskell-repl.defaultRepl': 'stack' | 'cabal' | 'ghci'
     'ide-haskell-repl.stackPath': string
     'ide-haskell-repl.cabalPath': string

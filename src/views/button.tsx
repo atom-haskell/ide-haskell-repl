@@ -15,11 +15,9 @@ export class Button implements JSX.ElementClass {
   // tslint:disable-next-line:no-uninitialized
   private element: HTMLElement
   private target: HTMLElement
-  private destroyed: boolean
   private disposables: CompositeDisposable
   private clslst: Set<string>
   constructor(public props: IProps) {
-    this.destroyed = false
     this.disposables = new CompositeDisposable()
     this.clslst = new Set()
     this.clslst.add(this.props.cls)
@@ -45,7 +43,6 @@ export class Button implements JSX.ElementClass {
 
   public async destroy() {
     await etch.destroy(this)
-    this.destroyed = true
     this.disposables.dispose()
   }
 

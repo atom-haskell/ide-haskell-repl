@@ -14,6 +14,7 @@ import {
 } from '../ide-haskell-repl-base'
 import { Button } from './button'
 import { Editor } from './editor'
+import * as UPI from 'atom-haskell-upi'
 
 export { IViewState, IContentItem }
 
@@ -46,7 +47,8 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
       lineNumberGutterVisible: false,
       softWrapped: true,
     })
-    this.editor.setGrammar(atom.grammars.grammarForScopeName('source.haskell'))
+    const grammar = atom.grammars.grammarForScopeName('source.haskell')
+    grammar && this.editor.setGrammar(grammar)
 
     // tslint:disable-next-line:no-unsafe-any
     atom.textEditors.add(this.editor)
@@ -77,6 +79,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
     if (this.ghci && this.ghci.isBusy()) {
       this.messages.push({ text: inp, hl: false, cls: 'ide-haskell-repl-input-text' })
       this.ghci.writeRaw(inp)
+      return undefined
     } else {
       this.history.save(inp)
       return this.runCommand(inp)
@@ -242,7 +245,8 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
   }
 
   private renderOutput() {
-    const maxMsg = atom.config.get('ide-haskell-repl.maxMessages')
+    let maxMsg = atom.config.get('ide-haskell-repl.maxMessages')
+    if (maxMsg === undefined) maxMsg = 100
     if (maxMsg > 0) {
       this.messages = this.messages.slice(-maxMsg)
     }
