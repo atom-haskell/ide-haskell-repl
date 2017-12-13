@@ -1,3 +1,9 @@
+## 0.7.7
+* Bump Atom version
+* Try to focus text editor on repl creation; restore text editor focus on restart
+* New typings; update deps; bump es target
+* Added david-dm badge
+
 ## 0.7.6
 * Bump atom-haskell-utils (getComponentsFromFile bug)
 
