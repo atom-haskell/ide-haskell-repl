@@ -24,7 +24,10 @@ interface IViewStateOutput extends IViewState {
   deserializer: string
 }
 
-export interface IProps extends JSX.Props { upiPromise: Promise<UPI.IUPIInstance>, state: IViewState }
+export interface IProps extends JSX.Props {
+  upiPromise: Promise<UPI.IUPIInstance>
+  state: IViewState
+}
 
 // tslint:disable-next-line:no-unsafe-any
 export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.ElementClass {
@@ -71,6 +74,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
     }))
 
     etch.initialize(this)
+    if (this.props.state.focus) setImmediate(() => this.refs.editor.element.focus())
   }
 
   public async execCommand() {
@@ -127,14 +131,14 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
       content: this.messages,
       history: this.history.serialize(),
       autoReloadRepeat: this.autoReloadRepeat,
+      focus: this.isFocused(),
     }
   }
 
   public async update() {
     const atEnd = !!this.refs &&
       (this.refs.output.scrollTop + this.refs.output.clientHeight >= this.refs.output.scrollHeight)
-    const focused = !!this.refs && !!document.activeElement &&
-      (this.refs.editor.element.contains(document.activeElement))
+    const focused = this.isFocused()
     await etch.update(this)
     if (atEnd) {
       this.refs.output.scrollTop = this.refs.output.scrollHeight - this.refs.output.clientHeight
@@ -267,5 +271,10 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
         return <pre className={cls}>{cleanText}</pre>
       }
     })
+  }
+
+  private isFocused() {
+    return !!this.refs && !!document.activeElement &&
+      (this.refs.editor.element.contains(document.activeElement))
   }
 }

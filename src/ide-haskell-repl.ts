@@ -26,7 +26,7 @@ export function activate() {
       if (!(m && m[1])) {
         return undefined
       }
-      return createReplView({ uri: m[1] })
+      return createReplView({ uri: m[1], focus: true })
     }),
   )
 

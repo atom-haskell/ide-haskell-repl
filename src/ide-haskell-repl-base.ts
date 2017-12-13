@@ -11,6 +11,7 @@ export interface IViewState {
   history?: string[]
   autoReloadRepeat?: boolean
   content?: IContentItem[]
+  focus?: boolean
 }
 
 export interface IContentItem {
