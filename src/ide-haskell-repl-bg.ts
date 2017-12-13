@@ -8,9 +8,8 @@ import {
   IViewState,
 } from './ide-haskell-repl-base'
 import * as UPI from 'atom-haskell-upi'
-import * as AtomTypes from 'atom'
 
-export {IViewState, IContentItem}
+export { IViewState, IContentItem }
 
 export interface ITypeRecord {
   uri: string
@@ -24,13 +23,13 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
     super(upiPromise, state)
   }
 
-  public showTypeAt (uri: string, inrange: AtomTypes.Range) {
+  public showTypeAt (uri: string, inrange: Range) {
     if (!this.types) { return undefined }
     const typeRec = this.types.find((tr) => tr && tr.uri === uri && tr.span.containsRange(inrange))
     if (!typeRec) { return undefined }
-    const {span: range, type: text} = typeRec
+    const { span: range, type: text } = typeRec
     const highlighter = 'hint.type.haskell'
-    return { range, text: { text, highlighter }}
+    return { range, text: { text, highlighter } }
   }
 
   public async destroy () {
@@ -54,7 +53,7 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
 
   protected async getAllTypes (): Promise<ITypeRecord[]> {
     if (!this.ghci) { throw new Error('No GHCI instance!') }
-    const {stdout} = await this.ghci.writeLines([':all-types'])
+    const { stdout } = await this.ghci.writeLines([':all-types'])
     this.types = []
     for (const line of stdout) {
       const rx = /^(.*):\((\d+),(\d+)\)-\((\d+),(\d+)\):\s*(.*)$/
@@ -67,7 +66,7 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
       const type = m[5]
       const [rowstart, colstart, rowend, colend] = m.slice(1).map((i) => parseInt(i, 10) - 1)
       const span = Range.fromObject([[rowstart, colstart], [rowend, colend]])
-      this.types.push({uri, type, span})
+      this.types.push({ uri, type, span })
     }
     return this.types
   }

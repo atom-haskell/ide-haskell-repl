@@ -1,4 +1,10 @@
-import { CompositeDisposable, CommandEvent, TextEditor } from 'atom'
+import {
+  CompositeDisposable,
+  CommandEvent,
+  TextEditor,
+  Range,
+  TextBuffer,
+} from 'atom'
 import { IdeHaskellReplBase } from './ide-haskell-repl-base'
 import { IdeHaskellReplBg } from './ide-haskell-repl-bg'
 import {
@@ -6,12 +12,11 @@ import {
   IViewState,
 } from './views/ide-haskell-repl-view'
 import * as UPI from 'atom-haskell-upi'
-import * as AtomTypes from 'atom'
 
 export * from './config'
 
 let disposables: CompositeDisposable
-const editorMap: WeakMap<AtomTypes.TextEditor, IdeHaskellReplView> = new WeakMap()
+const editorMap: WeakMap<TextEditor, IdeHaskellReplView> = new WeakMap()
 const bgEditorMap: Map<string, IdeHaskellReplBg> = new Map()
 let resolveUPIPromise: (upi?: UPI.IUPIInstance) => void
 const upiPromise = new Promise<UPI.IUPIInstance>((resolve) => { resolveUPIPromise = resolve })
@@ -144,7 +149,7 @@ export function consumeUPI(register: UPI.IUPIRegistration) {
   return upi
 }
 
-async function shouldShowTooltip(editor: AtomTypes.TextEditor, crange: AtomTypes.Range, _type: string) {
+async function shouldShowTooltip(editor: TextEditor, crange: Range, _type: string) {
   if (!atom.config.get('ide-haskell-repl.showTypes')) {
     return undefined
   }
@@ -164,7 +169,7 @@ async function shouldShowTooltip(editor: AtomTypes.TextEditor, crange: AtomTypes
   return bg.showTypeAt(path, crange)
 }
 
-async function didSaveBuffer(buffer: AtomTypes.TextBuffer) {
+async function didSaveBuffer(buffer: TextBuffer) {
   if (!atom.config.get('ide-haskell-repl.checkOnSave')) {
     return
   }

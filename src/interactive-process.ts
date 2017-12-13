@@ -73,7 +73,7 @@ export class InteractiveProcess {
 
       this.writeStdin(command)
       if (lineCallback) {
-        lineCallback({type: 'stdin', line: command})
+        lineCallback({ type: 'stdin', line: command })
       }
 
       const res: IRequestResult = {
@@ -86,7 +86,7 @@ export class InteractiveProcess {
 
       const stdErrLine = (line: string) => {
         if (lineCallback) {
-          lineCallback({type: 'stderr', line})
+          lineCallback({ type: 'stderr', line })
         }
         res.stderr.push(line)
       }
@@ -101,12 +101,12 @@ export class InteractiveProcess {
         const pattern = line.match(endPattern)
         if (pattern) {
           if (lineCallback) {
-            lineCallback({type: 'prompt', prompt: pattern})
+            lineCallback({ type: 'prompt', prompt: pattern })
           }
           res.prompt = pattern
         } else {
           if (lineCallback) {
-            lineCallback({type: 'stdout', line})
+            lineCallback({ type: 'stdout', line })
           }
           res.stdout.push(line)
         }
