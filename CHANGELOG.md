@@ -1,3 +1,6 @@
+## 0.7.8
+* Add tslib to dependencies
+
 ## 0.7.7
 * Bump Atom version
 * Try to focus text editor on repl creation; restore text editor focus on restart
