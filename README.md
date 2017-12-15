@@ -14,13 +14,16 @@ Please refer to documentation site https://atom-haskell.github.io. In particular
 
 Copyright © 2015 Atom-Haskell.
 
-See [LICENSE.md][LICENSE] for details.
+Contributors (by number of commits):
 
-[LICENSE]: https://github.com/atom-haskell/ide-haskell-repl/blob/master/LICENSE.md
-
-Contributors:
-
+<!-- BEGIN CONTRIBUTORS LIST -->
 * Nikolay Yakimov
 * yaeti
 * Yakov Borevich
 * soiamsoNG
+
+<!-- END CONTRIBUTORS LIST -->
+
+See [LICENSE.md][LICENSE] for details.
+
+[LICENSE]: https://github.com/atom-haskell/ide-haskell-repl/blob/master/LICENSE.md
