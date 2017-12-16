@@ -57,7 +57,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
     grammar && this.editor.setGrammar(grammar)
 
     // tslint:disable-next-line:no-unsafe-any
-    atom.textEditors.add(this.editor)
+    this.disposables.add(atom.textEditors.add(this.editor))
 
     this.disposables.add(
       atom.workspace.observeTextEditors((editor: TextEditor) => {
