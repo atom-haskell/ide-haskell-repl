@@ -1,5 +1,6 @@
 import {
   CompositeDisposable,
+  Disposable,
   TextEditor,
   Point,
 } from 'atom'
@@ -41,6 +42,8 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
   private outputFontFamily: string
   // tslint:disable-next-line:no-uninitialized
   private outputFontSize: string
+  // tslint:disable-next-line:no-uninitialized
+  private element: HTMLElement
   private disposables: CompositeDisposable
   constructor(public props: IProps) {
     super(props.upiPromise, props.state)
@@ -73,8 +76,21 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
       this.outputFontFamily = fontFamily
     }))
 
+    this.disposables.add(atom.workspace.onDidChangeActivePaneItem((item) => {
+      if (item === this) this.focus()
+    }))
+
     etch.initialize(this)
-    if (this.props.state.focus) setImmediate(() => this.refs.editor.element.focus())
+
+    const editorElement = this.refs.editor.element
+    editorElement.addEventListener('blur', this.didLoseFocus)
+    this.disposables.add(new Disposable(() => { editorElement.removeEventListener('blur', this.didLoseFocus) }))
+
+    if (this.props.state.focus) setImmediate(() => this.focus())
+  }
+
+  public focus() {
+    this.refs && this.refs.editor && this.refs.editor.element.focus()
   }
 
   public async execCommand() {
@@ -144,7 +160,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
       this.refs.output.scrollTop = this.refs.output.scrollHeight - this.refs.output.clientHeight
     }
     if (focused) {
-      this.refs.editor.element.focus()
+      this.focus()
     }
   }
 
@@ -276,5 +292,11 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
   private isFocused() {
     return !!this.refs && !!document.activeElement &&
       (this.refs.editor.element.contains(document.activeElement))
+  }
+
+  private didLoseFocus = (event: FocusEvent) => {
+    if (this.element.contains(event.relatedTarget as Node)) {
+      this.refs.editor.element.focus()
+    }
   }
 }
