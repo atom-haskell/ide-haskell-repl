@@ -1,3 +1,8 @@
+## 0.7.9
+* Try hard to maintain editor focus
+* Update licensing information in README
+* Bump typings
+
 ## 0.7.8
 * Add tslib to dependencies
 
