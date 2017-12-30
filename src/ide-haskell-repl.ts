@@ -1,7 +1,9 @@
 import {
   CompositeDisposable,
+  TWatchEditor,
   CommandEvent,
   TextEditor,
+  TextEditorElement,
   Range,
   TextBuffer,
 } from 'atom'
@@ -20,6 +22,8 @@ const editorMap: WeakMap<TextEditor, IdeHaskellReplView> = new WeakMap()
 const bgEditorMap: Map<string, IdeHaskellReplBg> = new Map()
 let resolveUPIPromise: (upi?: UPI.IUPIInstance) => void
 const upiPromise = new Promise<UPI.IUPIInstance>((resolve) => { resolveUPIPromise = resolve })
+let resolveWatchEditorPromise: (we: TWatchEditor) => void
+const watchEditorPromise = new Promise<TWatchEditor>((resolve) => { resolveWatchEditorPromise = resolve })
 let upi: UPI.IUPIInstance | undefined
 
 export function activate() {
@@ -37,11 +41,11 @@ export function activate() {
 
   disposables.add(
     atom.commands.add('atom-text-editor', {
-      'ide-haskell-repl:toggle': async ({ currentTarget }: CommandEvent) => open(currentTarget.getModel()),
+      'ide-haskell-repl:toggle': async ({ currentTarget }) => open(currentTarget.getModel()),
     }),
   )
 
-  const commandFunction = (func: string) => ({ currentTarget }: CommandEvent) => {
+  const commandFunction = (func: string) => ({ currentTarget }: CommandEvent<TextEditorElement>) => {
     const view = editorMap.get(currentTarget.getModel())
     if (view) { (view[func] as () => void)() }
   }
@@ -59,7 +63,7 @@ export function activate() {
     }),
   )
 
-  const externalCommandFunction = (func: string) => ({ currentTarget }: CommandEvent) => {
+  const externalCommandFunction = (func: string) => ({ currentTarget }: CommandEvent<TextEditorElement>) => {
     // tslint:disable-next-line:no-floating-promises
     open(currentTarget.getModel(), false)
       .then((model) => (model[func] as () => void)())
@@ -67,13 +71,13 @@ export function activate() {
 
   disposables.add(
     atom.commands.add('atom-text-editor:not(.ide-haskell-repl)', {
-      'ide-haskell-repl:copy-selection-to-repl-input': ({ currentTarget }: CommandEvent) => {
+      'ide-haskell-repl:copy-selection-to-repl-input': ({ currentTarget }) => {
         const ed = currentTarget.getModel()
         const cmd = ed.getLastSelection().getText()
         // tslint:disable-next-line:no-floating-promises
         open(ed).then((model) => model.copyText(cmd))
       },
-      'ide-haskell-repl:run-selection-in-repl': ({ currentTarget }: CommandEvent) => {
+      'ide-haskell-repl:run-selection-in-repl': ({ currentTarget }) => {
         const ed = currentTarget.getModel()
         const cmd = ed.getLastSelection().getText()
         // tslint:disable-next-line:no-floating-promises
@@ -102,7 +106,7 @@ export function activate() {
 }
 
 export function createReplView(state: IViewState) {
-  const view = new IdeHaskellReplView({ upiPromise, state })
+  const view = new IdeHaskellReplView({ upiPromise, state, watchEditorPromise })
   editorMap.set(view.editor, view)
   return view
 }
@@ -195,8 +199,9 @@ export function autocompleteProvider_3_0_0() {
   return {
     scopeSelector: '.source.haskell',
     disableForScopeSelector: '.source.haskell .comment',
-    getTextEditorSelector: () => 'atom-text-editor.ide-haskell-repl',
+    // getTextEditorSelector: () => 'atom-text-editor.ide-haskell-repl',
     inclusionPriority: 0,
+    labels: ['ide-haskell-repl'],
     getSuggestions: async ({ editor, prefix }: { editor: TextEditor, prefix: string }) => {
       const view = editorMap.get(editor)
       if (!view) {
@@ -205,4 +210,8 @@ export function autocompleteProvider_3_0_0() {
       return view.getCompletions(prefix)
     },
   }
+}
+
+export function consumeWatchEditor(watchEditor: TWatchEditor) {
+  resolveWatchEditorPromise(watchEditor)
 }

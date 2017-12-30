@@ -3,6 +3,7 @@ import {
   Disposable,
   TextEditor,
   Point,
+  TWatchEditor,
 } from 'atom'
 import highlightSync = require('atom-highlight')
 import etch = require('etch')
@@ -28,6 +29,7 @@ interface IViewStateOutput extends IViewState {
 export interface IProps extends JSX.Props {
   upiPromise: Promise<UPI.IUPIInstance>
   state: IViewState
+  watchEditorPromise: Promise<TWatchEditor>
 }
 
 // tslint:disable-next-line:no-unsafe-any
@@ -87,6 +89,13 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
     this.disposables.add(new Disposable(() => { editorElement.removeEventListener('blur', this.didLoseFocus) }))
 
     if (this.props.state.focus) setImmediate(() => this.focus())
+    this.registerEditor()
+    .catch((e: Error) => {
+      atom.notifications.addError(e.toString(), {
+        detail: e.stack,
+        dismissable: true,
+      })
+    })
   }
 
   public focus() {
@@ -298,5 +307,10 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
     if (this.element.contains(event.relatedTarget as Node)) {
       this.refs.editor.element.focus()
     }
+  }
+
+  private async registerEditor() {
+    const we = await this.props.watchEditorPromise
+    this.disposables.add(we(this.editor, ['ide-haskell-repl']))
   }
 }

@@ -15,7 +15,7 @@
   "repository": "https://github.com/atom-haskell/ide-haskell-repl",
   "license": "MIT",
   "engines": {
-    "atom": ">=1.22.0 <2.0.0"
+    "atom": ">=1.23.0 <2.0.0"
   },
   "dependencies": {
     "atom-haskell-utils": "^1.0.1",
@@ -32,6 +32,11 @@
       "versions": {
         "^0.3.0": "consumeUPI"
       }
+    },
+    "autocomplete.watchEditor": {
+      "versions": {
+        "^1.0.0": "consumeWatchEditor"
+      }
     }
   },
   "providedServices": {
@@ -45,9 +50,9 @@
     "IdeHaskellReplView": "createReplView"
   },
   "devDependencies": {
-    "@types/atom": "^1.22.3",
+    "@types/atom": "^1.23.0",
     "@types/fuzzaldrin": "^2.1.1",
-    "@types/node": "^8.0.58",
+    "@types/node": "^8.5.2",
     "atom-haskell-tslint-rules": "^0.1.1",
     "tslint": "^5.8.0",
     "typescript": "^2.6.2"
