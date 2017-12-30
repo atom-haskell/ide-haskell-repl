@@ -58,9 +58,6 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
     const grammar = atom.grammars.grammarForScopeName('source.haskell')
     grammar && this.editor.setGrammar(grammar)
 
-    // tslint:disable-next-line:no-unsafe-any
-    this.disposables.add(atom.textEditors.add(this.editor))
-
     this.disposables.add(
       atom.workspace.observeTextEditors((editor: TextEditor) => {
         if (editor.getPath() === this.uri) {
