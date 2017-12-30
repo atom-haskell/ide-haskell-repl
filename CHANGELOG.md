@@ -1,3 +1,7 @@
+## 0.7.10
+* Atom 1.23 support (repl autocompletion broken)
+* Dispose of repl's TextEditor registration
+
 ## 0.7.9
 * Try hard to maintain editor focus
 * Update licensing information in README
