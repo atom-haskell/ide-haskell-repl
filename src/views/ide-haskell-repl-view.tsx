@@ -47,6 +47,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
   // tslint:disable-next-line:no-uninitialized
   private element: HTMLElement
   private disposables: CompositeDisposable
+  private destroyed: boolean = false
   constructor(public props: IProps) {
     super(props.upiPromise, props.state)
     this.disposables = new CompositeDisposable()
@@ -142,6 +143,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
 
   public async destroy() {
     await etch.destroy(this)
+    this.destroyed = true
     this.disposables.dispose()
     return super.destroy()
   }
@@ -308,6 +310,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
 
   private async registerEditor() {
     const we = await this.props.watchEditorPromise
+    if (this.destroyed) return
     this.disposables.add(we(this.editor, ['ide-haskell-repl']))
   }
 }
