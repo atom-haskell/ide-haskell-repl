@@ -1,10 +1,17 @@
 {
   "name": "ide-haskell-repl",
   "main": "./lib/ide-haskell-repl",
-  "version": "0.7.10",
+  "version": "0.7.11",
   "description": "Haskell REPL support for ide-haskell",
-  "keywords": ["ide-haskell", "ide", "haskell", "repl"],
-  "activationHooks": ["language-haskell:grammar-used"],
+  "keywords": [
+    "ide-haskell",
+    "ide",
+    "haskell",
+    "repl"
+  ],
+  "activationHooks": [
+    "language-haskell:grammar-used"
+  ],
   "repository": "https://github.com/atom-haskell/ide-haskell-repl",
   "license": "MIT",
   "engines": {
