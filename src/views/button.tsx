@@ -2,7 +2,7 @@ import { CompositeDisposable } from 'atom'
 import etch = require('etch')
 import { IdeHaskellReplView } from './ide-haskell-repl-view'
 
-interface IProps extends JSX.Props {
+export interface IProps extends JSX.Props {
   cls: string
   parent: IdeHaskellReplView
   tooltip: string | (() => string)
@@ -23,11 +23,13 @@ export class Button implements JSX.ElementClass {
     this.clslst.add(this.props.cls)
     etch.initialize(this)
     this.target = atom.views.getView(this.props.parent.editor)
-    this.disposables.add(atom.tooltips.add(this.element, {
-      title: this.props.tooltip,
-      keyBindingCommand: this.props.command,
-      keyBindingTarget: this.target,
-    }))
+    this.disposables.add(
+      atom.tooltips.add(this.element, {
+        title: this.props.tooltip,
+        keyBindingCommand: this.props.command,
+        keyBindingTarget: this.target,
+      }),
+    )
   }
 
   public render() {
@@ -47,7 +49,9 @@ export class Button implements JSX.ElementClass {
   }
 
   public async update(props: IProps) {
-    if (this.props.state === props.state) { return Promise.resolve() }
+    if (this.props.state === props.state) {
+      return Promise.resolve()
+    }
     this.props.state = props.state
     if (this.props.state) {
       this.clslst.add('enabled')

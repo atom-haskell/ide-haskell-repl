@@ -1,9 +1,4 @@
-import {
-  CompositeDisposable,
-  TextEditor,
-  Point,
-  TWatchEditor,
-} from 'atom'
+import { CompositeDisposable, TextEditor, Point, TWatchEditor } from 'atom'
 import highlightSync = require('atom-highlight')
 import etch = require('etch')
 
@@ -12,16 +7,17 @@ import {
   IdeHaskellReplBase,
   IViewState,
   IErrorItem,
+  IRequestResult,
 } from '../ide-haskell-repl-base'
 import { Button } from './button'
 import { Editor } from './editor'
 import * as UPI from 'atom-haskell-upi'
 
-export { IViewState, IContentItem }
+export { IViewState, IContentItem, IRequestResult }
 
 const termEscapeRx = /\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]/g
 
-interface IViewStateOutput extends IViewState {
+export interface IViewStateOutput extends IViewState {
   deserializer: string
 }
 
@@ -32,7 +28,8 @@ export interface IProps extends JSX.Props {
 }
 
 // tslint:disable-next-line:no-unsafe-any
-export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.ElementClass {
+export class IdeHaskellReplView extends IdeHaskellReplBase
+  implements JSX.ElementClass {
   // tslint:disable-next-line:no-uninitialized
   public refs: {
     output: HTMLElement
@@ -59,25 +56,32 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
     this.disposables.add(
       atom.workspace.observeTextEditors((editor: TextEditor) => {
         if (editor.getPath() === this.uri) {
-          this.disposables.add(editor.onDidSave(() => {
-            // tslint:disable-next-line:no-floating-promises
-            if (this.autoReloadRepeat) { this.ghciReloadRepeat() }
-          }))
+          this.disposables.add(
+            editor.onDidSave(() => {
+              if (this.autoReloadRepeat) {
+                // tslint:disable-next-line:no-floating-promises
+                this.ghciReloadRepeat()
+              }
+            }),
+          )
         }
       }),
     )
-    this.disposables.add(atom.config.observe('editor.fontSize', (fontSize: number) => {
-      this.outputFontSize = `${fontSize}px`
-    }))
-    this.disposables.add(atom.config.observe('editor.fontFamily', (fontFamily: string) => {
-      this.outputFontFamily = fontFamily
-    }))
+    this.disposables.add(
+      atom.config.observe('editor.fontSize', (fontSize: number) => {
+        this.outputFontSize = `${fontSize}px`
+      }),
+    )
+    this.disposables.add(
+      atom.config.observe('editor.fontFamily', (fontFamily: string) => {
+        this.outputFontFamily = fontFamily
+      }),
+    )
 
     etch.initialize(this)
 
     if (this.props.state.focus) setImmediate(() => this.focus())
-    this.registerEditor()
-    .catch((e: Error) => {
+    this.registerEditor().catch((e: Error) => {
       atom.notifications.addError(e.toString(), {
         detail: e.stack,
         dismissable: true,
@@ -93,7 +97,11 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
     const inp = this.editor.getBuffer().getText()
     this.editor.setText('')
     if (this.ghci && this.ghci.isBusy()) {
-      this.messages.push({ text: inp, hl: false, cls: 'ide-haskell-repl-input-text' })
+      this.messages.push({
+        text: inp,
+        hl: false,
+        cls: 'ide-haskell-repl-input-text',
+      })
       this.ghci.writeRaw(inp)
       return undefined
     } else {
@@ -149,12 +157,15 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
   }
 
   public async update() {
-    const atEnd = !!this.refs &&
-      (this.refs.output.scrollTop + this.refs.output.clientHeight >= this.refs.output.scrollHeight)
+    const atEnd =
+      !!this.refs &&
+      this.refs.output.scrollTop + this.refs.output.clientHeight >=
+        this.refs.output.scrollHeight
     const focused = this.isFocused()
     await etch.update(this)
     if (atEnd) {
-      this.refs.output.scrollTop = this.refs.output.scrollHeight - this.refs.output.clientHeight
+      this.refs.output.scrollTop =
+        this.refs.output.scrollHeight - this.refs.output.clientHeight
     }
     if (focused) {
       this.focus()
@@ -164,12 +175,19 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
   public render() {
     return (
       // tslint:disable:no-unsafe-any
-      <div className="ide-haskell-repl" tabIndex="-1" on={{ focus: this.focus }}>
+      <div
+        className="ide-haskell-repl"
+        tabIndex="-1"
+        on={{ focus: this.focus }}
+      >
         <div
           ref="output"
           className="ide-haskell-repl-output native-key-bindings"
           tabIndex="-1"
-          style={{ fontSize: this.outputFontSize, fontFamily: this.outputFontFamily }}
+          style={{
+            fontSize: this.outputFontSize,
+            fontFamily: this.outputFontFamily,
+          }}
         >
           {this.renderOutput()}
         </div>
@@ -213,7 +231,9 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
   }
 
   protected async onInitialLoad() {
-    if (!this.ghci) { throw new Error('No GHCI instance!') }
+    if (!this.ghci) {
+      throw new Error('No GHCI instance!')
+    }
     const res = await this.ghci.load(this.uri)
     this.prompt = res.prompt[1]
     this.errorsFromStderr(res.stderr)
@@ -222,27 +242,21 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
 
   private renderErrDiv() {
     if (!this.upi) {
-      return (
-        // tslint:disable:no-unsafe-any
-        <div className="ide-haskell-repl-error">
-          {this.renderErrors()}
-        </div>
-        // tslint:enable:no-unsafe-any
-      )
-    } else { return null } // tslint:disable-line: no-null-keyword
+      return <div className="ide-haskell-repl-error">{this.renderErrors()}</div>
+    } else {
+      // tslint:disable-next-line: no-null-keyword
+      return null
+    }
   }
 
   private renderErrors() {
-    return this.errors.map(err => this.renderError(err))
+    return this.errors.map((err) => this.renderError(err))
   }
 
   private renderError(error: IErrorItem) {
     const pos = error.position ? Point.fromObject(error.position) : undefined
     const uri = error.uri || '<interactive>'
-    const positionText =
-        pos
-          ? `${uri}: ${pos.row + 1}, ${pos.column + 1}`
-          : uri
+    const positionText = pos ? `${uri}: ${pos.row + 1}, ${pos.column + 1}` : uri
     const context = error.context || ''
     return (
       // tslint:disable:no-unsafe-any
@@ -262,8 +276,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
   }
 
   private renderOutput() {
-    let maxMsg = atom.config.get('ide-haskell-repl.maxMessages')
-    if (maxMsg === undefined) maxMsg = 100
+    const maxMsg = atom.config.get('ide-haskell-repl.maxMessages')
     if (maxMsg > 0) {
       this.messages = this.messages.slice(-maxMsg)
     }
@@ -273,7 +286,11 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
       const cleanText = text.replace(termEscapeRx, '')
       if (hl) {
         if (!hlcache) {
-          hlcache = msg.hlcache = highlightSync({ fileContents: cleanText, scopeName: 'source.haskell', nbsp: false })
+          hlcache = msg.hlcache = highlightSync({
+            fileContents: cleanText,
+            scopeName: 'source.haskell',
+            nbsp: false,
+          })
         }
         return (
           // tslint:disable-next-line:no-unsafe-any
@@ -287,8 +304,11 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
   }
 
   private isFocused() {
-    return !!this.refs && !!document.activeElement &&
-      (this.refs.editor.element.contains(document.activeElement))
+    return (
+      !!this.refs &&
+      !!document.activeElement &&
+      this.refs.editor.element.contains(document.activeElement)
+    )
   }
 
   private async registerEditor() {

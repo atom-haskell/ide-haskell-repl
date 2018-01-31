@@ -9,10 +9,7 @@ import {
 } from 'atom'
 import { IdeHaskellReplBase } from './ide-haskell-repl-base'
 import { IdeHaskellReplBg } from './ide-haskell-repl-bg'
-import {
-  IdeHaskellReplView,
-  IViewState,
-} from './views/ide-haskell-repl-view'
+import { IdeHaskellReplView, IViewState } from './views/ide-haskell-repl-view'
 import * as UPI from 'atom-haskell-upi'
 
 export * from './config'
@@ -21,9 +18,13 @@ let disposables: CompositeDisposable
 const editorMap: WeakMap<TextEditor, IdeHaskellReplView> = new WeakMap()
 const bgEditorMap: Map<string, IdeHaskellReplBg> = new Map()
 let resolveUPIPromise: (upi?: UPI.IUPIInstance) => void
-const upiPromise = new Promise<UPI.IUPIInstance>((resolve) => { resolveUPIPromise = resolve })
+const upiPromise = new Promise<UPI.IUPIInstance>((resolve) => {
+  resolveUPIPromise = resolve
+})
 let resolveWatchEditorPromise: (we: TWatchEditor) => void
-const watchEditorPromise = new Promise<TWatchEditor>((resolve) => { resolveWatchEditorPromise = resolve })
+const watchEditorPromise = new Promise<TWatchEditor>((resolve) => {
+  resolveWatchEditorPromise = resolve
+})
 let upi: UPI.IUPIInstance | undefined
 
 export function activate() {
@@ -41,13 +42,18 @@ export function activate() {
 
   disposables.add(
     atom.commands.add('atom-text-editor', {
-      'ide-haskell-repl:toggle': async ({ currentTarget }) => open(currentTarget.getModel()),
+      'ide-haskell-repl:toggle': async ({ currentTarget }) =>
+        open(currentTarget.getModel()),
     }),
   )
 
-  const commandFunction = (func: string) => ({ currentTarget }: CommandEvent<TextEditorElement>) => {
+  const commandFunction = (func: string) => ({
+    currentTarget,
+  }: CommandEvent<TextEditorElement>) => {
     const view = editorMap.get(currentTarget.getModel())
-    if (view) { (view[func] as () => void)() }
+    if (view) {
+      ;(view[func] as () => void)()
+    }
   }
 
   disposables.add(
@@ -57,16 +63,21 @@ export function activate() {
       'ide-haskell-repl:history-forward': commandFunction('historyForward'),
       'ide-haskell-repl:ghci-reload': commandFunction('ghciReload'),
       'ide-haskell-repl:reload-repeat': commandFunction('ghciReloadRepeat'),
-      'ide-haskell-repl:toggle-auto-reload-repeat': commandFunction('toggleAutoReloadRepeat'),
+      'ide-haskell-repl:toggle-auto-reload-repeat': commandFunction(
+        'toggleAutoReloadRepeat',
+      ),
       'ide-haskell-repl:ghci-interrupt': commandFunction('interrupt'),
       'ide-haskell-repl:clear-output': commandFunction('clear'),
     }),
   )
 
-  const externalCommandFunction = (func: string) => ({ currentTarget }: CommandEvent<TextEditorElement>) => {
+  const externalCommandFunction = (func: string) => ({
+    currentTarget,
+  }: CommandEvent<TextEditorElement>) => {
     // tslint:disable-next-line:no-floating-promises
-    open(currentTarget.getModel(), false)
-      .then((model) => (model[func] as () => void)())
+    open(currentTarget.getModel(), false).then((model) =>
+      (model[func] as () => void)(),
+    )
   }
 
   disposables.add(
@@ -84,25 +95,34 @@ export function activate() {
         open(ed, false).then(async (model) => model.runCommand(cmd))
       },
       'ide-haskell-repl:ghci-reload': externalCommandFunction('ghciReload'),
-      'ide-haskell-repl:reload-repeat': externalCommandFunction('ghciReloadRepeat'),
-      'ide-haskell-repl:toggle-auto-reload-repeat': externalCommandFunction('toggleAutoReloadRepeat'),
+      'ide-haskell-repl:reload-repeat': externalCommandFunction(
+        'ghciReloadRepeat',
+      ),
+      'ide-haskell-repl:toggle-auto-reload-repeat': externalCommandFunction(
+        'toggleAutoReloadRepeat',
+      ),
     }),
   )
 
-  disposables.add(atom.menu.add([{
-    label: 'Haskell IDE',
-    submenu: [{
-      label: 'Open REPL',
-      command: 'ide-haskell-repl:toggle',
-    }],
-  }]))
-
-  setTimeout(
-    () => {
-      if (resolveUPIPromise && !upi) { resolveUPIPromise() }
-    },
-    5000,
+  disposables.add(
+    atom.menu.add([
+      {
+        label: 'Haskell IDE',
+        submenu: [
+          {
+            label: 'Open REPL',
+            command: 'ide-haskell-repl:toggle',
+          },
+        ],
+      },
+    ]),
   )
+
+  setTimeout(() => {
+    if (resolveUPIPromise && !upi) {
+      resolveUPIPromise()
+    }
+  }, 5000)
 }
 
 export function createReplView(state: IViewState) {
@@ -111,7 +131,10 @@ export function createReplView(state: IViewState) {
   return view
 }
 
-async function open(editor: TextEditor, activate = true): Promise<IdeHaskellReplView> {
+async function open(
+  editor: TextEditor,
+  activate = true,
+): Promise<IdeHaskellReplView> {
   const grammar = editor && editor.getGrammar()
   const scope = grammar && grammar.scopeName
   let uri
@@ -153,7 +176,11 @@ export function consumeUPI(register: UPI.IUPIRegistration) {
   return upi
 }
 
-async function shouldShowTooltip(editor: TextEditor, crange: Range, _type: string) {
+async function shouldShowTooltip(
+  editor: TextEditor,
+  crange: Range,
+  _type: string,
+) {
   if (!atom.config.get('ide-haskell-repl.showTypes')) {
     return undefined
   }
@@ -202,7 +229,13 @@ export function autocompleteProvider_3_0_0() {
     // getTextEditorSelector: () => 'atom-text-editor.ide-haskell-repl',
     inclusionPriority: 0,
     labels: ['ide-haskell-repl'],
-    getSuggestions: async ({ editor, prefix }: { editor: TextEditor, prefix: string }) => {
+    getSuggestions: async ({
+      editor,
+      prefix,
+    }: {
+      editor: TextEditor
+      prefix: string
+    }) => {
       const view = editorMap.get(editor)
       if (!view) {
         return []

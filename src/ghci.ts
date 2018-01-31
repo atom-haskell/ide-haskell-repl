@@ -1,6 +1,10 @@
 import { hsEscapeString } from 'atom-haskell-utils'
 import { EOL } from 'os'
-import { InteractiveProcess, IRequestResult, TLineCallback } from './interactive-process'
+import {
+  InteractiveProcess,
+  IRequestResult,
+  TLineCallback,
+} from './interactive-process'
 
 export { TLineCallback, IRequestResult }
 
@@ -26,7 +30,7 @@ export class GHCI {
       const spawnArgs = [command, ...args]
       const cmdexe = atom.config.get('ide-haskell-repl.ghciWrapperPath')
       if (cmdexe) {
-        spawnArgs.unshift('\"' + cmdexe + '\"')
+        spawnArgs.unshift('"' + cmdexe + '"')
       }
       this.process = new InteractiveProcess(
         'chcp 65001 && ',
@@ -47,9 +51,9 @@ export class GHCI {
 
     this.readyPromise = this.process.request(
       `:set editor \"${atomPath}\"${EOL}` +
-      `:set prompt2 \"\"${EOL}` +
-      `:set prompt-cont \"\"${EOL}` +
-      `:set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"${EOL}`,
+        `:set prompt2 \"\"${EOL}` +
+        `:set prompt-cont \"\"${EOL}` +
+        `:set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"${EOL}`,
     )
   }
 
@@ -71,7 +75,10 @@ export class GHCI {
 
   public async interrupt() {
     if (this.process) {
-      if (atom.config.get('ide-haskell-repl.ghciWrapperPath') && process.platform === 'win32') {
+      if (
+        atom.config.get('ide-haskell-repl.ghciWrapperPath') &&
+        process.platform === 'win32'
+      ) {
         await this.process.request('\x03')
       } else {
         this.process.interrupt()
