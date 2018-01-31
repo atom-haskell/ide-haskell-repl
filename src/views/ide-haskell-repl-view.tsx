@@ -1,6 +1,5 @@
 import {
   CompositeDisposable,
-  Disposable,
   TextEditor,
   Point,
   TWatchEditor,
@@ -44,8 +43,6 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
   private outputFontFamily: string
   // tslint:disable-next-line:no-uninitialized
   private outputFontSize: string
-  // tslint:disable-next-line:no-uninitialized
-  private element: HTMLElement
   private disposables: CompositeDisposable
   private destroyed: boolean = false
   constructor(public props: IProps) {
@@ -76,15 +73,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
       this.outputFontFamily = fontFamily
     }))
 
-    this.disposables.add(atom.workspace.onDidChangeActivePaneItem((item) => {
-      if (item === this) this.focus()
-    }))
-
     etch.initialize(this)
-
-    const editorElement = this.refs.editor.element
-    editorElement.addEventListener('blur', this.didLoseFocus)
-    this.disposables.add(new Disposable(() => { editorElement.removeEventListener('blur', this.didLoseFocus) }))
 
     if (this.props.state.focus) setImmediate(() => this.focus())
     this.registerEditor()
@@ -96,7 +85,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
     })
   }
 
-  public focus() {
+  public focus = () => {
     this.refs && this.refs.editor && this.refs.editor.element.focus()
   }
 
@@ -175,7 +164,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
   public render() {
     return (
       // tslint:disable:no-unsafe-any
-      <div className="ide-haskell-repl">
+      <div className="ide-haskell-repl" tabIndex="-1" on={{ focus: this.focus }}>
         <div
           ref="output"
           className="ide-haskell-repl-output native-key-bindings"
@@ -300,12 +289,6 @@ export class IdeHaskellReplView extends IdeHaskellReplBase implements JSX.Elemen
   private isFocused() {
     return !!this.refs && !!document.activeElement &&
       (this.refs.editor.element.contains(document.activeElement))
-  }
-
-  private didLoseFocus = (event: FocusEvent) => {
-    if (this.element.contains(event.relatedTarget as Node)) {
-      this.refs.editor.element.focus()
-    }
   }
 
   private async registerEditor() {
