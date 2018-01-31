@@ -1,3 +1,10 @@
+## 0.7.11
+* Prettier sources
+* Fix spec, Travis
+* Simplify focus retention, allow selecting output
+* Don't try to watch editor if repl view is destroyed
+* Remove repl editor registration in atom.textEditors
+
 ## 0.7.10
 * Atom 1.23 support (repl autocompletion broken)
 * Dispose of repl's TextEditor registration
