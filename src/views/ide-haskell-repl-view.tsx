@@ -100,9 +100,10 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
       this.messages.push({
         text: inp,
         hl: false,
-        cls: 'ide-haskell-repl-input-text',
+        cls: 'ide-haskell-repl-input-stdin',
       })
       this.ghci.writeRaw(inp)
+      await this.update()
       return undefined
     } else {
       this.history.save(inp)

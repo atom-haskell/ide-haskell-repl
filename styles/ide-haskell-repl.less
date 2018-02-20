@@ -2,8 +2,8 @@
 //
 // See https://github.com/atom/atom-dark-ui/blob/master/styles/ui-variables.less
 // for a full listing of what's available.
-@import "ui-variables";
-@import "octicon-utf-codes";
+@import 'ui-variables';
+@import 'octicon-utf-codes';
 
 .output-icon(@name) {
   position: relative;
@@ -18,7 +18,7 @@
     display: block;
     content: @@name;
     position: absolute;
-    left: 0;
+    left: 0.1em;
     top: 0;
     height: 100%;
     line-height: 1em;
@@ -48,6 +48,10 @@ div.ide-haskell-repl {
     }
     .ide-haskell-repl-input-text {
       .output-icon(chevron-right);
+      background: @overlay-background-color;
+    }
+    .ide-haskell-repl-input-stdin {
+      .output-icon(playback-play);
       background: @overlay-background-color;
     }
     .ide-haskell-repl-message-text {
@@ -88,7 +92,7 @@ div.ide-haskell-repl {
     overflow: auto;
     background-color: @pane-item-background-color;
     border-top: double 3px @pane-item-border-color;
-    &>div {
+    & > div {
       white-space: pre;
     }
   }
@@ -99,7 +103,7 @@ div.ide-haskell-repl {
     line-height: 1.8em;
     color: @text-color-subtle;
     border: 1px solid @button-border-color;
-    background: fade(@button-background-color,33%);
+    background: fade(@button-background-color, 33%);
     cursor: pointer;
     vertical-align: middle;
     &:active {
@@ -128,7 +132,7 @@ div.ide-haskell-repl {
       &.enabled {
         color: @text-color-success;
       }
-      &:before{
+      &:before {
         content: @sync;
       }
     }
