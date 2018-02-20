@@ -21,6 +21,7 @@ export class GHCI {
   private process: InteractiveProcess
   private readyPromise: Promise<IRequestResult>
   private onDidExit: (code: number) => void
+  private _isProcessingAutocompletionRequest: boolean = false
   constructor(opts: IOpts) {
     const endPattern = /^#~IDEHASKELLREPL~(.*)~#$/
     const { cwd, atomPath, command, args, onExit } = opts
@@ -62,7 +63,7 @@ export class GHCI {
   }
 
   public isBusy() {
-    return this.process.isBusy()
+    return this.process.isBusy() && !this._isProcessingAutocompletionRequest
   }
 
   public async load(uri: string, callback?: TLineCallback) {
@@ -98,7 +99,12 @@ export class GHCI {
   }
 
   public async sendCompletionRequest(callback?: TLineCallback) {
-    return this.process.request(`:complete repl \"\"${EOL}`, callback)
+    this._isProcessingAutocompletionRequest = true
+    try {
+      return await this.process.request(`:complete repl \"\"${EOL}`, callback)
+    } finally {
+      this._isProcessingAutocompletionRequest = false
+    }
   }
 
   public destroy() {
