@@ -1,3 +1,7 @@
+## 0.7.13
+
+-   Don't send raw stdin if ghci is busy with autocompletion request
+
 ## 0.7.12
 
 -   Display stdin input straight away; tweak style a bit
