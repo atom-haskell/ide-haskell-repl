@@ -1,3 +1,7 @@
+## 0.7.12
+
+-   Display stdin input straight away; tweak style a bit
+
 ## 0.7.11
 * Prettier sources
 * Fix spec, Travis
