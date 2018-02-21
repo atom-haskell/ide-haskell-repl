@@ -127,6 +127,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
 
   public clear() {
     this.messages = []
+    this.clearErrors()
     // tslint:disable-next-line:no-floating-promises
     this.update()
   }

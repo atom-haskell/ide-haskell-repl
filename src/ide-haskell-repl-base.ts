@@ -205,6 +205,10 @@ export abstract class IdeHaskellReplBase {
     return filter(stdout, prefix).map((text) => ({ text: text.slice(1, -1) }))
   }
 
+  public clearErrors() {
+    this.setErrors([])
+  }
+
   protected async onInitialLoad() {
     return this.onLoad()
   }
@@ -214,7 +218,7 @@ export abstract class IdeHaskellReplBase {
   }
 
   protected async onLoad() {
-    // noop
+    return this.clearErrors()
   }
 
   protected async destroy() {
@@ -327,25 +331,21 @@ export abstract class IdeHaskellReplBase {
   }
 
   protected errorsFromStderr(stderr: string[]): boolean {
-    this.errors = this.errors.filter(({ _time }) => Date.now() - _time < 10000)
+    const errors = this.errors.filter(({ _time }) => Date.now() - _time < 10000)
     let hasErrors = false
     for (const err of stderr.join('\n').split(/\n(?=\S)/)) {
       if (err) {
         const error = this.parseMessage(err)
         if (error) {
-          this.errors.push(error)
+          errors.push(error)
           if (error.severity === 'error') {
             hasErrors = true
           }
         }
       }
     }
-    if (this.upi) {
-      this.upi.setMessages(this.errors)
-    } else {
-      // tslint:disable-next-line:no-floating-promises
-      this.update()
-    }
+    // tslint:disable-next-line:no-floating-promises
+    this.setErrors(errors)
     return hasErrors
   }
 
@@ -415,6 +415,16 @@ export abstract class IdeHaskellReplBase {
       }
     } else {
       return undefined
+    }
+  }
+
+  private setErrors(errors: IErrorItem[]) {
+    this.errors = errors
+    if (this.upi) {
+      this.upi.setMessages(this.errors)
+    } else {
+      // tslint:disable-next-line:no-floating-promises
+      this.update()
     }
   }
 }
