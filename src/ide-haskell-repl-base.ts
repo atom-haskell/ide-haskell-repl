@@ -159,14 +159,16 @@ export abstract class IdeHaskellReplBase {
     if (!this.ghci) {
       throw new Error('No GHCI instance!')
     }
-    const res = await this.ghci.reload()
+    const { prompt, stderr } = await this.ghci.reload()
+    this.prompt = prompt[1]
+    // tslint:disable-next-line:no-floating-promises
+    this.update()
     await this.onReload()
-    return res
+    return !this.errorsFromStderr(stderr)
   }
 
   public async ghciReloadRepeat() {
-    const { stderr } = await this.ghciReload()
-    if (!this.errorsFromStderr(stderr)) {
+    if (await this.ghciReload()) {
       const command = this.history.peek(-1)
       if (command) {
         return this.runCommand(command)
@@ -325,8 +327,8 @@ export abstract class IdeHaskellReplBase {
 
     const initres = await this.ghci.waitReady()
     this.prompt = initres.prompt[1]
-    this.errorsFromStderr(initres.stderr)
     await this.onInitialLoad()
+    this.errorsFromStderr(initres.stderr)
     return this.update()
   }
 

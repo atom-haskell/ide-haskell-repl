@@ -238,10 +238,10 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
     if (!this.ghci) {
       throw new Error('No GHCI instance!')
     }
+    await super.onInitialLoad()
     const res = await this.ghci.load(this.uri)
     this.prompt = res.prompt[1]
     this.errorsFromStderr(res.stderr)
-    await super.onInitialLoad()
     this.initialized = true
   }
 

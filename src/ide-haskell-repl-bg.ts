@@ -45,6 +45,7 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
   }
 
   protected async onLoad() {
+    await super.onLoad()
     await this.getAllTypes()
   }
 
@@ -52,9 +53,9 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
     if (!this.ghci) {
       throw new Error('No GHCI instance!')
     }
+    await super.onInitialLoad()
     await this.ghci.writeLines([':set +c'])
     await this.ghciReload()
-    return super.onInitialLoad()
   }
 
   protected async getAllTypes(): Promise<ITypeRecord[]> {
