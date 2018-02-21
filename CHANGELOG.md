@@ -1,3 +1,7 @@
+## 0.7.15
+
+-   Fix error clear\/show races, fix reload command
+
 ## 0.7.14
 
 -   Do not allow input before REPL is initialized
