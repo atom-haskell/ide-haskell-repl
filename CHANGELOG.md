@@ -1,3 +1,8 @@
+## 0.7.14
+
+-   Do not allow input before REPL is initialized
+-   Clear errors on reload
+
 ## 0.7.13
 
 -   Don't send raw stdin if ghci is busy with autocompletion request
