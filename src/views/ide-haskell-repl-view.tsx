@@ -42,6 +42,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
   private outputFontSize: string
   private disposables: CompositeDisposable
   private destroyed: boolean = false
+  private initialized: boolean = false
   constructor(public props: IProps) {
     super(props.upiPromise, props.state)
     this.disposables = new CompositeDisposable()
@@ -94,6 +95,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
   }
 
   public async execCommand() {
+    if (!this.initialized) return undefined
     const inp = this.editor.getBuffer().getText()
     this.editor.setText('')
     if (this.ghci && this.ghci.isBusy()) {
@@ -239,7 +241,8 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
     const res = await this.ghci.load(this.uri)
     this.prompt = res.prompt[1]
     this.errorsFromStderr(res.stderr)
-    return super.onInitialLoad()
+    await super.onInitialLoad()
+    this.initialized = true
   }
 
   private renderErrDiv() {
