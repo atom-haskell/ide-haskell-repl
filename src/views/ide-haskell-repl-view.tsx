@@ -30,16 +30,13 @@ export interface IProps extends JSX.Props {
 // tslint:disable-next-line:no-unsafe-any
 export class IdeHaskellReplView extends IdeHaskellReplBase
   implements JSX.ElementClass {
-  // tslint:disable-next-line:no-uninitialized
-  public refs: {
+  public refs!: {
     output: HTMLElement
     editor: Editor
   }
   public editor: TextEditor
-  // tslint:disable-next-line:no-uninitialized
-  private outputFontFamily: string
-  // tslint:disable-next-line:no-uninitialized
-  private outputFontSize: string
+  private outputFontFamily!: string
+  private outputFontSize!: string
   private disposables: CompositeDisposable
   private destroyed: boolean = false
   private initialized: boolean = false
@@ -51,8 +48,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
       lineNumberGutterVisible: false,
       softWrapped: true,
     })
-    const grammar = atom.grammars.grammarForScopeName('source.haskell')
-    grammar && this.editor.setGrammar(grammar)
+    atom.grammars.assignLanguageMode(this.editor.getBuffer(), 'source.haskell')
 
     this.disposables.add(
       atom.workspace.observeTextEditors((editor: TextEditor) => {
@@ -67,13 +63,9 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
           )
         }
       }),
-    )
-    this.disposables.add(
       atom.config.observe('editor.fontSize', (fontSize: number) => {
         this.outputFontSize = `${fontSize}px`
       }),
-    )
-    this.disposables.add(
       atom.config.observe('editor.fontFamily', (fontFamily: string) => {
         this.outputFontFamily = fontFamily
       }),

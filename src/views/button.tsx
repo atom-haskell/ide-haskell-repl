@@ -12,8 +12,7 @@ export interface IProps extends JSX.Props {
 
 // tslint:disable-next-line:no-unsafe-any
 export class Button implements JSX.ElementClass {
-  // tslint:disable-next-line:no-uninitialized
-  private element: HTMLElement
+  private element!: HTMLElement
   private target: HTMLElement
   private disposables: CompositeDisposable
   private clslst: Set<string>

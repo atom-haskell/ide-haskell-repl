@@ -17,7 +17,6 @@ export interface IOpts {
 }
 
 export class GHCI {
-  // tslint:disable-next-line:no-uninitialized
   private process: InteractiveProcess
   private readyPromise: Promise<IRequestResult>
   private onDidExit: (code: number) => void

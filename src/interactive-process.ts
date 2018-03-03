@@ -24,11 +24,9 @@ export type TLineType = ILineIO | ILinePrompt
 export type TLineCallback = (line: TLineType) => void
 
 export class InteractiveProcess {
-  // tslint:disable-next-line:no-uninitialized
-  private process: CP.ChildProcess
+  private process?: CP.ChildProcess
   private requestQueue: Queue
   private endPattern: RegExp
-  private running: boolean
   constructor(
     cmd: string,
     args: string[],
@@ -37,7 +35,6 @@ export class InteractiveProcess {
     endPattern: RegExp,
   ) {
     this.endPattern = endPattern
-    this.running = false
     this.requestQueue = new Queue(1, 100)
 
     opts.stdio = ['pipe', 'pipe', 'pipe']
@@ -48,17 +45,15 @@ export class InteractiveProcess {
       this.process.stderr.setMaxListeners(100)
       this.process.stdout.setEncoding('utf-8')
       this.process.stderr.setEncoding('utf-8')
-      this.running = true
 
       this.process.on('exit', (code) => {
-        this.running = false
         onDidExit(code)
+        this.process = undefined
         this.destroy()
       })
     } catch (error) {
       atom.notifications.addFatalError('Error spawning REPL', {
         dismissable: true,
-        // tslint:disable-next-line:no-unsafe-any
         stack: error.stack,
         detail: `Tried to run "${cmd}" with arguments: ${args}`,
       })
@@ -72,7 +67,7 @@ export class InteractiveProcess {
     endPattern: RegExp = this.endPattern,
   ): Promise<IRequestResult> {
     return this.requestQueue.add(async () => {
-      if (!this.running) {
+      if (!this.process) {
         throw new Error('Interactive process is not running')
       }
 
@@ -99,8 +94,9 @@ export class InteractiveProcess {
         res.stderr.push(line)
       }
 
+      const stderr = this.process.stderr
       setImmediate(async () => {
-        for await (const line of this.readgen(this.process.stderr, isEnded)) {
+        for await (const line of this.readgen(stderr, isEnded)) {
           stdErrLine(line)
         }
       })
@@ -131,13 +127,14 @@ export class InteractiveProcess {
   }
 
   public destroy() {
-    if (this.running) {
+    if (this.process) {
       tkill(this.process.pid, 'SIGTERM')
+      this.process = undefined
     }
   }
 
   public interrupt() {
-    if (this.running) {
+    if (this.process) {
       tkill(this.process.pid, 'SIGINT')
     }
   }
@@ -147,7 +144,7 @@ export class InteractiveProcess {
   }
 
   public writeStdin(str: string) {
-    if (!this.running) {
+    if (!this.process) {
       throw new Error('Interactive process is not running')
     }
     this.process.stdin.write(str)
