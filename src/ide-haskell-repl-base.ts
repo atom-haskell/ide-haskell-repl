@@ -202,9 +202,12 @@ export abstract class IdeHaskellReplBase {
     if (!this.ghci) {
       throw new Error('No GHCI instance!')
     }
-    const { stdout } = await this.ghci.sendCompletionRequest()
-    stdout.shift()
-    return filter(stdout, prefix).map((text) => ({ text: text.slice(1, -1) }))
+    const res = await this.ghci.sendCompletionRequest()
+    if (!res) return undefined
+    res.stdout.shift()
+    return filter(res.stdout, prefix).map((text) => ({
+      text: text.slice(1, -1),
+    }))
   }
 
   public clearErrors() {

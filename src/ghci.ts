@@ -5,6 +5,7 @@ import {
   IRequestResult,
   TLineCallback,
 } from './interactive-process'
+import Queue = require('promise-queue')
 
 export { TLineCallback, IRequestResult }
 
@@ -20,7 +21,7 @@ export class GHCI {
   private process: InteractiveProcess
   private readyPromise: Promise<IRequestResult>
   private onDidExit: (code: number) => void
-  private _isProcessingAutocompletionRequest: boolean = false
+  private commandQueue: Queue = new Queue(1, 100)
   constructor(opts: IOpts) {
     const endPattern = /^#~IDEHASKELLREPL~(.*)~#$/
     const { cwd, atomPath, command, args, onExit } = opts
@@ -49,7 +50,7 @@ export class GHCI {
       )
     }
 
-    this.readyPromise = this.process.request(
+    this.readyPromise = this.request(
       `:set editor \"${atomPath}\"${EOL}` +
         `:set prompt2 \"\"${EOL}` +
         `:set prompt-cont \"\"${EOL}` +
@@ -62,15 +63,15 @@ export class GHCI {
   }
 
   public isBusy() {
-    return this.process.isBusy() && !this._isProcessingAutocompletionRequest
+    return this.commandQueue.getPendingLength() > 0
   }
 
   public async load(uri: string, callback?: TLineCallback) {
-    return this.process.request(`:load ${hsEscapeString(uri)}${EOL}`, callback)
+    return this.request(`:load ${hsEscapeString(uri)}${EOL}`, callback)
   }
 
   public async reload(callback?: TLineCallback) {
-    return this.process.request(`:reload${EOL}`, callback)
+    return this.request(`:reload${EOL}`, callback)
   }
 
   public async interrupt() {
@@ -79,7 +80,7 @@ export class GHCI {
         atom.config.get('ide-haskell-repl.ghciWrapperPath') &&
         process.platform === 'win32'
       ) {
-        await this.process.request('\x03')
+        await this.request('\x03')
       } else {
         this.process.interrupt()
       }
@@ -87,23 +88,18 @@ export class GHCI {
   }
 
   public async writeLines(lines: string[], callback?: TLineCallback) {
-    return this.process.request(
-      `:{${EOL}${lines.join(EOL)}${EOL}:}${EOL}`,
-      callback,
-    )
+    return this.request(`:{${EOL}${lines.join(EOL)}${EOL}:}${EOL}`, callback)
   }
 
   public writeRaw(raw: string) {
     this.process.writeStdin(raw)
   }
 
-  public async sendCompletionRequest(callback?: TLineCallback) {
-    this._isProcessingAutocompletionRequest = true
-    try {
-      return await this.process.request(`:complete repl \"\"${EOL}`, callback)
-    } finally {
-      this._isProcessingAutocompletionRequest = false
-    }
+  public async sendCompletionRequest() {
+    if (this.isBusy()) return undefined
+    // NOTE: this *has* to go around commandQueue, since completion requests
+    // shouldn't affect busy status
+    return this.process.request(`:complete repl \"\"${EOL}`)
   }
 
   public destroy() {
@@ -113,5 +109,11 @@ export class GHCI {
   private didExit(code: number) {
     this.onDidExit(code)
     this.destroy()
+  }
+
+  private async request(command: string, lineCallback?: TLineCallback) {
+    return this.commandQueue.add(async () =>
+      this.process.request(command, lineCallback),
+    )
   }
 }
