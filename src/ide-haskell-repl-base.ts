@@ -85,6 +85,8 @@ export abstract class IdeHaskellReplBase {
     cabalFile: AtomTypes.File,
   ): Promise<Util.IDotCabal | null> {
     const cabalContents = await cabalFile.read()
+    // tslint:disable-next-line:no-null-keyword
+    if (cabalContents === null) return null
     return Util.parseDotCabal(cabalContents)
   }
 
@@ -93,6 +95,7 @@ export abstract class IdeHaskellReplBase {
     uri: string,
   ): Promise<string[]> {
     const cabalContents = await cabalFile.read()
+    if (cabalContents === null) return []
     const cwd = cabalFile.getParent()
     return Util.getComponentFromFile(cabalContents, cwd.relativize(uri))
   }

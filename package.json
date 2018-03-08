@@ -59,7 +59,7 @@
     "IdeHaskellReplView": "createReplView"
   },
   "devDependencies": {
-    "@types/atom": "~1.24.1",
+    "@types/atom": "~1.24.2",
     "@types/chai": "^4.1.2",
     "@types/fuzzaldrin": "^2.1.1",
     "@types/mocha": "^2.2.48",
