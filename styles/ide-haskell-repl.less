@@ -79,6 +79,11 @@ div.ide-haskell-repl {
     .repl-prompt {
       flex-grow: 1;
       flex-shrink: 1;
+      &.ide-haskell-repl-busy::before {
+        font-family: 'Octicons Regular';
+        content: @hourglass;
+        margin: 0 0.5em;
+      }
     }
     button {
       flex-grow: 0;

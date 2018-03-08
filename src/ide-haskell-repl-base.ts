@@ -151,6 +151,8 @@ export abstract class IdeHaskellReplBase {
       // tslint:disable-next-line:no-floating-promises
       this.update()
     })
+    // tslint:disable-next-line:no-floating-promises
+    this.update()
     this.errorsFromStderr(res.stderr)
     return res
   }

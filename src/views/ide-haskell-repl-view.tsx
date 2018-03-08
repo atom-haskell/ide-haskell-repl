@@ -266,9 +266,11 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
   }
 
   private renderPrompt() {
+    const busyClass =
+      this.ghci && this.ghci.isBusy() ? ' ide-haskell-repl-busy' : ''
     return (
       // tslint:disable-next-line:no-unsafe-any
-      <div class="repl-prompt">{this.prompt || ''}&gt;</div>
+      <div class={`repl-prompt${busyClass}`}>{this.prompt || ''}&gt;</div>
     )
   }
 
