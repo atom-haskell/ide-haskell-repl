@@ -1,3 +1,11 @@
+## 0.7.16
+
+-   Add busy indicator
+-   Fix stdin input not showing up (#62)
+-   Fix spec runner
+-   Pin typescript version
+-   Bump dependencies
+
 ## 0.7.15
 
 -   Fix error clear\/show races, fix reload command
