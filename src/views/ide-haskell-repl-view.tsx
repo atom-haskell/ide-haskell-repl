@@ -22,7 +22,7 @@ export interface IViewStateOutput extends IViewState {
 }
 
 export interface IProps extends JSX.Props {
-  upiPromise: Promise<UPI.IUPIInstance>
+  upiPromise: Promise<UPI.IUPIInstance | undefined>
   state: IViewState
   watchEditorPromise: Promise<TWatchEditor>
 }

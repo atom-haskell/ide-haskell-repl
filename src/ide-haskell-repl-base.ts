@@ -39,7 +39,7 @@ export abstract class IdeHaskellReplBase {
   protected uri: string
 
   constructor(
-    upiPromise: Promise<UPI.IUPIInstance>,
+    upiPromise: Promise<UPI.IUPIInstance | undefined>,
     {
       uri,
       content,
@@ -237,7 +237,9 @@ export abstract class IdeHaskellReplBase {
     }
   }
 
-  protected async initialize(upiPromise: Promise<UPI.IUPIInstance>) {
+  protected async initialize(
+    upiPromise: Promise<UPI.IUPIInstance | undefined>,
+  ) {
     this.upi = await upiPromise
     if (!this.upi) {
       return this.runREPL()

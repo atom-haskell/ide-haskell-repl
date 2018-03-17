@@ -18,7 +18,7 @@ let disposables: CompositeDisposable
 const editorMap: WeakMap<TextEditor, IdeHaskellReplView> = new WeakMap()
 const bgEditorMap: Map<string, IdeHaskellReplBg> = new Map()
 let resolveUPIPromise: (upi?: UPI.IUPIInstance) => void
-const upiPromise = new Promise<UPI.IUPIInstance>((resolve) => {
+const upiPromise = new Promise<UPI.IUPIInstance | undefined>((resolve) => {
   resolveUPIPromise = resolve
 })
 let resolveWatchEditorPromise: (we: TWatchEditor) => void
@@ -190,11 +190,7 @@ async function shouldShowTooltip(
   const hash = `${cwd.getPath()}::${cabal && cabal.name}::${comp && comp[0]}`
   let bg = bgEditorMap.get(hash)
   if (!bg) {
-    if (!editor.getPath()) {
-      return undefined
-    }
-    await upiPromise
-    bg = new IdeHaskellReplBg(upiPromise, { uri: editor.getPath() })
+    bg = new IdeHaskellReplBg(upiPromise, { uri: path })
     bgEditorMap.set(hash, bg)
   }
   return bg.showTypeAt(path, crange)
@@ -213,11 +209,7 @@ async function didSaveBuffer(buffer: TextBuffer) {
     // tslint:disable-next-line:no-floating-promises
     bgt.ghciReload()
   } else {
-    if (!buffer.getPath()) {
-      return
-    }
-    await upiPromise
-    const bg = new IdeHaskellReplBg(upiPromise, { uri: buffer.getPath() })
+    const bg = new IdeHaskellReplBg(upiPromise, { uri: path })
     bgEditorMap.set(hash, bg)
   }
 }
