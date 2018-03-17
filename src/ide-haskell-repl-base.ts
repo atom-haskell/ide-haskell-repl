@@ -278,42 +278,37 @@ export abstract class IdeHaskellReplBase {
     this.cwd = cwd
 
     let commandPath: string
-    let args: string[]
+    let commandArgs: string[]
     let extraArgs: (x: string) => string
     switch (builder) {
       case 'cabal':
         commandPath = atom.config.get('ide-haskell-repl.cabalPath')
-        args = ['repl']
+        commandArgs = ['repl']
         extraArgs = (x: string) => `--ghc-option=${x}`
         break
       case 'nix-build':
       case 'cabal-new':
         commandPath = atom.config.get('ide-haskell-repl.cabalPath')
-        args = ['new-repl']
+        commandArgs = ['new-repl']
         extraArgs = (x: string) => `--ghc-option=${x}`
         break
       case 'stack':
         commandPath = atom.config.get('ide-haskell-repl.stackPath')
-        args = ['ghci']
+        commandArgs = ['ghci']
         extraArgs = (x: string) => `--ghci-options="${x}"`
         break
       case 'ghci':
       case 'none':
         commandPath = atom.config.get('ide-haskell-repl.ghciPath')
-        args = []
+        commandArgs = []
         extraArgs = (x) => x
         break
       default:
         throw new Error(`Unknown builder ${builder}`)
     }
 
-    if (!args[builder]) {
-      throw new Error(`Unknown builder ${builder}`)
-    }
-    const commandArgs = args[builder]
-
     const extraArgsList = atom.config.get('ide-haskell-repl.extraArgs') || []
-    commandArgs.push(...extraArgsList.map(extraArgs[builder]))
+    commandArgs.push(...extraArgsList.map(extraArgs))
 
     if (comp && cabal) {
       if (builder === 'stack') {
