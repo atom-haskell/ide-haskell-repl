@@ -6,6 +6,7 @@ import {
   IViewState,
 } from './ide-haskell-repl-base'
 import * as UPI from 'atom-haskell-upi'
+import * as path from 'path'
 
 export { IViewState, IContentItem }
 
@@ -71,7 +72,15 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
         continue
       }
       const m = match.slice(1)
-      const uri = m[0]
+      let uri = m[0]
+      if (!path.isAbsolute(uri)) {
+        if (this.cwd) {
+          uri = this.cwd.getFile(uri).getPath()
+        } else {
+          const rd = await IdeHaskellReplBase.getRootDir(this.uri)
+          uri = rd.getFile(uri).getPath()
+        }
+      }
       const type = m[5]
       const [rowstart, colstart, rowend, colend] = m
         .slice(1)
