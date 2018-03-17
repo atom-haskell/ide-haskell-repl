@@ -247,7 +247,7 @@ export abstract class IdeHaskellReplBase {
       const builder = await this.upi.getOthersConfigParam<{
         name: 'cabal' | 'stack' | 'cabal-nix' | 'none'
       }>('ide-haskell-cabal', 'builder')
-      return this.runREPL(builder && builder.name)
+      return await this.runREPL(builder && builder.name)
     } catch (e) {
       const error = e as Error
       if (error) {
