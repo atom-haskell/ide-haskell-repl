@@ -269,13 +269,8 @@ export abstract class IdeHaskellReplBase {
   }
 
   protected async runREPL(inbuilder?: string) {
-    let builder = inbuilder || atom.config.get('ide-haskell-repl.defaultRepl')
+    const builder = inbuilder || atom.config.get('ide-haskell-repl.defaultRepl')
     if (!builder) throw new Error(`Default REPL not specified`)
-    const subst: { [i: string]: string | undefined } = {
-      'nix-build': 'cabal',
-      none: 'ghci',
-    }
-    builder = subst[builder] || builder
 
     const { cwd, comp, cabal } = await IdeHaskellReplBase.componentFromURI(
       this.uri,
@@ -283,29 +278,33 @@ export abstract class IdeHaskellReplBase {
     this.cwd = cwd
 
     let commandPath: string
+    let args: string[]
+    let extraArgs: (x: string) => string
     switch (builder) {
       case 'cabal':
         commandPath = atom.config.get('ide-haskell-repl.cabalPath')
+        args = ['repl']
+        extraArgs = (x: string) => `--ghc-option=${x}`
+        break
+      case 'nix-build':
+      case 'cabal-new':
+        commandPath = atom.config.get('ide-haskell-repl.cabalPath')
+        args = ['new-repl']
+        extraArgs = (x: string) => `--ghc-option=${x}`
         break
       case 'stack':
         commandPath = atom.config.get('ide-haskell-repl.stackPath')
+        args = ['ghci']
+        extraArgs = (x: string) => `--ghci-options="${x}"`
         break
       case 'ghci':
+      case 'none':
         commandPath = atom.config.get('ide-haskell-repl.ghciPath')
+        args = []
+        extraArgs = (x) => x
         break
       default:
         throw new Error(`Unknown builder ${builder}`)
-    }
-
-    const args = {
-      stack: ['ghci'],
-      cabal: ['repl'],
-      ghci: [] as string[],
-    }
-    const extraArgs = {
-      stack: (x: string) => `--ghci-options="${x}"`,
-      cabal: (x: string) => `--ghc-option=${x}`,
-      ghci: (x: string) => x,
     }
 
     if (!args[builder]) {
