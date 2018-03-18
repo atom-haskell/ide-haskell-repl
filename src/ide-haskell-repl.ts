@@ -14,7 +14,7 @@ export * from './config'
 let disposables: CompositeDisposable
 const editorMap: WeakMap<TextEditor, IdeHaskellReplView> = new WeakMap()
 let resolveUPIPromise: (upi?: UPIConsumer) => void
-let upiPromise: Promise<UPIConsumer | undefined>
+let upiPromise: Promise<UPIConsumer | undefined> | undefined
 let resolveWatchEditorPromise: (we: TWatchEditor) => void
 const watchEditorPromise = new Promise<TWatchEditor>((resolve) => {
   resolveWatchEditorPromise = resolve
@@ -22,9 +22,8 @@ const watchEditorPromise = new Promise<TWatchEditor>((resolve) => {
 
 export function activate() {
   disposables = new CompositeDisposable()
-  upiPromise = new Promise<UPIConsumer | undefined>((resolve) => {
-    resolveUPIPromise = resolve
-  })
+  // tslint:disable-next-line:no-floating-promises
+  initUpiPromise()
 
   disposables.add(
     atom.workspace.addOpener((uriToOpen: string) => {
@@ -120,6 +119,7 @@ export function activate() {
 }
 
 export function createReplView(state: IViewState) {
+  const upiPromise = initUpiPromise()
   const view = new IdeHaskellReplView({ upiPromise, state, watchEditorPromise })
   editorMap.set(view.editor, view)
   return view
@@ -145,6 +145,7 @@ async function open(
 }
 
 export function deactivate() {
+  upiPromise = undefined
   disposables.dispose()
 }
 
@@ -180,4 +181,13 @@ export function autocompleteProvider_3_0_0() {
 
 export function consumeWatchEditor(watchEditor: TWatchEditor) {
   resolveWatchEditorPromise(watchEditor)
+}
+
+async function initUpiPromise() {
+  if (!upiPromise) {
+    upiPromise = new Promise<UPIConsumer | undefined>((resolve) => {
+      resolveUPIPromise = resolve
+    })
+  }
+  return upiPromise
 }
