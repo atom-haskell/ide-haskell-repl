@@ -5,6 +5,7 @@ import { CommandHistory } from './command-history'
 import { GHCI, IRequestResult } from './ghci'
 import * as UPI from 'atom-haskell-upi'
 import * as AtomTypes from 'atom'
+import { UPIConsumer } from './upiConsumer'
 
 export { IRequestResult }
 
@@ -30,28 +31,27 @@ export interface IErrorItem extends UPI.IResultItem {
 export abstract class IdeHaskellReplBase {
   protected ghci?: GHCI
   protected cwd?: AtomTypes.Directory
-  protected prompt: string
-  protected upi?: UPI.IUPIInstance
+  protected prompt: string = ''
+  protected upi?: UPIConsumer
   protected messages: IContentItem[]
-  protected errors: IErrorItem[]
+  protected errors: IErrorItem[] = []
   protected _autoReloadRepeat: boolean
   protected history: CommandHistory
   protected uri: string
 
   constructor(
-    upiPromise: Promise<UPI.IUPIInstance | undefined>,
+    upiPromise: Promise<UPIConsumer | undefined>,
     {
       uri,
       content,
       history,
       autoReloadRepeat = atom.config.get('ide-haskell-repl.autoReloadRepeat'),
     }: IViewState,
+    protected readonly errorSrouce: string,
   ) {
     this.uri = uri || ''
     this.history = new CommandHistory(history)
     this._autoReloadRepeat = !!autoReloadRepeat
-    this.errors = []
-    this.prompt = ''
 
     this.messages = content || []
 
@@ -232,23 +232,20 @@ export abstract class IdeHaskellReplBase {
   }
 
   protected async destroy() {
+    this.clearErrors()
     if (this.ghci) {
       this.ghci.destroy()
     }
   }
 
-  protected async initialize(
-    upiPromise: Promise<UPI.IUPIInstance | undefined>,
-  ) {
+  protected async initialize(upiPromise: Promise<UPIConsumer | undefined>) {
     this.upi = await upiPromise
     if (!this.upi) {
       return this.runREPL()
     }
 
     try {
-      const builder = await this.upi.getOthersConfigParam<{
-        name: 'cabal' | 'stack' | 'cabal-nix' | 'none'
-      }>('ide-haskell-cabal', 'builder')
+      const builder = await this.upi.getBuilder()
       return await this.runREPL(builder && builder.name)
     } catch (e) {
       const error = e as Error
@@ -338,21 +335,27 @@ export abstract class IdeHaskellReplBase {
   }
 
   protected errorsFromStderr(stderr: string[]): boolean {
-    const errors = this.errors.filter(({ _time }) => Date.now() - _time < 10000)
+    const errors = this.errors
     let hasErrors = false
-    for (const err of stderr.join('\n').split(/\n(?=\S)/)) {
+    let newMessages = false
+    let newErrors = false
+    for (const err of stderr
+      .filter((x) => !/^\s*\d* \|/.test(x))
+      .join('\n')
+      .split(/\n(?=\S)/)) {
       if (err) {
         const error = this.parseMessage(err)
         if (error) {
           errors.push(error)
-          if (error.severity === 'error') {
-            hasErrors = true
-          }
+          if (error.severity === 'error') hasErrors = true
+
+          if (error.severity === 'repl') newMessages = true
+          else newErrors = true
         }
       }
     }
     // tslint:disable-next-line:no-floating-promises
-    this.setErrors(errors)
+    this.setErrors(errors, newErrors, newMessages)
     return hasErrors
   }
 
@@ -425,10 +428,24 @@ export abstract class IdeHaskellReplBase {
     }
   }
 
-  private setErrors(errors: IErrorItem[]) {
+  private setErrors(
+    errors: IErrorItem[],
+    newErrors = true,
+    newMessages = true,
+  ) {
     this.errors = errors
     if (this.upi) {
-      this.upi.setMessages(this.errors)
+      if (newMessages) {
+        this.upi.setMessages(
+          this.errors.filter(({ severity }) => severity === 'repl'),
+        )
+      }
+      if (newErrors) {
+        this.upi.setErrors(
+          this.errorSrouce,
+          this.errors.filter(({ severity }) => severity !== 'repl'),
+        )
+      }
     } else {
       // tslint:disable-next-line:no-floating-promises
       this.update()

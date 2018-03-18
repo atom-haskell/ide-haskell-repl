@@ -11,7 +11,7 @@ import {
 } from '../ide-haskell-repl-base'
 import { Button } from './button'
 import { Editor } from './editor'
-import * as UPI from 'atom-haskell-upi'
+import { UPIConsumer } from '../upiConsumer'
 
 export { IViewState, IContentItem, IRequestResult }
 
@@ -22,7 +22,7 @@ export interface IViewStateOutput extends IViewState {
 }
 
 export interface IProps extends JSX.Props {
-  upiPromise: Promise<UPI.IUPIInstance | undefined>
+  upiPromise: Promise<UPIConsumer | undefined>
   state: IViewState
   watchEditorPromise: Promise<TWatchEditor>
 }
@@ -41,7 +41,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
   private destroyed: boolean = false
   private initialized: boolean = false
   constructor(public props: IProps) {
-    super(props.upiPromise, props.state)
+    super(props.upiPromise, props.state, `view:${props.state.uri}`)
     this.disposables = new CompositeDisposable()
 
     this.editor = atom.workspace.buildTextEditor({

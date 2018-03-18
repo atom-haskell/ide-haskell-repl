@@ -5,8 +5,8 @@ import {
   IdeHaskellReplBase,
   IViewState,
 } from './ide-haskell-repl-base'
-import * as UPI from 'atom-haskell-upi'
 import * as path from 'path'
+import { UPIConsumer } from './upiConsumer'
 
 export { IViewState, IContentItem }
 
@@ -18,11 +18,8 @@ export interface ITypeRecord {
 
 export class IdeHaskellReplBg extends IdeHaskellReplBase {
   private types?: ITypeRecord[]
-  constructor(
-    upiPromise: Promise<UPI.IUPIInstance | undefined>,
-    state: IViewState,
-  ) {
-    super(upiPromise, state)
+  constructor(consumer: UPIConsumer, state: IViewState) {
+    super(Promise.resolve(consumer), state, `bg:${state.uri}`)
   }
 
   public showTypeAt(uri: string, inrange: Range) {
@@ -51,15 +48,6 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
   protected async onLoad() {
     await super.onLoad()
     await this.getAllTypes()
-  }
-
-  protected async onInitialLoad() {
-    if (!this.ghci) {
-      throw new Error('No GHCI instance!')
-    }
-    await super.onInitialLoad()
-    await this.ghci.writeLines([':set +c'])
-    await this.ghciReload()
   }
 
   protected async getAllTypes(): Promise<ITypeRecord[]> {
