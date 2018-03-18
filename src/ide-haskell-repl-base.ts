@@ -29,6 +29,7 @@ export interface IErrorItem extends UPI.IResultItem {
 }
 
 export abstract class IdeHaskellReplBase {
+  public readonly readyPromise: Promise<void>
   protected ghci?: GHCI
   protected cwd?: AtomTypes.Directory
   protected prompt: string = ''
@@ -55,8 +56,7 @@ export abstract class IdeHaskellReplBase {
 
     this.messages = content || []
 
-    // tslint:disable-next-line:no-floating-promises
-    this.initialize(upiPromise)
+    this.readyPromise = this.initialize(upiPromise)
   }
 
   public static async getRootDir(uri: string) {

@@ -1,5 +1,4 @@
 import { Range } from 'atom'
-
 import {
   IContentItem,
   IdeHaskellReplBase,
@@ -17,14 +16,17 @@ export interface ITypeRecord {
 }
 
 export class IdeHaskellReplBg extends IdeHaskellReplBase {
-  private types?: ITypeRecord[]
+  private types: ITypeRecord[] = []
+  private gotTypes: Promise<void>
   constructor(consumer: UPIConsumer, state: IViewState) {
     super(Promise.resolve(consumer), state, `bg:${state.uri}`)
+    this.gotTypes = this.readyPromise
   }
 
-  public showTypeAt(uri: string, inrange: Range) {
-    if (!this.types) {
-      return undefined
+  public async showTypeAt(uri: string, inrange: Range) {
+    await this.gotTypes
+    if (this.types.length === 0) {
+      await (this.gotTypes = this.getAllTypes())
     }
     const typeRec = this.types.find(
       (tr) => tr && tr.uri === uri && tr.span.containsRange(inrange),
@@ -38,6 +40,7 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
   }
 
   public async destroy() {
+    this.types = []
     return super.destroy()
   }
 
@@ -45,16 +48,25 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
     // noop
   }
 
-  protected async onLoad() {
-    await super.onLoad()
-    await this.getAllTypes()
+  protected async onInitialLoad() {
+    await super.onInitialLoad()
+    await this.ghciReload()
   }
 
-  protected async getAllTypes(): Promise<ITypeRecord[]> {
+  protected async onLoad() {
+    await super.onLoad()
+    await (this.gotTypes = this.getAllTypes())
+  }
+
+  protected async getAllTypes(): Promise<void> {
     if (!this.ghci) {
       throw new Error('No GHCI instance!')
     }
     const { stdout } = await this.ghci.writeLines([':all-types'])
+    const cwd = this.cwd
+      ? this.cwd
+      : await IdeHaskellReplBase.getRootDir(this.uri)
+    // NOTE: do not await between setting types to [] and returning to avoid duplicate calls
     this.types = []
     for (const line of stdout) {
       const rx = /^(.*):\((\d+),(\d+)\)-\((\d+),(\d+)\):\s*(.*)$/
@@ -64,14 +76,7 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
       }
       const m = match.slice(1)
       let uri = m[0]
-      if (!path.isAbsolute(uri)) {
-        if (this.cwd) {
-          uri = this.cwd.getFile(uri).getPath()
-        } else {
-          const rd = await IdeHaskellReplBase.getRootDir(this.uri)
-          uri = rd.getFile(uri).getPath()
-        }
-      }
+      if (!path.isAbsolute(uri)) uri = cwd.getFile(uri).getPath()
       const type = m[5]
       const [rowstart, colstart, rowend, colend] = m
         .slice(1)
@@ -79,6 +84,5 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
       const span = Range.fromObject([[rowstart, colstart], [rowend, colend]])
       this.types.push({ uri, type, span })
     }
-    return this.types
   }
 }

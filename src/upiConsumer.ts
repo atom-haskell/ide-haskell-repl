@@ -124,7 +124,7 @@ export class UPIConsumer {
     const { cwd, cabal, comp } = await IdeHaskellReplBase.componentFromURI(path)
     const hash = `${cwd.getPath()}::${cabal && cabal.name}::${comp && comp[0]}`
     let bg = this.bgEditorMap.get(hash)
-    if (!bg) bg = this.createNewBgRepl(hash, path, buffer)
+    if (!bg) bg = await this.createNewBgRepl(hash, path, buffer)
     return bg.showTypeAt(path, crange)
   }
 
@@ -141,14 +141,17 @@ export class UPIConsumer {
     const hash = `${cwd.getPath()}::${cabal && cabal.name}::${comp && comp[0]}`
     const bgt = this.bgEditorMap.get(hash)
     if (bgt) {
-      // tslint:disable-next-line:no-floating-promises
-      bgt.ghciReload()
-    } else {
-      this.createNewBgRepl(hash, path, buffer)
+      await bgt.ghciReload()
+    } else if (atom.config.get('ide-haskell-repl.checkOnSave')) {
+      await this.createNewBgRepl(hash, path, buffer)
     }
   }
 
-  private createNewBgRepl(hash: string, path: string, buffer: TextBuffer) {
+  private async createNewBgRepl(
+    hash: string,
+    path: string,
+    buffer: TextBuffer,
+  ) {
     const bg = new IdeHaskellReplBg(this, { uri: path })
     this.bgEditorMap.set(hash, bg)
     const disp = new CompositeDisposable()
@@ -162,6 +165,7 @@ export class UPIConsumer {
       buffer.onDidDestroy(() => disp.dispose()),
     )
     this.disposables.add(disp)
+    await bg.readyPromise
     return bg
   }
 }
