@@ -156,6 +156,9 @@ export abstract class IdeHaskellReplBase {
     })
     // tslint:disable-next-line:no-floating-promises
     this.update()
+    if (command.trim().startsWith(':l')) await this.onLoad()
+    else if (command.trim().startsWith(':r')) await this.onReload()
+    else if (command.trim().startsWith(':e')) await this.onReload()
     this.errorsFromStderr(res.stderr)
     return res
   }
