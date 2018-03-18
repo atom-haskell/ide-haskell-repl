@@ -10,7 +10,6 @@ import {
   TextEditor,
   Range,
   TextBuffer,
-  Disposable,
   Point,
   PointCompatible,
 } from 'atom'
@@ -21,6 +20,14 @@ export interface IErrorItem extends IResultItem {
   _time: number
 }
 
+export interface BgRec {
+  references: number
+  bg: IdeHaskellReplBg
+  buffers: WeakSet<TextBuffer>
+  disposables: CompositeDisposable
+  dispose(): void
+}
+
 export class UPIConsumer {
   private upiRepl: IUPIInstance
   private upiErrors: IUPIInstance
@@ -28,7 +35,7 @@ export class UPIConsumer {
   private errors: Map<string, IErrorItem[]> = new Map()
   private disposables = new CompositeDisposable()
   private maxMessageTime = 10000
-  private bgEditorMap = new Map<string, IdeHaskellReplBg>()
+  private bgEditorMap = new Map<string, BgRec>()
 
   constructor(register: IUPIRegistration) {
     this.disposables.add(
@@ -52,11 +59,6 @@ export class UPIConsumer {
   }
 
   public dispose() {
-    for (const proc of this.bgEditorMap.values()) {
-      // tslint:disable-next-line:no-floating-promises
-      proc.destroy()
-    }
-    this.bgEditorMap.clear()
     this.disposables.dispose()
   }
 
@@ -120,11 +122,9 @@ export class UPIConsumer {
     }
     const path = editor.getPath()
     if (!path) return undefined
-    const buffer = editor.getBuffer() // important to bind before await
-    const { cwd, cabal, comp } = await IdeHaskellReplBase.componentFromURI(path)
-    const hash = `${cwd.getPath()}::${cabal && cabal.name}::${comp && comp[0]}`
-    let bg = this.bgEditorMap.get(hash)
-    if (!bg) bg = await this.createNewBgRepl(hash, path, buffer)
+    const buffer = editor.getBuffer()
+    const { bg } = await this.getBgRepl(buffer)
+    if (!bg) return undefined
     return bg.showTypeAt(path, crange)
   }
 
@@ -135,39 +135,63 @@ export class UPIConsumer {
     ) {
       return
     }
-    const path = buffer.getPath()
-    if (!path) return
-    const { cwd, cabal, comp } = await IdeHaskellReplBase.componentFromURI(path)
-    const hash = `${cwd.getPath()}::${cabal && cabal.name}::${comp && comp[0]}`
-    const bgt = this.bgEditorMap.get(hash)
-    if (bgt) {
-      await bgt.ghciReload()
-    } else if (atom.config.get('ide-haskell-repl.checkOnSave')) {
-      await this.createNewBgRepl(hash, path, buffer)
+    const { bg, isNew } = await this.getBgRepl(buffer)
+    if (bg) {
+      // no need to reload newly created instance since it reloads on start
+      if (isNew) await bg.readyPromise
+      else await bg.ghciReload()
     }
   }
 
-  private async createNewBgRepl(
-    hash: string,
-    path: string,
-    buffer: TextBuffer,
-  ) {
+  private async getBgRepl(buffer: TextBuffer) {
+    const path = buffer.getPath()
+    if (!path) return { bg: undefined, isNew: false }
+    const { cwd, cabal, comp } = await IdeHaskellReplBase.componentFromURI(path)
+    const hash = `${cwd.getPath()}::${cabal && cabal.name}::${comp && comp[0]}`
+    let bgrec = this.bgEditorMap.get(hash)
+    let isNew = false
+    if (!bgrec) {
+      bgrec = this.createNewBgRepl(hash, path)
+      isNew = true
+    }
+    subscribeToBuffer(bgrec, buffer)
+    return { bg: bgrec.bg, isNew }
+  }
+
+  private createNewBgRepl(hash: string, path: string) {
     const bg = new IdeHaskellReplBg(this, { uri: path })
-    this.bgEditorMap.set(hash, bg)
-    const disp = new CompositeDisposable()
-    disp.add(
-      new Disposable(() => {
-        this.disposables.delete(disp)
+    const bgrec: BgRec = {
+      bg,
+      references: 0,
+      buffers: new WeakSet(),
+      disposables: new CompositeDisposable(),
+      dispose: () => {
+        this.disposables.delete(bgrec)
         this.bgEditorMap.delete(hash)
         // tslint:disable-next-line:no-floating-promises
-        bg.destroy()
-      }),
-      buffer.onDidDestroy(() => disp.dispose()),
-    )
-    this.disposables.add(disp)
-    await bg.readyPromise
-    return bg
+        bgrec.bg.destroy()
+        bgrec.disposables.dispose()
+      },
+    }
+    this.disposables.add(bgrec)
+    this.bgEditorMap.set(hash, bgrec)
+    return bgrec
   }
+}
+
+function subscribeToBuffer(rec: BgRec, buffer: TextBuffer) {
+  if (rec.buffers.has(buffer)) return
+  rec.references++
+  rec.buffers.add(buffer)
+  rec.disposables.add(
+    buffer.onDidDestroy(() => {
+      rec.buffers.delete(buffer)
+      rec.references--
+      if (rec.references === 0) {
+        rec.dispose()
+      }
+    }),
+  )
 }
 
 function comparePosition(x?: PointCompatible, y?: PointCompatible): boolean {
