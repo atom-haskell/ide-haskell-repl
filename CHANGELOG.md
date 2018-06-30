@@ -1,3 +1,9 @@
+## 0.8.1
+
+-   More careful asyncIterator definition
+-   Avoid extraneous reload
+-   Use atom-ts-spec-runner
+
 ## 0.8.0
 
 -   Use reference-counting to track background REPL processes
