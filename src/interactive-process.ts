@@ -3,9 +3,13 @@ import Queue = require('promise-queue')
 import tkill = require('tree-kill')
 import { EOL } from 'os'
 
+if (!Symbol.asyncIterator) {
+  Object.defineProperty(Symbol, 'asyncIterator', {
+    value: Symbol.for('Symbol.asyncIterator'),
+  })
+}
+
 export type ExitCallback = (exitCode: number) => void
-;(Symbol as any).asyncIterator =
-  Symbol.asyncIterator || Symbol.for('Symbol.asyncIterator')
 
 export interface IRequestResult {
   stdout: string[]
