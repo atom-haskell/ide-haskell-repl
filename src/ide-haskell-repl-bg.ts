@@ -50,7 +50,6 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
 
   protected async onInitialLoad() {
     await super.onInitialLoad()
-    await this.ghciReload()
   }
 
   protected async onLoad() {
