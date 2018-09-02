@@ -28,6 +28,61 @@ export interface IErrorItem extends UPI.IResultItem {
   _time: number
 }
 
+async function readCabalFile(
+  cabalFile: AtomTypes.File,
+): Promise<string | undefined> {
+  const cabalContents = await cabalFile.read()
+  if (cabalContents === null) return undefined
+  const noTabs = cabalContents.replace(/\t/g, '        ')
+  if (noTabs !== cabalContents) {
+    atom.notifications.addWarning(
+      'Tabs found in Cabalfile, replacing with 8 spaces',
+      {
+        detail:
+          'Tabs are not allowed as indentation characters in Cabalfiles due to ' +
+          'a missing standard interpretation of tab width. Tabs have been ' +
+          'automatically replaced by 8 spaces as per Haskell report standard, ' +
+          'but it is advised to avoid using tabulation in Cabalfile.',
+        dismissable: true,
+      },
+    )
+  }
+  return noTabs
+}
+
+async function getCabalFile(
+  rootDir: AtomTypes.Directory,
+): Promise<AtomTypes.File[]> {
+  const cont = await new Promise<Array<AtomTypes.Directory | AtomTypes.File>>(
+    (resolve, reject) =>
+      rootDir.getEntries((error, contents) => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve(contents)
+        }
+      }),
+  )
+  return cont.filter(
+    (file) => file.isFile() && file.getBaseName().endsWith('.cabal'),
+  ) as AtomTypes.File[]
+}
+
+async function parseCabalFile(
+  cabalFile: AtomTypes.File,
+  cwd: AtomTypes.Directory,
+  uri: string | undefined,
+): Promise<{ cabal?: Util.IDotCabal; comps?: string[] }> {
+  const cabalContents = await readCabalFile(cabalFile)
+  if (cabalContents === undefined) return {}
+  const cabal = await Util.parseDotCabal(cabalContents)
+  let comps: string[] | undefined
+  if (uri !== undefined) {
+    comps = await Util.getComponentFromFile(cabalContents, cwd.relativize(uri))
+  }
+  return { cabal: cabal === null ? undefined : cabal, comps }
+}
+
 export abstract class IdeHaskellReplBase {
   public readonly readyPromise: Promise<void>
   protected ghci?: GHCI
@@ -63,55 +118,16 @@ export abstract class IdeHaskellReplBase {
     return Util.getRootDir(uri)
   }
 
-  public static async getCabalFile(
-    rootDir: AtomTypes.Directory,
-  ): Promise<AtomTypes.File[]> {
-    const cont = await new Promise<Array<AtomTypes.Directory | AtomTypes.File>>(
-      (resolve, reject) =>
-        rootDir.getEntries((error, contents) => {
-          if (error) {
-            reject(error)
-          } else {
-            resolve(contents)
-          }
-        }),
-    )
-    return cont.filter(
-      (file) => file.isFile() && file.getBaseName().endsWith('.cabal'),
-    ) as AtomTypes.File[]
-  }
-
-  public static async parseCabalFile(
-    cabalFile: AtomTypes.File,
-  ): Promise<Util.IDotCabal | null> {
-    const cabalContents = await cabalFile.read()
-    // tslint:disable-next-line:no-null-keyword
-    if (cabalContents === null) return null
-    return Util.parseDotCabal(cabalContents)
-  }
-
-  public static async getComponent(
-    cabalFile: AtomTypes.File,
-    uri: string,
-  ): Promise<string[]> {
-    const cabalContents = await cabalFile.read()
-    if (cabalContents === null) return []
-    const cwd = cabalFile.getParent()
-    return Util.getComponentFromFile(cabalContents, cwd.relativize(uri))
-  }
-
   public static async componentFromURI(uri: string) {
     const cwd = await IdeHaskellReplBase.getRootDir(uri)
-    const [cabalFile] = await IdeHaskellReplBase.getCabalFile(cwd)
+    const [cabalFile] = await getCabalFile(cwd)
 
     let comp: string | undefined
     let cabal: Util.IDotCabal | undefined
     if (cabalFile) {
-      cabal = (await IdeHaskellReplBase.parseCabalFile(cabalFile)) || undefined
-      ;[comp] = await IdeHaskellReplBase.getComponent(
-        cabalFile,
-        cwd.relativize(uri),
-      )
+      const parsed = await parseCabalFile(cabalFile, cwd, cwd.relativize(uri))
+      if (parsed.comps) comp = parsed.comps[0]
+      if (parsed.cabal) cabal = parsed.cabal
     }
     return { cwd, comp, cabal }
   }
