@@ -8,6 +8,7 @@ import {
 import { IdeHaskellReplView, IViewState } from './views/ide-haskell-repl-view'
 import * as UPI from 'atom-haskell-upi'
 import { UPIConsumer } from './upiConsumer'
+import { handlePromise } from './util'
 
 export * from './config'
 
@@ -36,10 +37,13 @@ export function activate() {
   )
 
   disposables.add(
-    atom.commands.add('atom-text-editor', {
-      'ide-haskell-repl:toggle': async ({ currentTarget }) =>
-        open(currentTarget.getModel()),
-    }),
+    atom.commands.add(
+      'atom-text-editor',
+      'ide-haskell-repl:toggle',
+      async ({ currentTarget }) => {
+        handlePromise(open(currentTarget.getModel()))
+      },
+    ),
   )
 
   const commandFunction = (func: string) => ({
