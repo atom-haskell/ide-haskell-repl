@@ -20,6 +20,7 @@ export class Button implements JSX.ElementClass {
     this.disposables = new CompositeDisposable()
     this.clslst = new Set()
     this.clslst.add(this.props.cls)
+    this.updateState(this.props.state)
     etch.initialize(this)
     this.target = atom.views.getView(this.props.parent.editor)
     this.disposables.add(
@@ -52,17 +53,21 @@ export class Button implements JSX.ElementClass {
       return Promise.resolve()
     }
     this.props.state = props.state
-    if (this.props.state) {
-      this.clslst.add('enabled')
-    } else {
-      this.clslst.delete('enabled')
-    }
+    this.updateState(this.props.state)
     return etch.update(this)
   }
 
   public click() {
     if (this.target) {
       atom.commands.dispatch(this.target, this.props.command)
+    }
+  }
+
+  private updateState(state?: boolean) {
+    if (state) {
+      this.clslst.add('enabled')
+    } else {
+      this.clslst.delete('enabled')
     }
   }
 }
