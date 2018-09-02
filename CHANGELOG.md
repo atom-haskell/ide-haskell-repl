@@ -1,3 +1,18 @@
+## 0.8.2
+
+-   Fixed opening repl outside of a source file
+-   Handle tabs in cabalfile more gracefully
+
+    Note: tabs are forbidden in Cabalfiles, most of the ecosystem can't
+    handle those. `stack` replaces tabs with spaces, but spews warnings.
+    Other tools just silently fail. Please don't use tabs in cabalfiles.
+
+-   Fix button state initialization
+
+    Toggle buttons are now displayed correctly across Atom restarts
+
+-   Bump dependencies
+
 ## 0.8.1
 
 -   More careful asyncIterator definition
