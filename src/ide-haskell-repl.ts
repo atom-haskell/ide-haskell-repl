@@ -29,10 +29,11 @@ export function activate() {
   disposables.add(
     atom.workspace.addOpener((uriToOpen: string) => {
       const m = uriToOpen.match(/^ide-haskell:\/\/repl\/(.*)$/)
-      if (!(m && m[1])) {
-        return undefined
+      // tslint:disable-next-line:strict-type-predicates
+      if (m && m[1] !== undefined) {
+        return createReplView({ uri: m[1], focus: true })
       }
-      return createReplView({ uri: m[1], focus: true })
+      return undefined
     }),
   )
 
