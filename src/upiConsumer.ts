@@ -175,6 +175,9 @@ export class UPIConsumer {
     }
     this.disposables.add(bgrec)
     this.bgEditorMap.set(hash, bgrec)
+    bg.onDidDestroy(() => {
+      bgrec.dispose()
+    })
     return bgrec
   }
 }

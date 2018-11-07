@@ -94,6 +94,7 @@ export abstract class IdeHaskellReplBase {
   protected _autoReloadRepeat: boolean
   protected history: CommandHistory
   protected uri: string
+  private emitter = new AtomTypes.Emitter<{ destroyed: void }>()
 
   constructor(
     upiPromise: Promise<UPIConsumer | undefined>,
@@ -133,6 +134,10 @@ export abstract class IdeHaskellReplBase {
   }
 
   public abstract async update(): Promise<void>
+
+  public onDidDestroy(callback: () => void) {
+    this.emitter.on('destroyed', callback)
+  }
 
   public toggleAutoReloadRepeat() {
     this.autoReloadRepeat = !this.autoReloadRepeat
@@ -251,6 +256,7 @@ export abstract class IdeHaskellReplBase {
   }
 
   protected async destroy() {
+    this.emitter.emit('destroyed')
     this.clearErrors()
     if (this.ghci) {
       this.ghci.destroy()
