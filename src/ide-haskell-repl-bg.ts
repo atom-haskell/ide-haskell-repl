@@ -26,7 +26,7 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
   public async showTypeAt(uri: string, inrange: Range) {
     await this.gotTypes
     if (this.types.length === 0) {
-      await (this.gotTypes = this.getAllTypes())
+      await this.ghciReload()
     }
     const typeRec = this.types.find(
       (tr) => tr && tr.uri === uri && tr.span.containsRange(inrange),

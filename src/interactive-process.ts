@@ -154,6 +154,7 @@ request:
 ${command}
 `,
           dismissable: true,
+          stack: (e as Error).stack,
         })
         throw e
       }

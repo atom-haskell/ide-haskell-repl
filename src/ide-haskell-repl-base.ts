@@ -136,7 +136,7 @@ export abstract class IdeHaskellReplBase {
   public abstract async update(): Promise<void>
 
   public onDidDestroy(callback: () => void) {
-    this.emitter.on('destroyed', callback)
+    return this.emitter.on('destroyed', callback)
   }
 
   public toggleAutoReloadRepeat() {
