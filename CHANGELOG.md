@@ -1,3 +1,7 @@
+## 0.8.4
+
+-   Minor fixes, reload GHCI on no type (fixes no type tooltips until saved)
+
 ## 0.8.3
 
 -   Update dependencies
