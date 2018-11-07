@@ -1,3 +1,9 @@
+## 0.8.3
+
+-   Update dependencies
+-   Properly dispose of crashed background processes
+-   Better spawn errors and crash handling
+
 ## 0.8.2
 
 -   Fixed opening repl outside of a source file
