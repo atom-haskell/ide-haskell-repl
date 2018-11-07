@@ -32,7 +32,7 @@
     "etch": "^0.14.0",
     "fuzzaldrin": "^2.1.0",
     "promise-queue": "^2.2.5",
-    "tree-kill": "^1.2.0",
+    "tree-kill": "^1.2.1",
     "tslib": "^1.9.3"
   },
   "consumedServices": {
@@ -59,18 +59,18 @@
     "IdeHaskellReplView": "createReplView"
   },
   "devDependencies": {
-    "@types/atom": "^1.28.0",
-    "@types/chai": "^4.1.4",
+    "@types/atom": "^1.31.0",
+    "@types/chai": "^4.1.7",
     "@types/fuzzaldrin": "^2.1.1",
     "@types/mocha": "^5.2.5",
-    "@types/node": "^8",
+    "@types/node": "^8.10.37",
     "atom-haskell-tslint-rules": "^0.2.2",
     "atom-ts-spec-runner": "^1.1.1",
-    "chai": "^4.1.2",
+    "chai": "^4.2.0",
     "mocha": "^5.2.0",
-    "prettier": "^1.14.2",
+    "prettier": "^1.15.1",
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",
-    "typescript": "~3.0.3"
+    "typescript": "~3.1.6"
   }
 }
