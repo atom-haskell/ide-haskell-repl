@@ -1,6 +1,7 @@
 import * as CP from 'child_process'
 import Queue = require('promise-queue')
 import tkill = require('tree-kill')
+import EventEmitter = require('events')
 import { EOL } from 'os'
 
 if (!Symbol.asyncIterator) {
@@ -31,6 +32,7 @@ export class InteractiveProcess {
   private process?: CP.ChildProcess
   private requestQueue: Queue
   private endPattern: RegExp
+  private events = new EventEmitter()
   constructor(
     cmd: string,
     args: string[],
@@ -51,8 +53,21 @@ export class InteractiveProcess {
       this.process.stderr.setEncoding('utf-8')
 
       this.process.on('exit', (code) => {
-        onDidExit(code)
+        if (code !== 0) {
+          console.error('Process exited abnormally', code)
+        }
         this.process = undefined
+        onDidExit(code)
+        this.destroy()
+      })
+      this.process.on('error', (err) => {
+        atom.notifications.addError(`Process "${cmd}" failed to start`, {
+          dismissable: true,
+          detail: err.toString(),
+          stack: (err as Error).stack,
+        })
+        this.process = undefined
+        onDidExit(-1)
         this.destroy()
       })
     } catch (error) {
@@ -89,7 +104,7 @@ export class InteractiveProcess {
         prompt: [],
       }
 
-      const isEnded = () => res.prompt.length > 0
+      const isEnded = () => res.prompt.length > 0 || this.process === undefined
 
       const stdErrLine = (line: string) => {
         if (lineCallback) {
@@ -104,29 +119,44 @@ export class InteractiveProcess {
           stdErrLine(line)
         }
       })
-
-      for await (const line of this.readgen(this.process.stdout, isEnded)) {
-        const pattern = line.match(endPattern)
-        if (pattern) {
-          if (lineCallback) {
-            lineCallback({ type: 'prompt', prompt: pattern })
+      try {
+        for await (const line of this.readgen(this.process.stdout, isEnded)) {
+          const pattern = line.match(endPattern)
+          if (pattern) {
+            if (lineCallback) {
+              lineCallback({ type: 'prompt', prompt: pattern })
+            }
+            res.prompt = pattern
+          } else {
+            if (lineCallback) {
+              lineCallback({ type: 'stdout', line })
+            }
+            res.stdout.push(line)
           }
-          res.prompt = pattern
-        } else {
-          if (lineCallback) {
-            lineCallback({ type: 'stdout', line })
-          }
-          res.stdout.push(line)
         }
+        // tslint:disable-next-line:no-unsafe-any
+        const restErr: string = this.process.stderr.read()
+        if (restErr) {
+          restErr.split('\n').forEach(stdErrLine)
+        }
+        this.process.stdout.resume()
+        this.process.stderr.resume()
+        return res
+      } catch (e) {
+        console.error(e, res)
+        atom.notifications.addError(`Process crashed while running request`, {
+          detail: `\
+stderr:
+${res.stderr.join('\n')}
+stdout:
+${res.stdout.join('\n')}
+request:
+${command}
+`,
+          dismissable: true,
+        })
+        throw e
       }
-      // tslint:disable-next-line:no-unsafe-any
-      const restErr: string = this.process.stderr.read()
-      if (restErr) {
-        restErr.split('\n').forEach(stdErrLine)
-      }
-      this.process.stdout.resume()
-      this.process.stderr.resume()
-      return res
     })
   }
 
@@ -135,6 +165,7 @@ export class InteractiveProcess {
       tkill(this.process.pid, 'SIGTERM')
       this.process = undefined
     }
+    this.events.emit('destroyed')
   }
 
   public interrupt() {
@@ -155,11 +186,23 @@ export class InteractiveProcess {
   }
 
   private async waitReadable(stream: NodeJS.ReadableStream) {
-    return new Promise((resolve) =>
-      stream.once('readable', () => {
+    return new Promise((resolve, reject) => {
+      if (!this.process) return reject(new Error('No process'))
+      const removeListeners = () => {
+        this.events.removeListener('destroyed', rejectError)
+        stream.removeListener('readable', resolv)
+      }
+      const rejectError = () => {
+        removeListeners()
+        reject(new Error('Process destroyed while awaiting stream readable'))
+      }
+      const resolv = () => {
+        removeListeners()
         resolve()
-      }),
-    )
+      }
+      this.events.once('destroyed', rejectError)
+      stream.once('readable', resolv)
+    })
   }
 
   private async *readgen(out: NodeJS.ReadableStream, isEnded: () => boolean) {
