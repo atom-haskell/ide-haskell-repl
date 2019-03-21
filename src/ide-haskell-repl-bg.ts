@@ -12,11 +12,11 @@ export { IViewState, IContentItem }
 export interface ITypeRecord {
   uri: string
   type: string
-  span: Range
+  span: [[number, number], [number, number]]
 }
 
 export class IdeHaskellReplBg extends IdeHaskellReplBase {
-  private types: ITypeRecord[] = []
+  private types: Array<ITypeRecord | undefined> = []
   private gotTypes: Promise<void>
   constructor(consumer: UPIConsumer, state: IViewState) {
     super(Promise.resolve(consumer), state, `bg:${state.uri}`)
@@ -29,7 +29,10 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
       await this.ghciReload()
     }
     const typeRec = this.types.find(
-      (tr) => tr && tr.uri === uri && tr.span.containsRange(inrange),
+      (tr) =>
+        tr !== undefined &&
+        tr.uri === uri &&
+        Range.fromObject(tr.span).containsRange(inrange),
     )
     if (!typeRec) {
       return undefined
@@ -61,27 +64,26 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
     if (!this.ghci) {
       throw new Error('No GHCI instance!')
     }
+    // don't waste time if don't need to
+    if (!atom.config.get('ide-haskell-repl.showTypes')) return
     const { stdout } = await this.ghci.writeLines([':all-types'])
     const cwd = this.cwd
       ? this.cwd
       : await IdeHaskellReplBase.getRootDir(this.uri)
-    // NOTE: do not await between setting types to [] and returning to avoid duplicate calls
-    this.types = []
-    for (const line of stdout) {
-      const rx = /^(.*):\((\d+),(\d+)\)-\((\d+),(\d+)\):\s*(.*)$/
+    const rx = /^(.*):\((\d+),(\d+)\)-\((\d+),(\d+)\):\s*(.*)$/
+    this.types = stdout.map((line) => {
       const match = line.match(rx)
-      if (!match) {
-        continue
-      }
-      const m = match.slice(1)
-      let uri = m[0]
-      if (!path.isAbsolute(uri)) uri = cwd.getFile(uri).getPath()
-      const type = m[5]
-      const [rowstart, colstart, rowend, colend] = m
-        .slice(1)
-        .map((i) => parseInt(i, 10) - 1)
-      const span = Range.fromObject([[rowstart, colstart], [rowend, colend]])
-      this.types.push({ uri, type, span })
-    }
+      if (!match) return undefined
+      return {
+        uri: path.isAbsolute(match[1])
+          ? match[1]
+          : cwd.getFile(match[1]).getPath(),
+        type: match[6],
+        span: [
+          [parseInt(match[2], 10) - 1, parseInt(match[3], 10) - 1],
+          [parseInt(match[4], 10) - 1, parseInt(match[5], 10) - 1],
+        ],
+      } as ITypeRecord
+    })
   }
 }
