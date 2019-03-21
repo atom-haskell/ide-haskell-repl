@@ -1,3 +1,7 @@
+## 0.8.6
+
+-   Optimize type collection a little bit
+
 ## 0.8.5
 
 -   Don't relativize absolute paths in messages
