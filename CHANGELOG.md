@@ -1,3 +1,7 @@
+## 0.8.5
+
+-   Don't relativize absolute paths in messages
+
 ## 0.8.4
 
 -   Minor fixes, reload GHCI on no type (fixes no type tooltips until saved)
