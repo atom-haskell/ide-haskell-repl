@@ -25,9 +25,6 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
 
   public async showTypeAt(uri: string, inrange: Range) {
     await this.gotTypes
-    if (this.types.length === 0) {
-      await this.ghciReload()
-    }
     const typeRec = this.types.find(
       (tr) =>
         tr !== undefined &&
@@ -52,12 +49,13 @@ export class IdeHaskellReplBg extends IdeHaskellReplBase {
   }
 
   protected async onInitialLoad() {
+    await this.ghciReload() // required to collect types
     await super.onInitialLoad()
   }
 
-  protected async onLoad() {
-    await super.onLoad()
+  protected async onReload() {
     await (this.gotTypes = this.getAllTypes())
+    await super.onReload()
   }
 
   protected async getAllTypes(): Promise<void> {
