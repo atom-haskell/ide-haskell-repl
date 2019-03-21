@@ -1,3 +1,7 @@
+## 0.8.7
+
+-   Fix type collection on initial load
+
 ## 0.8.6
 
 -   Optimize type collection a little bit
