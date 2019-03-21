@@ -6,6 +6,7 @@ import { GHCI, IRequestResult } from './ghci'
 import * as UPI from 'atom-haskell-upi'
 import * as AtomTypes from 'atom'
 import { UPIConsumer } from './upiConsumer'
+import { isAbsolute, normalize } from 'path'
 
 export { IRequestResult }
 
@@ -425,7 +426,9 @@ export abstract class IdeHaskellReplBase {
 
         return {
           uri: file
-            ? this.cwd.getFile(this.cwd.relativize(file)).getPath()
+            ? isAbsolute(file)
+              ? normalize(file)
+              : this.cwd.getFile(file).getPath()
             : undefined,
           position: [
             parseInt(line as string, 10) - 1,
