@@ -10,7 +10,7 @@ if (!Symbol.asyncIterator) {
   })
 }
 
-export type ExitCallback = (exitCode: number) => void
+export type ExitCallback = (exitCode: number | null) => void
 
 export interface IRequestResult {
   stdout: string[]

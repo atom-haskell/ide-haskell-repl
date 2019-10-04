@@ -28,12 +28,12 @@
   "atomTestRunner": "./node_modules/atom-ts-spec-runner/runner.js",
   "dependencies": {
     "atom-haskell-utils": "^1.0.2",
-    "atom-highlight": "^0.4.1",
+    "atom-highlight": "^0.4.2",
     "etch": "^0.14.0",
     "fuzzaldrin": "^2.1.0",
     "promise-queue": "^2.2.5",
     "tree-kill": "^1.2.1",
-    "tslib": "^1.9.3"
+    "tslib": "^1.10.0"
   },
   "consumedServices": {
     "ide-haskell-upi": {
@@ -59,18 +59,18 @@
     "IdeHaskellReplView": "createReplView"
   },
   "devDependencies": {
-    "@types/atom": "^1.31.0",
-    "@types/chai": "^4.1.7",
-    "@types/fuzzaldrin": "^2.1.1",
-    "@types/mocha": "^5.2.5",
-    "@types/node": "^8.10.37",
+    "@types/atom": "^1.36.1",
+    "@types/chai": "^4.2.3",
+    "@types/fuzzaldrin": "^2.1.2",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^10",
     "atom-haskell-tslint-rules": "^0.2.2",
     "atom-ts-spec-runner": "^1.1.1",
     "chai": "^4.2.0",
-    "mocha": "^5.2.0",
-    "prettier": "^1.15.1",
-    "ts-node": "^7.0.1",
-    "tslint": "^5.11.0",
-    "typescript": "~3.1.6"
+    "mocha": "^6.2.1",
+    "prettier": "^1.18.2",
+    "ts-node": "^8.4.1",
+    "tslint": "^5.20.0",
+    "typescript": "~3.6.3"
   }
 }

@@ -23,6 +23,17 @@ const watchEditorPromise = new Promise<TWatchEditor>((resolve) => {
 
 export function activate() {
   disposables = new CompositeDisposable()
+
+  // backwards compatibility
+  switch (atom.config.get('ide-haskell-repl').defaultRepl as string) {
+    case 'cabal':
+      atom.config.set('ide-haskell-repl.defaultRepl', 'cabal-v1')
+      break
+    case 'cabal-nix':
+    case 'cabal-new':
+      atom.config.set('ide-haskell-repl.defaultRepl', 'cabal-v2')
+      break
+  }
   // tslint:disable-next-line:no-floating-promises
   initUpiPromise()
 

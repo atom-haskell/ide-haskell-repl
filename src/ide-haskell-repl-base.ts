@@ -293,9 +293,9 @@ export abstract class IdeHaskellReplBase {
   }
 
   protected async runREPL(
-    inbuilder?: 'cabal' | 'stack' | 'cabal-nix' | 'none',
+    inbuilder?: 'cabal-v1' | 'stack' | 'cabal-v2' | 'none',
   ) {
-    const builder = inbuilder || atom.config.get('ide-haskell-repl.defaultRepl')
+    let builder = inbuilder || atom.config.get('ide-haskell-repl.defaultRepl')
     if (!builder) throw new Error(`Default REPL not specified`)
 
     const { cwd, comp, cabal } = await IdeHaskellReplBase.componentFromURI(
@@ -307,15 +307,16 @@ export abstract class IdeHaskellReplBase {
     let commandArgs: string[]
     let extraArgs: (x: string) => string
     switch (builder) {
-      case 'cabal':
+      case 'cabal-v1':
         commandPath = atom.config.get('ide-haskell-repl.cabalPath')
-        commandArgs = ['repl']
+        commandArgs = atom.config.get('ide-haskell-repl').legacyCabalV1
+          ? ['repl']
+          : ['v1-repl']
         extraArgs = (x: string) => `--ghc-option=${x}`
         break
-      case 'cabal-nix':
-      case 'cabal-new':
+      case 'cabal-v2':
         commandPath = atom.config.get('ide-haskell-repl.cabalPath')
-        commandArgs = ['new-repl']
+        commandArgs = ['v2-repl']
         extraArgs = (x: string) => `--ghc-option=${x}`
         break
       case 'stack':

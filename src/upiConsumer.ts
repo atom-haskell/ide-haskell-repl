@@ -62,10 +62,25 @@ export class UPIConsumer {
     this.disposables.dispose()
   }
 
-  public async getBuilder() {
-    return this.upiRepl.getOthersConfigParam<{
-      name: 'cabal' | 'stack' | 'cabal-nix' | 'none'
+  public async getBuilder(): Promise<
+    | {
+        name: 'cabal-v1' | 'stack' | 'cabal-v2' | 'none'
+      }
+    | undefined
+  > {
+    const builder = await this.upiRepl.getOthersConfigParam<{
+      name: 'cabal-v1' | 'stack' | 'cabal-v2' | 'none'
     }>('ide-haskell-cabal', 'builder')
+    // backwards compatibility
+    switch (builder && (builder.name as string)) {
+      case 'cabal':
+        builder!.name = 'cabal-v1' as const
+        break
+      case 'cabal-nix':
+        builder!.name = 'cabal-v2' as const
+        break
+    }
+    return builder
   }
 
   public setErrors(source: string, errors: IResultItem[]) {

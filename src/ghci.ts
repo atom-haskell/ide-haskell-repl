@@ -14,13 +14,13 @@ export interface IOpts {
   atomPath: string
   command: string
   args: string[]
-  onExit: (code: number) => void
+  onExit: (code: number | null) => void
 }
 
 export class GHCI {
   private process: InteractiveProcess
   private readyPromise: Promise<IRequestResult>
-  private onDidExit: (code: number) => void
+  private onDidExit: (code: number | null) => void
   private commandQueue: Queue = new Queue(1, 100)
   constructor(opts: IOpts) {
     const endPattern = /^#~IDEHASKELLREPL~(.*)~#$/
@@ -107,7 +107,7 @@ export class GHCI {
     this.process.destroy()
   }
 
-  private didExit(code: number) {
+  private didExit(code: number | null) {
     this.onDidExit(code)
     this.destroy()
   }
