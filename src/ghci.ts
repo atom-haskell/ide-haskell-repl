@@ -54,8 +54,8 @@ export class GHCI {
       `:set editor \"${atomPath}\" --wait${EOL}` +
         `:set prompt2 \"\"${EOL}` +
         `:set prompt-cont \"\"${EOL}` +
-        `:set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"${EOL}` +
-        `:set +c${EOL}`,
+        `:set +c${EOL}` +
+        `:set prompt \"\\n#~IDEHASKELLREPL~%s~#\\n\"${EOL}`,
     )
   }
 
