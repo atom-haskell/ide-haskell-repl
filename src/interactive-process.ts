@@ -28,6 +28,12 @@ export interface ILinePrompt {
 export type TLineType = ILineIO | ILinePrompt
 export type TLineCallback = (line: TLineType) => void
 
+function debug(...args: string[]) {
+  if (window['atom-haskell-interactive-process-debug'] === true) {
+    console.debug(...args)
+  }
+}
+
 export class InteractiveProcess {
   private process?: CP.ChildProcess
   private requestQueue: Queue
@@ -116,11 +122,13 @@ export class InteractiveProcess {
       const stderr = this.process.stderr
       setImmediate(async () => {
         for await (const line of this.readgen(stderr, isEnded)) {
+          debug('stderr', line)
           stdErrLine(line)
         }
       })
       try {
         for await (const line of this.readgen(this.process.stdout, isEnded)) {
+          debug('stdout', line)
           const pattern = line.match(endPattern)
           if (pattern) {
             if (lineCallback) {
@@ -183,6 +191,7 @@ ${command}
     if (!this.process) {
       throw new Error('Interactive process is not running')
     }
+    debug('request', str)
     this.process.stdin.write(str)
   }
 
