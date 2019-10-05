@@ -1,3 +1,8 @@
+## 0.9.0
+
+-   Reorder initialization to fix prompt bug
+-   Bump dependencies & cabal-install 3.0 compatibility
+
 ## 0.8.7
 
 -   Fix type collection on initial load
