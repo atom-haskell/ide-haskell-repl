@@ -36,7 +36,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
   }
   public editor: TextEditor
   private outputFontFamily!: string
-  private outputFontSize!: string
+  private outputFontSize!: number
   private disposables: CompositeDisposable
   private destroyed: boolean = false
   private initialized: boolean = false
@@ -64,7 +64,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
         }
       }),
       atom.config.observe('editor.fontSize', (fontSize: number) => {
-        this.outputFontSize = `${fontSize}px`
+        this.outputFontSize = fontSize
       }),
       atom.config.observe('editor.fontFamily', (fontFamily: string) => {
         this.outputFontFamily = fontFamily
@@ -156,7 +156,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
     const atEnd =
       !!this.refs &&
       this.refs.output.scrollTop + this.refs.output.clientHeight >=
-        this.refs.output.scrollHeight
+        this.refs.output.scrollHeight - this.outputFontSize
     const focused = this.isFocused()
     await etch.update(this)
     if (atEnd) {
@@ -181,7 +181,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
           className="ide-haskell-repl-output native-key-bindings"
           tabIndex="-1"
           style={{
-            fontSize: this.outputFontSize,
+            fontSize: `${this.outputFontSize}px`,
             fontFamily: this.outputFontFamily,
           }}
         >
