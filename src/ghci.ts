@@ -81,7 +81,7 @@ export class GHCI {
         atom.config.get('ide-haskell-repl.ghciWrapperPath') &&
         process.platform === 'win32'
       ) {
-        await this.request('\x03')
+        this.process.writeStdin('\x03')
       } else {
         this.process.interrupt()
       }
