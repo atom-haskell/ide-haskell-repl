@@ -4,11 +4,13 @@ import {
   CommandEvent,
   TextEditor,
   TextEditorElement,
+  Directory,
 } from 'atom'
 import { IdeHaskellReplView, IViewState } from './views/ide-haskell-repl-view'
 import * as UPI from 'atom-haskell-upi'
 import { UPIConsumer } from './upiConsumer'
 import { handlePromise } from './util'
+import { createHash } from 'crypto'
 
 export * from './config'
 
@@ -57,6 +59,61 @@ export function activate() {
       },
     ),
   )
+
+  if (process.platform === 'win32') {
+    disposables.add(
+      atom.commands.add(
+        'atom-workspace',
+        'ide-haskell-repl:setup-ghci-wrapper',
+        async () => {
+          const downloadUrl =
+            'https://github.com/atom-haskell/win-ghci-wrapper/releases/download/v0.0.2/ghci-wrapper.exe'
+          const expectedDigest = '4663295d71a5057dee41945a52d39ed61fcd8830'
+          try {
+            atom.notifications.addInfo('GHCi Wrapper setup started...')
+            const result = await window.fetch(downloadUrl, {
+              redirect: 'follow',
+            })
+            if (!result.ok) {
+              atom.notifications.addError('Getting ghci-wrapper.exe failed', {
+                detail: result.statusText,
+                dismissable: true,
+              })
+              return
+            }
+            const configDir = new Directory(atom.getConfigDirPath())
+            const subdir = configDir.getSubdirectory('ide-haskell-repl')
+            if (!(await subdir.exists())) subdir.create()
+            const file = subdir.getFile('ghci-wrapper.exe')
+            const stream = file.createWriteStream()
+            const buf = Buffer.from(await result.arrayBuffer())
+            const hash = createHash('sha1')
+            hash.update(buf)
+            const digest = hash.digest('hex')
+            if (digest !== expectedDigest) {
+              atom.notifications.addError(
+                'Got ghci-wrapper.exe, but hash check failed!',
+                {
+                  detail: `Expected ${expectedDigest} but got ${digest}`,
+                  dismissable: true,
+                },
+              )
+              return
+            }
+            stream.write(buf)
+            stream.close()
+            atom.config.set('ide-haskell-repl.ghciWrapperPath', file.getPath())
+            atom.notifications.addSuccess('GHCi Wrapper setup finished!')
+          } catch (e) {
+            atom.notifications.addFatalError('GHCi wrapper setup failed', {
+              stack: e.stack,
+              detail: e.message,
+            })
+          }
+        },
+      ),
+    )
+  }
 
   const commandFunction = (func: string) => ({
     currentTarget,
