@@ -1,3 +1,7 @@
+## 0.9.3
+
+-   Fix and clean-up wrapper set-up code
+
 ## 0.9.2
 
 -   Add command to setup ghci-wrapper
