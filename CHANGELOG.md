@@ -1,3 +1,7 @@
+## 0.9.4
+
+-   Enable setup-ghci-wrapper command on windows
+
 ## 0.9.3
 
 -   Fix and clean-up wrapper set-up code
