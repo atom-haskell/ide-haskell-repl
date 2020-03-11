@@ -1,3 +1,7 @@
+## 0.9.2
+
+-   Add command to setup ghci-wrapper
+
 ## 0.9.1
 
 -   Fix interrupt when using ghci-wrapper
