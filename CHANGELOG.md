@@ -1,3 +1,8 @@
+## 0.9.1
+
+-   Fix interrupt when using ghci-wrapper
+-   Relax autoscroll condition
+
 ## 0.9.0
 
 -   Reorder initialization to fix prompt bug
