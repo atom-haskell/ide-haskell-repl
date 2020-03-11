@@ -59,7 +59,7 @@ export function activate() {
     ),
   )
 
-  if (process.platform !== 'win32') {
+  if (process.platform === 'win32') {
     disposables.add(
       atom.commands.add(
         'atom-workspace',
