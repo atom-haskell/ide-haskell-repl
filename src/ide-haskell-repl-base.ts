@@ -134,7 +134,7 @@ export abstract class IdeHaskellReplBase {
     return { cwd, comp, cabal }
   }
 
-  public abstract async update(): Promise<void>
+  public abstract async update(props?: any): Promise<void>
 
   public onDidDestroy(callback: () => void) {
     return this.emitter.on('destroyed', callback)

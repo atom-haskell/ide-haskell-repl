@@ -12,6 +12,7 @@ import {
 import { Button } from './button'
 import { Editor } from './editor'
 import { UPIConsumer } from '../upiConsumer'
+import { handlePromise } from '../util'
 
 export { IViewState, IContentItem, IRequestResult }
 
@@ -27,6 +28,11 @@ export interface IProps extends JSX.Props {
   watchEditorPromise: Promise<TWatchEditor>
 }
 
+export interface UpdateProps extends JSX.Props {
+  outputFontFamily: string
+  outputFontSize: number
+}
+
 // tslint:disable-next-line:no-unsafe-any
 export class IdeHaskellReplView extends IdeHaskellReplBase
   implements JSX.ElementClass {
@@ -35,8 +41,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
     editor: Editor
   }
   public editor: TextEditor
-  private outputFontFamily!: string
-  private outputFontSize!: number
+  private fontSettings: UpdateProps
   private disposables: CompositeDisposable
   private destroyed: boolean = false
   private initialized: boolean = false
@@ -50,6 +55,10 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
     })
     atom.grammars.assignLanguageMode(this.editor.getBuffer(), 'source.haskell')
 
+    this.fontSettings = {
+      outputFontSize: atom.config.get('editor.fontSize'),
+      outputFontFamily: atom.config.get('editor.fontFamily'),
+    }
     this.disposables.add(
       atom.workspace.observeTextEditors((editor: TextEditor) => {
         if (editor.getPath() === this.uri) {
@@ -63,11 +72,11 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
           )
         }
       }),
-      atom.config.observe('editor.fontSize', (fontSize: number) => {
-        this.outputFontSize = fontSize
+      atom.config.onDidChange('editor.fontSize', ({ newValue }) => {
+        handlePromise(this.update({ outputFontSize: newValue }))
       }),
-      atom.config.observe('editor.fontFamily', (fontFamily: string) => {
-        this.outputFontFamily = fontFamily
+      atom.config.onDidChange('editor.fontFamily', ({ newValue }) => {
+        handlePromise(this.update({ outputFontFamily: newValue }))
       }),
     )
 
@@ -152,11 +161,13 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
     }
   }
 
-  public async update() {
+  public async update(props?: Partial<UpdateProps>) {
+    if (props) Object.assign(this.fontSettings, props)
+
     const atEnd =
       !!this.refs &&
       this.refs.output.scrollTop + this.refs.output.clientHeight >=
-        this.refs.output.scrollHeight - this.outputFontSize
+        this.refs.output.scrollHeight - this.fontSettings.outputFontSize
     const focused = this.isFocused()
     await etch.update(this)
     if (atEnd) {
@@ -181,8 +192,8 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
           className="ide-haskell-repl-output native-key-bindings"
           tabIndex="-1"
           style={{
-            fontSize: `${this.outputFontSize}px`,
-            fontFamily: this.outputFontFamily,
+            fontSize: `${this.fontSettings.outputFontSize}px`,
+            fontFamily: this.fontSettings.outputFontFamily,
           }}
         >
           {this.renderOutput()}
