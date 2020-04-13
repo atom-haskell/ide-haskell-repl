@@ -1,3 +1,8 @@
+## 0.9.5
+
+-   Make error div selectable\/copyable
+-   Update repl view when changing editor font size\/family
+
 ## 0.9.4
 
 -   Enable setup-ghci-wrapper command on windows
