@@ -250,7 +250,14 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
 
   private renderErrDiv() {
     if (!this.upi) {
-      return <div className="ide-haskell-repl-error">{this.renderErrors()}</div>
+      return (
+        <div
+          className="native-key-bindings ide-haskell-repl-error"
+          tabIndex="-1"
+        >
+          {this.renderErrors()}
+        </div>
+      )
     } else {
       // tslint:disable-next-line: no-null-keyword
       return null
