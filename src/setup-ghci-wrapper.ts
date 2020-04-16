@@ -13,7 +13,8 @@ export async function setupGhciWrapper() {
     atom.config.set('ide-haskell-repl.ghciWrapperPath', filePath)
     atom.notifications.addSuccess('GHCi Wrapper setup finished!')
   } catch (e) {
-    if (e !== null) {
+    // tslint:disable-next-line: no-null-keyword
+    if (e != null) {
       atom.notifications.addFatalError('GHCi wrapper setup failed', {
         stack: e.stack,
         detail: e.message,
@@ -32,7 +33,7 @@ async function downloadFile(url: string): Promise<Buffer> {
       detail: result.statusText,
       dismissable: true,
     })
-    throw null
+    throw undefined
   }
   return Buffer.from(await result.arrayBuffer())
 }
@@ -49,7 +50,7 @@ function checkHash(buf: Buffer, expected: string): void {
         dismissable: true,
       },
     )
-    throw null
+    throw undefined
   }
 }
 
@@ -65,7 +66,7 @@ async function writeFile(buf: Buffer): Promise<string> {
           dismissable: true,
         },
       )
-      throw null
+      throw undefined
     }
   }
   const file = subdir.getFile('ghci-wrapper.exe')
@@ -75,6 +76,7 @@ async function writeFile(buf: Buffer): Promise<string> {
       stream.on('error', reject)
       stream.write(buf, (error) => {
         stream.off('error', reject)
+        // tslint:disable-next-line: no-null-keyword
         if (error != null) reject(error)
         else resolve()
       })

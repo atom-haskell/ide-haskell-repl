@@ -59,6 +59,7 @@ export function activate() {
     ),
   )
 
+  // tslint:disable-next-line: totality-check
   if (process.platform === 'win32') {
     disposables.add(
       atom.commands.add(

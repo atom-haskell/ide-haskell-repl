@@ -74,9 +74,11 @@ export class UPIConsumer {
     // backwards compatibility
     switch (builder && (builder.name as string)) {
       case 'cabal':
+        // tslint:disable-next-line: no-non-null-assertion
         builder!.name = 'cabal-v1' as const
         break
       case 'cabal-nix':
+        // tslint:disable-next-line: no-non-null-assertion
         builder!.name = 'cabal-v2' as const
         break
     }

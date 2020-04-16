@@ -295,7 +295,7 @@ export abstract class IdeHaskellReplBase {
   protected async runREPL(
     inbuilder?: 'cabal-v1' | 'stack' | 'cabal-v2' | 'none',
   ) {
-    let builder = inbuilder || atom.config.get('ide-haskell-repl.defaultRepl')
+    const builder = inbuilder || atom.config.get('ide-haskell-repl.defaultRepl')
     if (!builder) throw new Error(`Default REPL not specified`)
 
     const { cwd, comp, cabal } = await IdeHaskellReplBase.componentFromURI(
