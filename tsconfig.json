@@ -27,7 +27,10 @@
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "typeRoots": ["./typings", "./node_modules/@types"]
+    "typeRoots": ["./typings", "./node_modules/@types"],
+    "plugins": [{ "name": "typescript-tslint-plugin" }],
+    "newLine": "LF",
+    "skipLibCheck": true
   },
   "exclude": ["node_modules", "spec"],
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js"],
