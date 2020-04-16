@@ -1,6 +1,5 @@
 import { createHash } from 'crypto'
 import { Directory } from 'atom'
-import { promisify } from 'util'
 
 export async function setupGhciWrapper() {
   const downloadUrl =
