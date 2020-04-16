@@ -387,6 +387,15 @@ export abstract class IdeHaskellReplBase {
             continue
           }
 
+          const dupIdx = errors.findIndex((x) => isSameError(error, x))
+          if (dupIdx >= 0) {
+            if (errors[dupIdx]._time <= error._time) {
+              errors.splice(dupIdx, 1)
+            } else {
+              continue
+            }
+          }
+
           errors.push(error)
           if (error.severity === 'error') hasErrors = true
 
@@ -395,7 +404,6 @@ export abstract class IdeHaskellReplBase {
         }
       }
     }
-    // tslint:disable-next-line:no-floating-promises
     this.setErrors(errors, newErrors, newMessages)
     return hasErrors
   }
@@ -493,5 +501,29 @@ export abstract class IdeHaskellReplBase {
       // tslint:disable-next-line:no-floating-promises
       this.update()
     }
+  }
+}
+
+function isSameError(e1: IErrorItem, e2: IErrorItem) {
+  const sameContext = e1.context === e2.context
+  const samePos =
+    e1.position &&
+    e2.position &&
+    AtomTypes.Point.fromObject(e1.position).isEqual(e2.position)
+  const sameSeverity = e1.severity === e2.severity
+  const sameUri = e1.uri === e2.uri
+  const sameMessage = isSameMessage(e1.message, e2.message)
+  return sameContext && samePos && sameSeverity && sameUri && sameMessage
+}
+
+function isSameMessage(m1: UPI.TMessage, m2: UPI.TMessage) {
+  if (typeof m1 === 'string' || typeof m2 === 'string') {
+    return m1 === m2
+  } else if ('html' in m1 && 'html' in m2) {
+    return m1.html === m2.html
+  } else if ('text' in m1 && 'text' in m2) {
+    return m1.text === m2.text && m1.highlighter === m2.highlighter
+  } else {
+    return false
   }
 }
