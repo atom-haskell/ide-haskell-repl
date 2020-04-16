@@ -98,7 +98,14 @@ div.ide-haskell-repl {
     background-color: @pane-item-background-color;
     border-top: double 3px @pane-item-border-color;
     & > div {
+      border-bottom: solid 2px @pane-item-border-color;
+      &:last-of-type {
+        border-bottom: none;
+      }
       white-space: pre;
+      .ide-haskell-repl-error-message {
+        margin-left: 2em;
+      }
     }
   }
   button {

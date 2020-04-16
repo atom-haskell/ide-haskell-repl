@@ -274,12 +274,10 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
     const positionText = pos ? `${uri}: ${pos.row + 1}, ${pos.column + 1}` : uri
     const context = error.context || ''
     return (
-      // tslint:disable:no-unsafe-any
       <div>
         {positionText}: {error.severity}: {context}
-        {error.message}
+        <div class="ide-haskell-repl-error-message">{error.message}</div>
       </div>
-      // tslint:enable:no-unsafe-any
     )
   }
 
