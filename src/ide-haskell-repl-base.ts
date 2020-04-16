@@ -498,6 +498,10 @@ export abstract class IdeHaskellReplBase {
         )
       }
     } else {
+      const now = Date.now()
+      this.errors = this.errors.filter(
+        (x) => x.uri !== undefined || now - x._time < 3000,
+      )
       // tslint:disable-next-line:no-floating-promises
       this.update()
     }
