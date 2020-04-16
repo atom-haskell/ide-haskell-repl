@@ -357,11 +357,14 @@ export abstract class IdeHaskellReplBase {
     const initres = await this.ghci.waitReady()
     this.prompt = initres.prompt[1]
     await this.onInitialLoad()
-    this.errorsFromStderr(initres.stderr)
+    this.errorsFromStderr(initres.stderr, true)
     return this.update()
   }
 
-  protected errorsFromStderr(stderr: string[]): boolean {
+  protected errorsFromStderr(
+    stderr: string[],
+    filterInitWarnings = false,
+  ): boolean {
     const errors = this.errors
     let hasErrors = false
     let newMessages = false
@@ -373,6 +376,17 @@ export abstract class IdeHaskellReplBase {
       if (err) {
         const error = this.parseMessage(err)
         if (error) {
+          if (
+            filterInitWarnings &&
+            error.severity === 'repl' &&
+            typeof error.message === 'string' &&
+            error.message.match(
+              /^Some flags have not been recognized: (?:(?:prompt2|prompt-cont),\s*)+\s*/,
+            )
+          ) {
+            continue
+          }
+
           errors.push(error)
           if (error.severity === 'error') hasErrors = true
 
