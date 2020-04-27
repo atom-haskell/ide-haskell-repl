@@ -480,7 +480,7 @@ export abstract class IdeHaskellReplBase {
       const dupIdx = this.errors.findIndex((x) => isSameError(error, x))
       if (dupIdx >= 0) {
         if (this.errors[dupIdx]._time <= error._time) {
-          this.errors.splice(dupIdx, 1)
+          this.errors[dupIdx]._time = error._time
         }
       } else {
         this.errors.push(error)
