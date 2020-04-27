@@ -366,38 +366,24 @@ export abstract class IdeHaskellReplBase {
     stderr: string[],
     filterInitWarnings = false,
   ): boolean {
-    const errors = []
-    let hasErrors = false
-    let newMessages = false
-    let newErrors = false
-    for (const err of stderr
-      .filter((x) => !/^\s*\d* \|/.test(x))
-      .join('\n')
-      .split(/\n(?=\S)/)) {
-      if (err) {
-        const error = this.parseMessage(err)
-        if (error) {
-          if (
-            filterInitWarnings &&
-            error.severity === 'repl' &&
-            typeof error.message === 'string' &&
-            error.message.match(
+    const noInitWarnings = filterInitWarnings
+      ? (x: IErrorItem | undefined): x is IErrorItem =>
+          x !== undefined &&
+          !(
+            x.severity === 'repl' &&
+            getText(x.message).match(
               /^Some flags have not been recognized: (?:(?:prompt2|prompt-cont),\s*)+\s*/,
             )
-          ) {
-            continue
-          }
-
-          errors.push(error)
-          if (error.severity === 'error') hasErrors = true
-
-          if (error.severity === 'repl') newMessages = true
-          else newErrors = true
-        }
-      }
-    }
-    this.appendErrors(errors, newErrors, newMessages)
-    return hasErrors
+          )
+      : (x: IErrorItem | undefined): x is IErrorItem => x !== undefined
+    return this.appendErrors(
+      stderr
+        .filter((x) => !/^\s*\d* \|/.test(x))
+        .join('\n')
+        .split(/\n(?=\S)/)
+        .map(this.parseMessage)
+        .filter(noInitWarnings),
+    )
   }
 
   protected unindentMessage(message: string): string {
@@ -419,7 +405,7 @@ export abstract class IdeHaskellReplBase {
     return lines.join('\n')
   }
 
-  protected parseMessage(raw: string): IErrorItem | undefined {
+  protected parseMessage = (raw: string): IErrorItem | undefined => {
     if (!this.cwd) {
       return undefined
     }
@@ -471,11 +457,10 @@ export abstract class IdeHaskellReplBase {
     }
   }
 
-  private appendErrors(
-    errors: IErrorItem[],
-    newErrors: boolean,
-    newMessages: boolean,
-  ) {
+  private appendErrors(errors: IErrorItem[]): boolean {
+    let hasErrors = false
+    let newMessages = false
+    let newErrors = false
     for (const error of errors) {
       const dupIdx = this.errors.findIndex((x) => isSameError(error, x))
       if (dupIdx >= 0) {
@@ -485,6 +470,9 @@ export abstract class IdeHaskellReplBase {
       } else {
         this.errors.push(error)
       }
+      if (error.severity === 'error') hasErrors = true
+      if (error.severity === 'repl') newMessages = true
+      else newErrors = true
     }
     const errMessages = errors.filter(({ severity }) => severity === 'repl')
     if (atom.config.get('ide-haskell-repl.errorsInOutput')) {
@@ -496,6 +484,7 @@ export abstract class IdeHaskellReplBase {
       }
     }
     this.setErrors(this.errors, newErrors, newMessages)
+    return hasErrors
   }
 
   private setErrors(
