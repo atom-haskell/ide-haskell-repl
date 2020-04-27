@@ -7,7 +7,7 @@
 
 .output-icon(@name) {
   position: relative;
-  padding-left: 1.2em;
+  padding-left: 1.6em;
   white-space: pre-wrap;
   &:before {
     font-family: 'Octicons Regular';
@@ -16,13 +16,14 @@
     -webkit-font-smoothing: antialiased;
     text-decoration: none;
     display: block;
+    text-align: center;
     content: @@name;
     position: absolute;
-    left: 0.1em;
+    left: 0;
     top: 0;
     height: 100%;
     line-height: 1em;
-    width: 1em;
+    width: 1.4em;
     padding-top: 0.5em;
     background: @overlay-background-color;
     border-right: 0.3em solid @overlay-border-color;
@@ -48,6 +49,10 @@ div.ide-haskell-repl {
     }
     .ide-haskell-repl-input-text {
       .output-icon(chevron-right);
+      background: @overlay-background-color;
+    }
+    .ide-haskell-repl-stderr {
+      .output-icon(issue-opened);
       background: @overlay-background-color;
     }
     .ide-haskell-repl-input-stdin {

@@ -7,6 +7,7 @@ import * as UPI from 'atom-haskell-upi'
 import * as AtomTypes from 'atom'
 import { UPIConsumer } from './upiConsumer'
 import { isAbsolute, normalize } from 'path'
+import { handlePromise, getText } from './util'
 
 export { IRequestResult }
 
@@ -365,7 +366,7 @@ export abstract class IdeHaskellReplBase {
     stderr: string[],
     filterInitWarnings = false,
   ): boolean {
-    const errors = this.errors
+    const errors = []
     let hasErrors = false
     let newMessages = false
     let newErrors = false
@@ -387,15 +388,6 @@ export abstract class IdeHaskellReplBase {
             continue
           }
 
-          const dupIdx = errors.findIndex((x) => isSameError(error, x))
-          if (dupIdx >= 0) {
-            if (errors[dupIdx]._time <= error._time) {
-              errors.splice(dupIdx, 1)
-            } else {
-              continue
-            }
-          }
-
           errors.push(error)
           if (error.severity === 'error') hasErrors = true
 
@@ -404,7 +396,7 @@ export abstract class IdeHaskellReplBase {
         }
       }
     }
-    this.setErrors(errors, newErrors, newMessages)
+    this.appendErrors(errors, newErrors, newMessages)
     return hasErrors
   }
 
@@ -479,6 +471,33 @@ export abstract class IdeHaskellReplBase {
     }
   }
 
+  private appendErrors(
+    errors: IErrorItem[],
+    newErrors: boolean,
+    newMessages: boolean,
+  ) {
+    for (const error of errors) {
+      const dupIdx = this.errors.findIndex((x) => isSameError(error, x))
+      if (dupIdx >= 0) {
+        if (this.errors[dupIdx]._time <= error._time) {
+          this.errors.splice(dupIdx, 1)
+        }
+      } else {
+        this.errors.push(error)
+      }
+    }
+    const errMessages = errors.filter(({ severity }) => severity === 'repl')
+    if (atom.config.get('ide-haskell-repl.errorsInOutput')) {
+      for (const m of errMessages) {
+        this.messages.push({
+          text: getText(m.message),
+          cls: 'ide-haskell-repl-stderr',
+        })
+      }
+    }
+    this.setErrors(this.errors, newErrors, newMessages)
+  }
+
   private setErrors(
     errors: IErrorItem[],
     newErrors = true,
@@ -498,13 +517,15 @@ export abstract class IdeHaskellReplBase {
         )
       }
     } else {
+      if (atom.config.get('ide-haskell-repl.errorsInOutput')) {
+        this.errors = this.errors.filter(({ severity }) => severity !== 'repl')
+      }
       const now = Date.now()
       this.errors = this.errors.filter(
         (x) => x.uri !== undefined || now - x._time < 3000,
       )
-      // tslint:disable-next-line:no-floating-promises
-      this.update()
     }
+    handlePromise(this.update())
   }
 }
 

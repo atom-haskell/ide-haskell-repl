@@ -54,6 +54,12 @@ export let config = {
     description: `Maximum number of ghci messages shown. 0 means unlimited.`,
     order: 60,
   },
+  errorsInOutput: {
+    type: 'boolean',
+    default: true,
+    description: `Show interactive errors in output window.`,
+    order: 65,
+  },
   showTypes: {
     type: 'boolean',
     default: false,
@@ -88,6 +94,7 @@ declare module 'atom' {
     'ide-haskell-repl.extraArgs': string[]
     'ide-haskell-repl.autoReloadRepeat': boolean
     'ide-haskell-repl.maxMessages': number
+    'ide-haskell-repl.errorsInOutput': boolean
     'ide-haskell-repl.showTypes': boolean
     'ide-haskell-repl.checkOnSave': boolean
     'ide-haskell-repl.ghciWrapperPath': string
@@ -100,6 +107,7 @@ declare module 'atom' {
       extraArgs: string[]
       autoReloadRepeat: boolean
       maxMessages: number
+      errorsInOutput: boolean
       showTypes: boolean
       checkOnSave: boolean
       ghciWrapperPath: string
