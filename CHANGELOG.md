@@ -1,3 +1,7 @@
+## 0.9.7
+
+-   Add run code button
+
 ## 0.9.5
 
 -   Make error div selectable\/copyable
