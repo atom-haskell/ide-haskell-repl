@@ -104,6 +104,15 @@ div.ide-haskell-repl {
     border-top: double 3px @pane-item-border-color;
     & > div {
       border-bottom: solid 2px @pane-item-border-color;
+      .ide-haskell-repl-error-error {
+        color: @text-color-error;
+      }
+      .ide-haskell-repl-error-warning {
+        color: @text-color-warning;
+      }
+      .ide-haskell-repl-error-repl {
+        color: @text-color-info;
+      }
       &:last-of-type {
         border-bottom: none;
       }

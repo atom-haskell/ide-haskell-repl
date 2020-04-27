@@ -282,7 +282,11 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
     const context = error.context || ''
     return (
       <div>
-        {positionText}: {error.severity}: {context}
+        {positionText}:{' '}
+        <span className={`ide-haskell-repl-error-${error.severity}`}>
+          {error.severity}
+        </span>
+        : {context}
         <div class="ide-haskell-repl-error-message">{error.message}</div>
       </div>
     )
