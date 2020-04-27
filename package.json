@@ -1,7 +1,7 @@
 {
   "name": "ide-haskell-repl",
   "main": "./lib/ide-haskell-repl",
-  "version": "0.9.6",
+  "version": "0.9.7",
   "description": "Haskell REPL support for ide-haskell",
   "keywords": [
     "ide-haskell",
