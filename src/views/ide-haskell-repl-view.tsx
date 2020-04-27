@@ -189,6 +189,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
       >
         <div
           ref="output"
+          key="output"
           className="ide-haskell-repl-output native-key-bindings"
           tabIndex="-1"
           style={{
@@ -199,7 +200,7 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
           {this.renderOutput()}
         </div>
         {this.renderErrDiv()}
-        <div className="button-container">
+        <div key="buttons" className="button-container">
           {this.renderPrompt()}
           <Button
             cls="reload-repeat"
@@ -227,10 +228,16 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
             parent={this}
           />
         </div>
-        <div className="ide-haskell-repl-editor">
+        <div key="editor" className="ide-haskell-repl-editor">
           <div className="editor-container">
             <Editor ref="editor" element={atom.views.getView(this.editor)} />
           </div>
+          <Button
+            cls="exec"
+            tooltip="Run code"
+            command="ide-haskell-repl:exec-command"
+            parent={this}
+          />
         </div>
       </div>
       // tslint:enable:no-unsafe-any

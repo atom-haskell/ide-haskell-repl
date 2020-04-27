@@ -140,6 +140,10 @@ div.ide-haskell-repl {
     &.clear:before {
       content: @trashcan;
     }
+    &.exec:before {
+      content: @zap;
+      max-height: 2em;
+    }
     &.auto-reload-repeat {
       &.enabled {
         color: @text-color-success;
