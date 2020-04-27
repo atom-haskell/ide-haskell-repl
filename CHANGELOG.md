@@ -1,3 +1,10 @@
+## 0.10.0
+
+-   Simplify error parsing somewhat
+-   Fix duplicate error filtering
+-   Colorize error severity in error div
+-   Option to put errors in main repl output
+
 ## 0.9.7
 
 -   Add run code button
