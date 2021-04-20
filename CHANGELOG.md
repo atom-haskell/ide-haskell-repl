@@ -1,3 +1,8 @@
+## 0.10.1
+
+-   Report ghci destruction on debug log, not as error
+-   Avoid infinite recursion on bg repl destruction
+
 ## 0.10.0
 
 -   Simplify error parsing somewhat
