@@ -96,6 +96,7 @@ export abstract class IdeHaskellReplBase {
   protected _autoReloadRepeat: boolean
   protected history: CommandHistory
   protected uri: string
+  protected destroyed = false
   private emitter = new AtomTypes.Emitter<{ destroyed: void }>()
 
   constructor(
@@ -258,6 +259,8 @@ export abstract class IdeHaskellReplBase {
   }
 
   protected async destroy() {
+    if (this.destroyed) return
+    this.destroyed = true
     this.emitter.emit('destroyed')
     this.clearErrors()
     if (this.ghci) {

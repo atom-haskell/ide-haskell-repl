@@ -43,7 +43,6 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
   public editor: TextEditor
   private fontSettings: UpdateProps
   private disposables: CompositeDisposable
-  private destroyed: boolean = false
   private initialized: boolean = false
   constructor(public props: IProps) {
     super(props.upiPromise, props.state, `view:${props.state.uri}`)
@@ -144,8 +143,9 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
   }
 
   public async destroy() {
-    await etch.destroy(this)
+    if (this.destroyed) return
     this.destroyed = true
+    await etch.destroy(this)
     this.disposables.dispose()
     return super.destroy()
   }
