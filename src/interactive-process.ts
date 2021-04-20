@@ -204,7 +204,11 @@ ${command}
       }
       const rejectError = () => {
         removeListeners()
-        reject(new Error('Process destroyed while awaiting stream readable'))
+        const err = new Error(
+          'Process destroyed while awaiting stream readable',
+        ) as any
+        err.destroyed = true
+        reject(err)
       }
       const resolv = () => {
         removeListeners()
@@ -228,7 +232,14 @@ ${command}
           yield* arr
         }
       } else {
-        await this.waitReadable(out)
+        try {
+          await this.waitReadable(out)
+        } catch (e) {
+          if (e.destroyed) {
+            console.debug(e)
+            return
+          }
+        }
       }
     }
     if (buffer) {
