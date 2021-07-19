@@ -27,7 +27,7 @@
   },
   "atomTestRunner": "./node_modules/atom-ts-spec-runner/runner.js",
   "dependencies": {
-    "atom-haskell-utils": "^2.0.0",
+    "atom-haskell-utils": "^2.0.2",
     "atom-highlight": "^0.4.2",
     "etch": "^0.14.0",
     "fuzzaldrin": "^2.1.0",
