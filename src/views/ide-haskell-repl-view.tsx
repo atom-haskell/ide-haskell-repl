@@ -144,7 +144,6 @@ export class IdeHaskellReplView extends IdeHaskellReplBase
 
   public async destroy() {
     if (this.destroyed) return
-    this.destroyed = true
     await etch.destroy(this)
     this.disposables.dispose()
     return super.destroy()
