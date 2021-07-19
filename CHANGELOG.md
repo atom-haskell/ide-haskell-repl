@@ -1,3 +1,7 @@
+## 0.10.2
+
+-   Fix dangling ghci instances
+
 ## 0.10.1
 
 -   Report ghci destruction on debug log, not as error
