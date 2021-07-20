@@ -1,3 +1,11 @@
+## 0.11.1
+
+-   Spin event loop while waiting for repl output
+
+    This should improve responsiveness in some cases.
+
+-   Fix autocomplete box positioning
+
 ## 0.11.0
 
 -   Bump atom-haskell-utils
