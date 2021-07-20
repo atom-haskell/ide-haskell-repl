@@ -126,7 +126,9 @@ export class InteractiveProcess {
           stdErrLine(line)
         }
       })
+      let interval = undefined
       try {
+        interval = window.setInterval(() => process.activateUvLoop(), 100)
         for await (const line of this.readgen(this.process.stdout, isEnded)) {
           debug('stdout', line)
           const pattern = line.match(endPattern)
@@ -165,6 +167,8 @@ ${command}
           stack: (e as Error).stack,
         })
         throw e
+      } finally {
+        if (interval !== undefined) window.clearInterval(interval)
       }
     })
   }
